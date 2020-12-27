@@ -68,7 +68,6 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
 
     inner class Engine : CanvasWatchFaceService.Engine() {
-
         private var mRegisteredTimeZoneReceiver = false
         private var mMuteMode: Boolean = false
         private lateinit var mCalendar: Calendar
@@ -78,11 +77,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
         private lateinit var mVeneer: NormalAmbient<Veneer>
 
         private lateinit var mPainter: NormalAmbient<WatchfacePainter>
-
-
-        private lateinit var mComplicationData: SparseArray<ComplicationData>
-        private lateinit var mComplicationDrawables: SparseArray<ComplicationDrawable>
-        private lateinit var mComplicationBounds: SparseArray<Rect>
+        private lateinit var mComplications: ComplicationsHolder
 
         private lateinit var mTypeface: Typeface
 
@@ -139,39 +134,26 @@ class SlantedWatchface : CanvasWatchFaceService() {
         }
 
         private fun initializeComplications() {
-            mComplicationData = SparseArray(Complications.ALL.size)
-            mComplicationBounds = SparseArray(Complications.ALL.size)
-            mComplicationDrawables = SparseArray(Complications.ALL.size)
-            for (id in Complications.ALL) {
-                mComplicationDrawables.put(id, ComplicationDrawable(applicationContext))
-            }
+            mComplications = ComplicationsHolder()
             setActiveComplications(*Complications.ALL)
         }
 
         override fun onComplicationDataUpdate(
             watchFaceComplicationId: Int, data: ComplicationData?
         ) {
-            Log.i(TAG, "onComplicationDataUpdate: ${watchFaceComplicationId} data = ${data}")
             super.onComplicationDataUpdate(watchFaceComplicationId, data)
+            mComplications.onComplicationDataUpdate(watchFaceComplicationId, data)
 
-            val shouldUpdatePositions =
-                isComplicationEmpty(watchFaceComplicationId) != isEmptyComplicationData(data)
-            mComplicationData.put(watchFaceComplicationId, data)
-            Log.i(TAG, "onComplicationDataUpdate: shouldUpdatePositions=${shouldUpdatePositions}")
-            if (shouldUpdatePositions) {
-                updateComplicationPositions()
-            }
-            val complicationDrawable = mComplicationDrawables.get(watchFaceComplicationId)
-            complicationDrawable.setComplicationData(data)
             invalidate()
         }
 
         private fun initializeWatchFace(width: Int, height: Int) {
             val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
             mPainter = NormalAmbient(
-                normal = WatchfacePainter(mVeneer.normal, bounds),
-                ambient = WatchfacePainter(mVeneer.ambient, bounds)
+                normal = WatchfacePainter(mVeneer.normal, bounds, mComplications),
+                ambient = WatchfacePainter(mVeneer.ambient, bounds, mComplications)
             )
+            mComplications.updatePositions()
         }
 
         override fun onDestroy() {
@@ -187,9 +169,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
         override fun onAmbientModeChanged(inAmbientMode: Boolean) {
             super.onAmbientModeChanged(inAmbientMode)
             mAmbient = inAmbientMode
-            for (id in Complications.ALL) {
-                mComplicationDrawables[id].setInAmbientMode(inAmbientMode)
-            }
+            mComplications.setInAmbientMode(inAmbientMode)
 
             // Check and trigger whether or not timer should be running (only
             // in active mode).
@@ -202,12 +182,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
             mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false)
             mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false)
 
-            for (id in Complications.ALL) {
-                val complicationDrawable = mComplicationDrawables.get(id)
-
-                complicationDrawable.setLowBitAmbient(mLowBitAmbient)
-                complicationDrawable.setBurnInProtection(mBurnInProtection)
-            }
+            mComplications.setProperties(mLowBitAmbient, mBurnInProtection)
         }
 
 
@@ -227,75 +202,9 @@ class SlantedWatchface : CanvasWatchFaceService() {
         }
 
         private fun initializeComplicationAppearance() {
-            updateComplicationPositions()
-
-            for (id in Complications.ALL) {
-                mComplicationDrawables[id].setTextColorActive(Color.GREEN)
-                mComplicationDrawables[id].setTextColorAmbient(Color.WHITE)
-                mComplicationDrawables[id].setBackgroundColorActive(Color.BLACK)
-                mComplicationDrawables[id].setBackgroundColorAmbient(Color.BLACK)
-            }
+            mComplications.updatePositions()
+            mComplications.setColors()
         }
-
-        private fun updateComplicationPositions() {
-            val boundsProvider = mPainter.get(true).boundsProvider
-
-            val largeInset = 10f
-            val maxHoursHeight = boundsProvider.calculateMaxHoursHeight()
-            val maxMinutesHeight = boundsProvider.calculateMaxMinutesHeight()
-            val hoursY = mCenterY + maxHoursHeight / 2
-            val minutesX = mCenterX + largeInset
-            val minutesY = hoursY - maxHoursHeight + maxMinutesHeight
-
-            val complicationAreaLeft = minutesX
-            val complicationAreaTop = minutesY + largeInset
-            val complicationAreaRight = mCenterX * 2
-            val complicationAreaBottom = hoursY
-
-            var nonEmptyComplications = 0
-            for (id in Complications.ALL) {
-                if (!isComplicationEmpty(id)) {
-                    nonEmptyComplications++
-                }
-            }
-            val emptyRect = Rect()
-            if (nonEmptyComplications == 0) {
-                for (id in Complications.ALL) mComplicationBounds.put(id, emptyRect)
-            } else {
-                val inset = if (nonEmptyComplications > 1) 1 else 0
-                val delta = (complicationAreaBottom - complicationAreaTop) / nonEmptyComplications
-                var indexOfNonEmpty = 0
-                for (id in Complications.ALL) {
-                    if (isComplicationEmpty(id)) {
-                        mComplicationBounds.put(id, emptyRect)
-                        continue
-                    }
-                    val top = complicationAreaTop + delta * indexOfNonEmpty
-                    mComplicationBounds.put(
-                        id, Rect(
-                            complicationAreaLeft.toInt(),
-                            top.toInt(),
-                            complicationAreaRight.toInt(),
-                            (top + delta).toInt() - inset
-                        )
-                    )
-                    indexOfNonEmpty++
-                }
-            }
-
-            for (id in Complications.ALL) {
-                mComplicationDrawables[id].bounds = mComplicationBounds[id]
-            }
-        }
-
-        private fun isComplicationEmpty(id: Int): Boolean =
-            mComplicationData.get(id).let {
-                isEmptyComplicationData(it)
-            }
-
-        private fun isEmptyComplicationData(it: ComplicationData?) =
-            it == null || it.type == ComplicationData.TYPE_EMPTY
-
 
         private fun launchAgenda() {
             startActivity(Intent().apply {
@@ -321,44 +230,14 @@ class SlantedWatchface : CanvasWatchFaceService() {
                     // The user has started a different gesture or otherwise cancelled the tap.
                 }
                 WatchFaceService.TAP_TYPE_TAP -> {
-                    // Rotate a point
-                    val dx: Float = x - mCenterX
-                    val dy: Float = y - mCenterY
-                    val a = -Constants.ANGLE / 180f * Math.PI
-                    val dx1 = dx * Math.cos(a) - dy * Math.sin(a)
-                    val dy1 = dx * Math.sin(a) + dy * Math.cos(a)
-                    val x1 = (mCenterX + dx1).toInt()
-                    val y1 = (mCenterY + dy1).toInt()
-
-                    if (mPainter.get(isInAmbientMode).isDateAreaTap(mCalendar, x1, y1)) {
+                    if (mPainter.get(isInAmbientMode).isDateAreaTap(mCalendar, x, y)) {
                         launchAgenda()
                     } else {
-                        for (id in Complications.ALL) {
-                            performComplicationTap(id, x1, y1)
-                        }
+                        mComplications.performTap(x, y)
                     }
                 }
             }
             invalidate()
-        }
-
-        private fun performComplicationTap(complicationId: Int, x: Int, y: Int) {
-            if (mComplicationBounds[complicationId].contains(x, y)) {
-                val complicationData = mComplicationData.get(complicationId)
-                if (complicationData != null &&
-                    complicationData.type == ComplicationData.TYPE_NO_PERMISSION
-                ) {
-                    startActivity(
-                        ComplicationHelperActivity.createPermissionRequestHelperIntent(
-                            applicationContext,
-                            ComponentName(applicationContext, this@SlantedWatchface::class.java)
-                        ).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        })
-                } else {
-                    mComplicationDrawables[complicationId].onTap(x, y)
-                }
-            }
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
@@ -366,10 +245,6 @@ class SlantedWatchface : CanvasWatchFaceService() {
             mCalendar.timeInMillis = now
             canvas.drawColor(Color.BLACK)
             mPainter.get(isInAmbientMode).draw(mCalendar, canvas)
-            canvas.rotate(Constants.ANGLE, mCenterX, mCenterY)
-            for (id in Complications.ALL) {
-                mComplicationDrawables[id].draw(canvas, now)
-            }
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
@@ -434,5 +309,123 @@ class SlantedWatchface : CanvasWatchFaceService() {
                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs)
             }
         }
+
+        private inner class ComplicationsHolder : WatchfacePainter.Complications {
+            private val TAG = ComplicationsHolder::class.qualifiedName
+            private val mComplicationData = SparseArray<ComplicationData>(Complications.ALL.size)
+            private val mComplicationBounds = SparseArray<Rect>(Complications.ALL.size)
+            private val mComplicationDrawables =
+                SparseArray<ComplicationDrawable>(Complications.ALL.size).apply {
+                    for (id in Complications.ALL)
+                        put(id, ComplicationDrawable(applicationContext))
+                }
+
+            override val ids: IntArray = Complications.ALL
+
+            override fun isComplicationEmpty(id: Int): Boolean =
+                isEmptyComplicationData(mComplicationData.get(id))
+
+            private fun isEmptyComplicationData(it: ComplicationData?) =
+                it == null || it.type == ComplicationData.TYPE_EMPTY
+
+            override fun draw(canvas: Canvas, currentTimeMillis: Long) {
+                for (id in ids) {
+                    mComplicationDrawables[id].draw(canvas, currentTimeMillis)
+                }
+            }
+
+            fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData?) {
+                Log.i(TAG, "onComplicationDataUpdate: ${watchFaceComplicationId} data = ${data}")
+
+                val shouldUpdatePositions =
+                    isComplicationEmpty(watchFaceComplicationId) != isEmptyComplicationData(data)
+                mComplicationData.put(watchFaceComplicationId, data)
+                Log.i(
+                    TAG,
+                    "onComplicationDataUpdate: shouldUpdatePositions=${shouldUpdatePositions}"
+                )
+                if (shouldUpdatePositions) {
+                    updatePositions()
+                }
+                val complicationDrawable = mComplicationDrawables.get(watchFaceComplicationId)
+                complicationDrawable.setComplicationData(data)
+            }
+
+            fun updatePositions() {
+                painterForBounds().updateComplicationBounds(mComplicationBounds)
+                for (id in Complications.ALL) {
+                    mComplicationDrawables[id].bounds = mComplicationBounds[id]
+                }
+            }
+
+            fun setInAmbientMode(inAmbientMode: Boolean) {
+                for (id in Complications.ALL) {
+                    mComplicationDrawables[id].setInAmbientMode(inAmbientMode)
+                }
+                // We assume complication positions are the same in normal and ambient mode.
+            }
+
+            fun setProperties(lowBitAmbient: Boolean, burnInProtection: Boolean) {
+                for (id in Complications.ALL) {
+                    val complicationDrawable = mComplicationDrawables.get(id)
+
+                    complicationDrawable.setLowBitAmbient(lowBitAmbient)
+                    complicationDrawable.setBurnInProtection(burnInProtection)
+                }
+
+            }
+
+            fun setColors() {
+                for (id in Complications.ALL) {
+                    mComplicationDrawables[id].setTextColorActive(Color.GREEN)
+                    mComplicationDrawables[id].setTextColorAmbient(Color.WHITE)
+                    mComplicationDrawables[id].setBackgroundColorActive(Color.BLACK)
+                    mComplicationDrawables[id].setBackgroundColorAmbient(Color.BLACK)
+                }
+            }
+
+            fun performTap(x: Int, y: Int) {
+                val rotatedPoint = painterForBounds().rotate(x, y)
+                for (id in Complications.ALL) {
+                    performComplicationTap(id, rotatedPoint)
+                }
+            }
+
+            // To save cycles, assume complication positions are the same
+            // in normal and ambient mode.
+            private fun painterForBounds() = mPainter.normal
+
+            private fun performComplicationTap(
+                complicationId: Int,
+                rotatedPoint: Pair<Float, Float>
+            ) {
+                if (mComplicationBounds[complicationId].contains(
+                        rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
+                    )
+                ) {
+                    val complicationData = mComplicationData.get(complicationId)
+                    if (complicationData != null &&
+                        complicationData.type == ComplicationData.TYPE_NO_PERMISSION
+                    ) {
+                        requestComplicationsPermission()
+                    } else {
+                        mComplicationDrawables[complicationId].onTap(
+                            rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
+                        )
+                    }
+                }
+            }
+
+            private fun requestComplicationsPermission() {
+                applicationContext.startActivity(
+                    ComplicationHelperActivity.createPermissionRequestHelperIntent(
+                        applicationContext,
+                        ComponentName(applicationContext, SlantedWatchface::class.java)
+                    ).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    })
+            }
+        }
+
     }
 }

@@ -1,11 +1,19 @@
 package de.mulambda.slantedwatchface
 
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.graphics.RectF
 import android.text.TextPaint
+import android.util.SparseArray
 import java.util.*
 
-class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
+class WatchfacePainter(val veneer: Veneer, val bounds: RectF, val complications: Complications) {
+    interface Complications {
+        val ids: IntArray
+        fun isComplicationEmpty(id: Int): Boolean
+        fun draw(canvas: Canvas, currentTimeMillis: Long)
+    }
+
     private val mCenterX = bounds.width() / 2f
     private val mCenterY = bounds.height() / 2f
     private val hoursSize = mCenterY * 2
@@ -41,10 +49,55 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
         isAntiAlias = !veneer.isAmbient
     }
 
-    internal val boundsProvider = BoundsProvider(
+    private val boundsProvider = BoundsProvider(
         Calendar.getInstance(),
         hoursPaint, minutesPaint, secondsPaint, datePaint
     )
+
+    fun updateComplicationBounds(complicationBounds: SparseArray<Rect>) {
+        val largeInset = 10f
+        val maxHoursHeight = boundsProvider.calculateMaxHoursHeight()
+        val maxMinutesHeight = boundsProvider.calculateMaxMinutesHeight()
+        val hoursY = mCenterY + maxHoursHeight / 2
+        val minutesX = mCenterX + largeInset
+        val minutesY = hoursY - maxHoursHeight + maxMinutesHeight
+
+        val complicationAreaLeft = minutesX
+        val complicationAreaTop = minutesY + largeInset
+        val complicationAreaRight = mCenterX * 2
+        val complicationAreaBottom = hoursY
+
+        var nonEmptyComplications = 0
+        complications.ids.forEach {
+            if (!complications.isComplicationEmpty(it)) {
+                nonEmptyComplications++
+            }
+        }
+        val emptyRect = Rect()
+        if (nonEmptyComplications == 0) {
+            complications.ids.forEach { complicationBounds.put(it, emptyRect) }
+        } else {
+            val inset = if (nonEmptyComplications > 1) 1 else 0
+            val delta = (complicationAreaBottom - complicationAreaTop) / nonEmptyComplications
+            var indexOfNonEmpty = 0
+            complications.ids.forEach {
+                if (complications.isComplicationEmpty(it)) {
+                    complicationBounds.put(it, emptyRect)
+                    return@forEach
+                }
+                val top = complicationAreaTop + delta * indexOfNonEmpty
+                complicationBounds.put(
+                    it, Rect(
+                        complicationAreaLeft.toInt(),
+                        top.toInt(),
+                        complicationAreaRight.toInt(),
+                        (top + delta).toInt() - inset
+                    )
+                )
+                indexOfNonEmpty++
+            }
+        }
+    }
 
     // Data is in Painter coordinates
     private data class PaintData(
@@ -60,6 +113,8 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
     )
 
     fun isDateAreaTap(calendar: Calendar, x: Int, y: Int): Boolean {
+        val (x1, y1) = rotate(x, y)
+
         val p = calculatePaintData(calendar)
         val (_, secondsBounds) = boundsProvider.getSeconds(calendar)
         val secondsRect = RectF(
@@ -77,7 +132,18 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
         )
         dateRect.union(secondsRect)
         dateRect.offset(bounds.left, bounds.top)
-        return dateRect.contains(x.toFloat(), y.toFloat())
+        return dateRect.contains(x1.toFloat(), y1.toFloat())
+    }
+
+    fun rotate(x: Int, y: Int): Pair<Float, Float> {
+        val dx = x - mCenterX - bounds.left
+        val dy = y - mCenterY - bounds.top
+        val a = -veneer.angle / 180f * Math.PI
+        val dx1 = dx * Math.cos(a) - dy * Math.sin(a)
+        val dy1 = dx * Math.sin(a) + dy * Math.cos(a)
+        val x1 = bounds.left + mCenterX + dx1
+        val y1 = bounds.top + mCenterY + dy1
+        return Pair(x1.toFloat(), y1.toFloat())
     }
 
     private fun calculatePaintData(calendar: Calendar): PaintData {
@@ -132,6 +198,7 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
                 )
             }
         }
+        complications.draw(canvas, mCalendar.timeInMillis)
         canvas.restore()
     }
 }
