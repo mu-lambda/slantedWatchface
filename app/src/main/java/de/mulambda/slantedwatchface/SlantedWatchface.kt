@@ -75,8 +75,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
         private var mCenterX: Float = 0F
         private var mCenterY: Float = 0F
 
-        private lateinit var mAmbientVeneer: Veneer
-        private lateinit var mActiveVeneer: Veneer
+        private lateinit var mVeneer: NormalAmbient<Veneer>
 
         private lateinit var mPainter: NormalAmbient<WatchfacePainter>
 
@@ -114,21 +113,25 @@ class SlantedWatchface : CanvasWatchFaceService() {
             mCalendar = Calendar.getInstance()
             mTypeface =
                 Typeface.createFromAsset(this@SlantedWatchface.assets, "limelight.ttf")
-            mActiveVeneer = Veneer(
-                typeface = mTypeface,
-                hoursColor = Constants.HOURS_COLOR,
-                minutesColor = Constants.MINUTES_COLOR,
-                secondsColor = Constants.SECONDS_COLOR,
-                dateColor = Constants.DATE_COLOR,
-                isAmbient = false,
-            )
-            mAmbientVeneer = Veneer(
-                typeface = mTypeface,
-                hoursColor = Color.WHITE,
-                minutesColor = Color.WHITE,
-                secondsColor = Color.WHITE,
-                dateColor = Color.WHITE,
-                isAmbient = true,
+            mVeneer = NormalAmbient(
+                normal = Veneer(
+                    angle = Constants.ANGLE,
+                    typeface = mTypeface,
+                    hoursColor = Constants.HOURS_COLOR,
+                    minutesColor = Constants.MINUTES_COLOR,
+                    secondsColor = Constants.SECONDS_COLOR,
+                    dateColor = Constants.DATE_COLOR,
+                    isAmbient = false,
+                ),
+                ambient = Veneer(
+                    angle = Constants.ANGLE,
+                    typeface = mTypeface,
+                    hoursColor = Color.WHITE,
+                    minutesColor = Color.WHITE,
+                    secondsColor = Color.WHITE,
+                    dateColor = Color.WHITE,
+                    isAmbient = true,
+                )
             )
 
             initializeComplications()
@@ -166,8 +169,8 @@ class SlantedWatchface : CanvasWatchFaceService() {
         private fun initializeWatchFace(width: Int, height: Int) {
             val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
             mPainter = NormalAmbient(
-                normal = WatchfacePainter(mActiveVeneer, bounds),
-                ambient = WatchfacePainter(mAmbientVeneer, bounds)
+                normal = WatchfacePainter(mVeneer.normal, bounds),
+                ambient = WatchfacePainter(mVeneer.ambient, bounds)
             )
         }
 
@@ -362,8 +365,8 @@ class SlantedWatchface : CanvasWatchFaceService() {
             val now = System.currentTimeMillis()
             mCalendar.timeInMillis = now
             canvas.drawColor(Color.BLACK)
-            canvas.rotate(Constants.ANGLE, mCenterX, mCenterY)
             mPainter.get(isInAmbientMode).draw(mCalendar, canvas)
+            canvas.rotate(Constants.ANGLE, mCenterX, mCenterY)
             for (id in Complications.ALL) {
                 mComplicationDrawables[id].draw(canvas, now)
             }

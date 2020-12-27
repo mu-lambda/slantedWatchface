@@ -1,40 +1,39 @@
 package de.mulambda.slantedwatchface
 
 import android.graphics.Canvas
-import android.graphics.Rect
 import android.graphics.RectF
 import android.text.TextPaint
 import java.util.*
 
 class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
-    private val mCenterX = bounds.width() / 2
-    private val mCenterY = bounds.height() / 2
-    val hoursSize = mCenterY * 2
-    val hoursPaint = TextPaint().apply {
+    private val mCenterX = bounds.width() / 2f
+    private val mCenterY = bounds.height() / 2f
+    private val hoursSize = mCenterY * 2
+    private val hoursPaint = TextPaint().apply {
         typeface = veneer.typeface
         textSize = hoursSize
         textScaleX = 0.4f
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
-    val minutesSize = hoursSize / SlantedWatchface.Constants.RATIO
-    val minutesPaint = TextPaint().apply {
+    private val minutesSize = hoursSize / SlantedWatchface.Constants.RATIO
+    private val minutesPaint = TextPaint().apply {
         typeface = veneer.typeface
         textSize = minutesSize
         textScaleX = 0.33f
         color = veneer.minutesColor
         isAntiAlias = !veneer.isAmbient
     }
-    val secondsSize = minutesSize / 2
-    val secondsPaint = TextPaint().apply {
+    private val secondsSize = minutesSize / 2
+    private val secondsPaint = TextPaint().apply {
         typeface = veneer.typeface
         textSize = secondsSize
         textScaleX = 0.4f
         color = veneer.secondsColor
         isAntiAlias = !veneer.isAmbient
     }
-    val dateSize = secondsSize / 3
-    val datePaint = TextPaint().apply {
+    private val dateSize = secondsSize / 3
+    private val datePaint = TextPaint().apply {
         typeface = veneer.typeface
         textSize = dateSize
         textScaleX = 0.5f
@@ -42,7 +41,7 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
         isAntiAlias = !veneer.isAmbient
     }
 
-    val boundsProvider = BoundsProvider(
+    internal val boundsProvider = BoundsProvider(
         Calendar.getInstance(),
         hoursPaint, minutesPaint, secondsPaint, datePaint
     )
@@ -63,22 +62,22 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
     fun isDateAreaTap(calendar: Calendar, x: Int, y: Int): Boolean {
         val p = calculatePaintData(calendar)
         val (_, secondsBounds) = boundsProvider.getSeconds(calendar)
-        val secondsRect = Rect(
-            p.secondsX.toInt(),
-            p.secondsY.toInt() - secondsBounds.second,
-            p.secondsX.toInt() + secondsBounds.first,
-            p.secondsY.toInt()
+        val secondsRect = RectF(
+            p.secondsX,
+            p.secondsY - secondsBounds.second,
+            p.secondsX + secondsBounds.first,
+            p.secondsY
         )
         val (_, dateBounds) = boundsProvider.getDate(calendar)
-        val dateRect = Rect(
-            p.dateX.toInt(),
-            p.dateY.toInt() - dateBounds.second,
-            p.dateX.toInt() + dateBounds.first,
-            p.dateY.toInt()
+        val dateRect = RectF(
+            p.dateX,
+            p.dateY - dateBounds.second,
+            p.dateX + dateBounds.first,
+            p.dateY
         )
         dateRect.union(secondsRect)
-        dateRect.offset(bounds.left.toInt(), bounds.top.toInt())
-        return dateRect.contains(x, y)
+        dateRect.offset(bounds.left, bounds.top)
+        return dateRect.contains(x.toFloat(), y.toFloat())
     }
 
     private fun calculatePaintData(calendar: Calendar): PaintData {
@@ -115,14 +114,24 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF) {
     }
 
     fun draw(mCalendar: Calendar, canvas: Canvas) {
+        canvas.save()
+        canvas.rotate(veneer.angle, bounds.left + mCenterX, bounds.top + mCenterY)
         with(calculatePaintData(mCalendar)) {
-            canvas.drawText(hours, hoursX, hoursY, hoursPaint)
-            canvas.drawText(minutes, minutesX, minutesY, minutesPaint)
-            canvas.drawText(date, dateX, dateY, datePaint)
+            canvas.drawText(
+                hours, bounds.left + hoursX, bounds.top + hoursY, hoursPaint
+            )
+            canvas.drawText(
+                minutes, bounds.left + minutesX, bounds.top + minutesY, minutesPaint
+            )
+            canvas.drawText(
+                date, bounds.left + dateX, bounds.top + dateY, datePaint
+            )
             if (!veneer.isAmbient) {
-                canvas.drawText(seconds, secondsX, secondsY, secondsPaint)
+                canvas.drawText(
+                    seconds, bounds.left + secondsX, bounds.top + secondsY, secondsPaint
+                )
             }
         }
-
+        canvas.restore()
     }
 }
