@@ -129,31 +129,28 @@ class SlantedWatchface : CanvasWatchFaceService() {
                 )
             )
 
-            initializeComplications()
-            initializeWatchFace(0, 0)
-        }
-
-        private fun initializeComplications() {
             mComplications = ComplicationsHolder()
             setActiveComplications(*mComplications.ids)
         }
 
-        override fun onComplicationDataUpdate(
-            watchFaceComplicationId: Int, data: ComplicationData?
-        ) {
-            super.onComplicationDataUpdate(watchFaceComplicationId, data)
-            mComplications.onComplicationDataUpdate(watchFaceComplicationId, data)
+        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+            super.onSurfaceChanged(holder, format, width, height)
 
-            invalidate()
-        }
+            /*
+             * Find the coordinates of the center point on the screen, and ignore the window
+             * insets, so that, on round watches with a "chin", the watch face is centered on the
+             * entire screen, not just the usable portion.
+             */
+            mCenterX = width / 2f
+            mCenterY = height / 2f
 
-        private fun initializeWatchFace(width: Int, height: Int) {
             val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
             mPainter = NormalAmbient(
                 normal = WatchfacePainter(mVeneer.normal, bounds, mComplications),
                 ambient = WatchfacePainter(mVeneer.ambient, bounds, mComplications)
             )
             mComplications.updatePositions()
+            mComplications.setColors()
         }
 
         override fun onDestroy() {
@@ -163,6 +160,15 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
         override fun onTimeTick() {
             super.onTimeTick()
+            invalidate()
+        }
+
+        override fun onComplicationDataUpdate(
+            watchFaceComplicationId: Int, data: ComplicationData?
+        ) {
+            super.onComplicationDataUpdate(watchFaceComplicationId, data)
+            mComplications.onComplicationDataUpdate(watchFaceComplicationId, data)
+
             invalidate()
         }
 
@@ -185,26 +191,6 @@ class SlantedWatchface : CanvasWatchFaceService() {
             mComplications.setProperties(mLowBitAmbient, mBurnInProtection)
         }
 
-
-        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-            super.onSurfaceChanged(holder, format, width, height)
-
-            /*
-             * Find the coordinates of the center point on the screen, and ignore the window
-             * insets, so that, on round watches with a "chin", the watch face is centered on the
-             * entire screen, not just the usable portion.
-             */
-            mCenterX = width / 2f
-            mCenterY = height / 2f
-
-            initializeWatchFace(width, height)
-            initializeComplicationAppearance()
-        }
-
-        private fun initializeComplicationAppearance() {
-            mComplications.updatePositions()
-            mComplications.setColors()
-        }
 
         private fun launchAgenda() {
             startActivity(Intent().apply {
@@ -392,6 +378,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
             // To save cycles, assume complication positions are the same
             // in normal and ambient mode.
+            // Not a value because painters change on resize etc.
             private fun painterForBounds() = mPainter.normal
 
             private fun performComplicationTap(
