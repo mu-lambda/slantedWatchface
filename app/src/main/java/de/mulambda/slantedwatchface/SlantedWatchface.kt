@@ -135,7 +135,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
         private fun initializeComplications() {
             mComplications = ComplicationsHolder()
-            setActiveComplications(*Complications.ALL)
+            setActiveComplications(*mComplications.ids)
         }
 
         override fun onComplicationDataUpdate(
@@ -241,8 +241,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
-            val now = System.currentTimeMillis()
-            mCalendar.timeInMillis = now
+            mCalendar.timeInMillis = System.currentTimeMillis()
             canvas.drawColor(Color.BLACK)
             mPainter.get(isInAmbientMode).draw(mCalendar, canvas)
         }
