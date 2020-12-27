@@ -11,7 +11,6 @@ import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
-import android.text.TextPaint
 import android.util.Log
 import android.util.SparseArray
 import android.view.SurfaceHolder
@@ -37,17 +36,6 @@ class SlantedWatchface : CanvasWatchFaceService() {
             }
         }
     }
-
-    data class PaintData(
-        var hours: String,
-        var hoursX: Float, val hoursY: Float,
-        var minutes: String,
-        var minutesX: Float, val minutesY: Float,
-        var seconds: String,
-        var secondsX: Float, val secondsY: Float,
-        var date: String,
-        var dateX: Float, val dateY: Float
-    )
 
     companion object {
         /**
@@ -87,11 +75,10 @@ class SlantedWatchface : CanvasWatchFaceService() {
         private var mCenterX: Float = 0F
         private var mCenterY: Float = 0F
 
-        private lateinit var mHoursPaint: NormalAmbient<TextPaint>
-        private lateinit var mMinutesPaint: NormalAmbient<TextPaint>
-        private lateinit var mSecondsPaint: NormalAmbient<TextPaint>
-        private lateinit var mDatePaint: NormalAmbient<TextPaint>
-        private lateinit var mBoundsProvider: NormalAmbient<BoundsProvider>
+        private lateinit var mAmbientVeneer: Veneer
+        private lateinit var mActiveVeneer: Veneer
+
+        private lateinit var mPainter: NormalAmbient<WatchfacePainter>
 
 
         private lateinit var mComplicationData: SparseArray<ComplicationData>
@@ -127,9 +114,25 @@ class SlantedWatchface : CanvasWatchFaceService() {
             mCalendar = Calendar.getInstance()
             mTypeface =
                 Typeface.createFromAsset(this@SlantedWatchface.assets, "limelight.ttf")
+            mActiveVeneer = Veneer(
+                typeface = mTypeface,
+                hoursColor = Constants.HOURS_COLOR,
+                minutesColor = Constants.MINUTES_COLOR,
+                secondsColor = Constants.SECONDS_COLOR,
+                dateColor = Constants.DATE_COLOR,
+                isAmbient = false,
+            )
+            mAmbientVeneer = Veneer(
+                typeface = mTypeface,
+                hoursColor = Color.WHITE,
+                minutesColor = Color.WHITE,
+                secondsColor = Color.WHITE,
+                dateColor = Color.WHITE,
+                isAmbient = true,
+            )
 
             initializeComplications()
-            initializeWatchFace()
+            initializeWatchFace(0, 0)
         }
 
         private fun initializeComplications() {
@@ -160,87 +163,11 @@ class SlantedWatchface : CanvasWatchFaceService() {
             invalidate()
         }
 
-        private fun initializeWatchFace() {
-            val hoursSize = mCenterY * 2
-            val hoursPaint = TextPaint().apply {
-                typeface = mTypeface
-                textSize = hoursSize
-                textScaleX = 0.4f
-            }
-            val minutesSize = hoursSize / Constants.RATIO
-            val minutesPaint = TextPaint().apply {
-                typeface = mTypeface
-                textSize = minutesSize
-                textScaleX = 0.33f
-            }
-            val secondsSize = minutesSize / 2
-            val secondsPaint = TextPaint().apply {
-                typeface = mTypeface
-                textSize = secondsSize
-                textScaleX = 0.4f
-            }
-            val dateSize = secondsSize / 3
-            val datePaint = TextPaint().apply {
-                typeface = mTypeface
-                textSize = dateSize
-                textScaleX = 0.5f
-            }
-
-            mHoursPaint = NormalAmbient(
-                normal = TextPaint(hoursPaint).apply {
-                    color = Constants.HOURS_COLOR
-                    isAntiAlias = true
-                },
-                ambient = TextPaint(hoursPaint).apply {
-                    color = Color.WHITE
-                    isAntiAlias = false
-                }
-            )
-            mMinutesPaint = NormalAmbient(
-                normal = TextPaint(minutesPaint).apply {
-                    color = Constants.MINUTES_COLOR
-                    isAntiAlias = true
-                },
-                ambient = TextPaint(minutesPaint).apply {
-                    color = Color.WHITE
-                    isAntiAlias = false
-                }
-            )
-            mSecondsPaint = NormalAmbient(
-                normal = TextPaint(secondsPaint).apply {
-                    color = Constants.SECONDS_COLOR
-                    isAntiAlias = true
-                },
-                ambient = TextPaint(secondsPaint).apply {
-                    color = Color.WHITE
-                    isAntiAlias = false
-                }
-            )
-            mDatePaint = NormalAmbient(
-                normal = TextPaint(datePaint).apply {
-                    color = Constants.DATE_COLOR
-                    isAntiAlias = true
-                },
-                ambient = TextPaint(datePaint).apply {
-                    color = Color.WHITE
-                    isAntiAlias = true
-                }
-            )
-            mBoundsProvider = NormalAmbient(
-                normal = BoundsProvider(
-                    mCalendar,
-                    mHoursPaint.normal,
-                    mMinutesPaint.normal,
-                    mSecondsPaint.normal,
-                    mDatePaint.normal
-                ),
-                ambient = BoundsProvider(
-                    mCalendar,
-                    mHoursPaint.ambient,
-                    mMinutesPaint.ambient,
-                    mSecondsPaint.ambient,
-                    mDatePaint.ambient
-                )
+        private fun initializeWatchFace(width: Int, height: Int) {
+            val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
+            mPainter = NormalAmbient(
+                normal = WatchfacePainter(mActiveVeneer, bounds),
+                ambient = WatchfacePainter(mAmbientVeneer, bounds)
             )
         }
 
@@ -292,7 +219,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
             mCenterX = width / 2f
             mCenterY = height / 2f
 
-            initializeWatchFace()
+            initializeWatchFace(width, height)
             initializeComplicationAppearance()
         }
 
@@ -308,7 +235,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
         }
 
         private fun updateComplicationPositions() {
-            val boundsProvider = mBoundsProvider.get(true)
+            val boundsProvider = mPainter.get(true).boundsProvider
 
             val largeInset = 10f
             val maxHoursHeight = boundsProvider.calculateMaxHoursHeight()
@@ -366,25 +293,6 @@ class SlantedWatchface : CanvasWatchFaceService() {
         private fun isEmptyComplicationData(it: ComplicationData?) =
             it == null || it.type == ComplicationData.TYPE_EMPTY
 
-        private fun isDateAreaTap(x: Int, y: Int): Boolean {
-            val p = calculatePaintData()
-            val (_, secondsBounds) = mBoundsProvider.get(isInAmbientMode).getSeconds(mCalendar)
-            val secondsRect = Rect(
-                p.secondsX.toInt(),
-                p.secondsY.toInt() - secondsBounds.second,
-                p.secondsX.toInt() + secondsBounds.first,
-                p.secondsY.toInt()
-            )
-            val (_, dateBounds) = mBoundsProvider.get(isInAmbientMode).getDate(mCalendar)
-            val dateRect = Rect(
-                p.dateX.toInt(),
-                p.dateY.toInt() - dateBounds.second,
-                p.dateX.toInt() + dateBounds.first,
-                p.dateY.toInt()
-            )
-            dateRect.union(secondsRect)
-            return dateRect.contains(x, y)
-        }
 
         private fun launchAgenda() {
             startActivity(Intent().apply {
@@ -419,7 +327,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
                     val x1 = (mCenterX + dx1).toInt()
                     val y1 = (mCenterY + dy1).toInt()
 
-                    if (isDateAreaTap(x1, y1)) {
+                    if (mPainter.get(isInAmbientMode).isDateAreaTap(mCalendar, x1, y1)) {
                         launchAgenda()
                     } else {
                         for (id in Complications.ALL) {
@@ -450,73 +358,15 @@ class SlantedWatchface : CanvasWatchFaceService() {
             }
         }
 
-        private fun calculatePaintData(): PaintData {
-            val (hours, hoursDim) = mBoundsProvider.get(isInAmbientMode).getHours(mCalendar)
-            val (minutes, minutesDim) = mBoundsProvider.get(isInAmbientMode).getMinutes(mCalendar)
-            val (seconds, _) = mBoundsProvider.get(isInAmbientMode).getSeconds(mCalendar)
-            val (date, dateDim) = mBoundsProvider.get(isInAmbientMode).getDate(mCalendar)
-
-            val largeInset = 10f
-            val smallInset = 2f
-            val hoursX = mCenterX - hoursDim.first
-            val hoursY = mCenterY + hoursDim.second / 2
-            val minutesX = mCenterX + largeInset
-            val minutesY = hoursY - hoursDim.second + minutesDim.second
-            val dateX = minutesX + minutesDim.first + largeInset
-            val dateY = minutesY
-            val secondsX = dateX
-            val secondsY = dateY - dateDim.second - smallInset
-
-            return PaintData(
-                hours = hours,
-                hoursX = hoursX,
-                hoursY = hoursY,
-                minutes = minutes,
-                minutesX = minutesX,
-                minutesY = minutesY,
-                seconds = seconds,
-                secondsX = secondsX,
-                secondsY = secondsY,
-                date = date,
-                dateX = dateX,
-                dateY = dateY,
-            )
-        }
-
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             val now = System.currentTimeMillis()
             mCalendar.timeInMillis = now
             canvas.drawColor(Color.BLACK)
             canvas.rotate(Constants.ANGLE, mCenterX, mCenterY)
-
-            with(calculatePaintData()) {
-                canvas.drawText(
-                    hours,
-                    hoursX, hoursY,
-                    mHoursPaint.get(isInAmbientMode)
-                )
-
-                canvas.drawText(
-                    minutes,
-                    minutesX,
-                    minutesY, mMinutesPaint.get(isInAmbientMode)
-                )
-
-                canvas.drawText(date, dateX, dateY, mDatePaint.get(isInAmbientMode))
-
-                if (!isInAmbientMode) {
-                    canvas.drawText(
-                        seconds,
-                        secondsX, secondsY,
-                        mSecondsPaint.get(isInAmbientMode)
-                    )
-                }
-
-                for (id in Complications.ALL) {
-                    mComplicationDrawables[id].draw(canvas, now)
-                }
+            mPainter.get(isInAmbientMode).draw(mCalendar, canvas)
+            for (id in Complications.ALL) {
+                mComplicationDrawables[id].draw(canvas, now)
             }
-            canvas.save()
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
