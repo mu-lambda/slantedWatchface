@@ -77,7 +77,7 @@ class WatchFace : CanvasWatchFaceService() {
         private lateinit var mPainter: NormalAmbient<WatchFacePainter>
         private lateinit var mComplications: ComplicationsHolder
 
-        private lateinit var mTypeface: Typeface
+        private lateinit var mTypefaces: Typefaces
 
         private var mAmbient: Boolean = false
         private var mLowBitAmbient: Boolean = false
@@ -104,12 +104,12 @@ class WatchFace : CanvasWatchFaceService() {
             )
 
             mCalendar = Calendar.getInstance()
-            mTypeface =
-                Typeface.createFromAsset(this@WatchFace.assets, "limelight.ttf")
+            mTypefaces = Typefaces(this@WatchFace.assets)
+
             mVeneer = NormalAmbient(
                 normal = Veneer(
                     angle = Constants.ANGLE,
-                    typeface = mTypeface,
+                    typefaces = mTypefaces,
                     hoursColor = Constants.HOURS_COLOR,
                     minutesColor = Constants.MINUTES_COLOR,
                     secondsColor = Constants.SECONDS_COLOR,
@@ -118,7 +118,7 @@ class WatchFace : CanvasWatchFaceService() {
                 ),
                 ambient = Veneer(
                     angle = Constants.ANGLE,
-                    typeface = mTypeface,
+                    typefaces = mTypefaces,
                     hoursColor = Color.WHITE,
                     minutesColor = Color.WHITE,
                     secondsColor = Color.WHITE,

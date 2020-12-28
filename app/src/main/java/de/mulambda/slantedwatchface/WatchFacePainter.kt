@@ -22,7 +22,7 @@ class WatchFacePainter(
     private val mCenterY = bounds.height() / 2f
     private val hoursSize = mCenterY * 2
     private val hoursPaint = TextPaint().apply {
-        typeface = veneer.typeface
+        typeface = veneer.typefaces.timeTypeface
         textSize = hoursSize
         textScaleX = 0.4f
         color = veneer.hoursColor
@@ -30,7 +30,7 @@ class WatchFacePainter(
     }
     private val minutesSize = hoursSize / WatchFace.Constants.RATIO
     private val minutesPaint = TextPaint().apply {
-        typeface = veneer.typeface
+        typeface = veneer.typefaces.timeTypeface
         textSize = minutesSize
         textScaleX = 0.33f
         color = veneer.minutesColor
@@ -38,7 +38,7 @@ class WatchFacePainter(
     }
     private val secondsSize = minutesSize / 2
     private val secondsPaint = TextPaint().apply {
-        typeface = veneer.typeface
+        typeface = veneer.typefaces.timeTypeface
         textSize = secondsSize
         textScaleX = 0.4f
         color = veneer.secondsColor
@@ -46,7 +46,7 @@ class WatchFacePainter(
     }
     private val dateSize = secondsSize / 3
     private val datePaint = TextPaint().apply {
-        typeface = veneer.typeface
+        typeface = veneer.typefaces.dateTypeface
         textSize = dateSize
         textScaleX = 0.5f
         color = veneer.dateColor

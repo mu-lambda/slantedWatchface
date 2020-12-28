@@ -17,8 +17,6 @@ import androidx.wear.widget.WearableRecyclerView
 import java.util.concurrent.Executors
 
 class ConfigActivity : Activity() {
-    private val TAG = ConfigActivity::class.qualifiedName
-
     companion object {
         const val REQUEST_TOP_COMPLICATION = 1001
         const val REQUEST_BOTTOM_COMPLICATION = 1002
@@ -201,10 +199,11 @@ class ConfigActivity : Activity() {
         val complicationId: Int,
         iconId: Int
     ) : RecyclerView.ViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.complication, parent, false)
+        LayoutInflater
+            .from(parent.context)
+            .inflate(R.layout.complication, parent, false)
     ),
         View.OnClickListener {
-        private val TAG = this::class.qualifiedName
         private val mDataButton: Button = itemView.findViewById(R.id.data_button)
 
         init {

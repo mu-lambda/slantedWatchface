@@ -21,15 +21,18 @@ class WatchFacePreview(
     attrs: AttributeSet?,
 ) : View(context, attrs) {
     private val TAG = this::class.qualifiedName
-    private val veneer = Veneer(
-        angle = WatchFace.Constants.ANGLE,
-        typeface = Typeface.createFromAsset(context.assets, "limelight.ttf"),
-        hoursColor = WatchFace.Constants.HOURS_COLOR,
-        minutesColor = WatchFace.Constants.MINUTES_COLOR,
-        secondsColor = WatchFace.Constants.SECONDS_COLOR,
-        dateColor = WatchFace.Constants.DATE_COLOR,
-        isAmbient = false
-    )
+    private val veneer =
+        Typefaces(context.assets).let {
+            Veneer(
+                angle = WatchFace.Constants.ANGLE,
+                typefaces = it,
+                hoursColor = WatchFace.Constants.HOURS_COLOR,
+                minutesColor = WatchFace.Constants.MINUTES_COLOR,
+                secondsColor = WatchFace.Constants.SECONDS_COLOR,
+                dateColor = WatchFace.Constants.DATE_COLOR,
+                isAmbient = false
+            )
+        }
     private lateinit var painter: WatchFacePainter
     private lateinit var complications: ComplicationsPreview
     private lateinit var watchFaceClipPath: Path

@@ -12,8 +12,6 @@ class Geometry(
     mSecondsPaint: TextPaint,
     mDatePaint: TextPaint
 ) {
-    private val TAG = this::class.qualifiedName
-
     // TODO(#5): Handle AM/PM
     private val hoursField = Calendar.HOUR_OF_DAY
     private val minutesField = Calendar.MINUTE
