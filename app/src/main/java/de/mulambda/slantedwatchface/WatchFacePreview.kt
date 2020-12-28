@@ -22,7 +22,6 @@ class WatchFacePreview(
     context: Context,
     attrs: AttributeSet?,
 ) : View(context, attrs), SharedPreferences.OnSharedPreferenceChangeListener {
-    private val TAG = this::class.qualifiedName
     private lateinit var painter: WatchFacePainter
     private val complications = ComplicationsPreview()
     private lateinit var watchFaceClipPath: Path

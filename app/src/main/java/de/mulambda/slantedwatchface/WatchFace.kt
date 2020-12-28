@@ -74,7 +74,7 @@ class WatchFace : CanvasWatchFaceService() {
         private lateinit var veneer: Active<Veneer>
 
         private lateinit var painter: Active<WatchFacePainter>
-        private lateinit var complications: ComplicationsHolder
+        private val complications = ComplicationsHolder()
 
         private lateinit var typefaces: Typefaces
 
@@ -104,7 +104,6 @@ class WatchFace : CanvasWatchFaceService() {
             )
 
             initialize(loadSavedPreverences())
-            complications = ComplicationsHolder()
             setActiveComplications(*complications.ids)
         }
 
@@ -123,6 +122,7 @@ class WatchFace : CanvasWatchFaceService() {
                 active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
                 ambient = Veneer.fromSharedPreferences(sharedPreferences, typefaces, true)
             )
+            complications.setColors()
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -136,13 +136,16 @@ class WatchFace : CanvasWatchFaceService() {
             centerX = width / 2f
             centerY = height / 2f
 
-            val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
+            initializePainter()
+        }
+
+        private fun initializePainter() {
+            val bounds = RectF(0f, 0f, centerX * 2, centerY * 2)
             painter = Active(
                 active = WatchFacePainter(veneer.active, bounds, complications),
                 ambient = WatchFacePainter(veneer.ambient, bounds, complications)
             )
             complications.updatePositions()
-            complications.setColors()
         }
 
         override fun onDestroy() {
@@ -229,6 +232,7 @@ class WatchFace : CanvasWatchFaceService() {
 
             if (visible) {
                 initialize(loadSavedPreverences())
+                initializePainter()
                 registerReceiver()
                 /* Update time zone in case it changed while we weren"t visible. */
                 calendar.timeZone = TimeZone.getDefault()
