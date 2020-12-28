@@ -134,7 +134,7 @@ class WatchFacePainter(val veneer: Veneer, val bounds: RectF, val complications:
         )
         dateRect.union(secondsRect)
         dateRect.offset(bounds.left, bounds.top)
-        return dateRect.contains(x1.toFloat(), y1.toFloat())
+        return dateRect.contains(x1, y1)
     }
 
     fun rotate(x: Int, y: Int): Pair<Float, Float> {
