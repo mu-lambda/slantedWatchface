@@ -27,7 +27,6 @@ class ConfigActivity : Activity() {
     private lateinit var mConfigMenu: WearableRecyclerView
     private lateinit var mAdapter: Adapter
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.w(TAG, "onCreate")
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.config_activity)
@@ -61,10 +60,6 @@ class ConfigActivity : Activity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.i(
-            TAG,
-            "onActivityResult: requestCode=${requestCode} resultCode=${resultCode} success = ${resultCode == RESULT_OK}"
-        )
         if (resultCode != RESULT_OK) return
 
         when (requestCode) {
@@ -88,7 +83,6 @@ class ConfigActivity : Activity() {
         private lateinit var preview: WatchFacePreview
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-            Log.i(TAG, "onCreateViewHolder:${viewType}")
             when (viewType) {
                 MenuItems.PREVIEW ->
                     return PreviewViewHolder(parent).also {
@@ -113,7 +107,6 @@ class ConfigActivity : Activity() {
 
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            Log.i(TAG, "onBindViewHolder:${position}")
             when (holder.itemViewType) {
                 MenuItems.TOP_COMPLICATION, MenuItems.BOTTOM_COMPLICATION -> {
                     retrieveComplicationInfo(holder as ComplicationViewHolder)
@@ -167,7 +160,6 @@ class ConfigActivity : Activity() {
 
 
         override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-            Log.i(TAG, "Detached from view")
             mProviderInfoRetriever.release()
             super.onDetachedFromRecyclerView(recyclerView)
         }
@@ -230,8 +222,6 @@ class ConfigActivity : Activity() {
 
 
         override fun onClick(v: View?) {
-            Log.i(TAG, "OnClick")
-
             selectComplication(complicationId)
         }
     }

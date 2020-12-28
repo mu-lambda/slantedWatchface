@@ -11,7 +11,6 @@ import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
-import android.util.Log
 import android.util.SparseArray
 import android.view.SurfaceHolder
 import java.lang.ref.WeakReference
@@ -320,15 +319,9 @@ class WatchFace : CanvasWatchFaceService() {
             }
 
             fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData?) {
-                Log.i(TAG, "onComplicationDataUpdate: ${watchFaceComplicationId} data = ${data}")
-
                 val shouldUpdatePositions =
                     isComplicationEmpty(watchFaceComplicationId) != isEmptyComplicationData(data)
                 mComplicationData.put(watchFaceComplicationId, data)
-                Log.i(
-                    TAG,
-                    "onComplicationDataUpdate: shouldUpdatePositions=${shouldUpdatePositions}"
-                )
                 if (shouldUpdatePositions) {
                     updatePositions()
                 }

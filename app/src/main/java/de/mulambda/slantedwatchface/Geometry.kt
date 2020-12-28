@@ -12,11 +12,20 @@ class Geometry(
     mSecondsPaint: TextPaint,
     mDatePaint: TextPaint
 ) {
-    private val mHoursDimensions = getDimensions(mHoursPaint, range(Calendar.HOUR), ::padZero)
+    private val TAG = this::class.qualifiedName
+
+    // TODO(#5): Handle AM/PM
+    private val hoursField = Calendar.HOUR_OF_DAY
+    private val minutesField = Calendar.MINUTE
+    private val secondsField = Calendar.SECOND
+
+
+    private val mHoursDimensions =
+        getDimensions(mHoursPaint, range(hoursField)) { i -> "$i" }
     private val mMinutesDimensions =
-        getDimensions(mMinutesPaint, range(Calendar.MINUTE), ::padZero)
+        getDimensions(mMinutesPaint, range(minutesField), ::padZero)
     private val mSecondsDimensions =
-        getDimensions(mSecondsPaint, range(Calendar.SECOND), ::padZero)
+        getDimensions(mSecondsPaint, range(secondsField), ::padZero)
     private val mDateDimensions = getDimensions(
         mDatePaint,
         sequence {
@@ -66,13 +75,13 @@ class Geometry(
 
 
     fun getHours(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair(padZero(c.get(Calendar.HOUR)), mHoursDimensions[c.get(Calendar.HOUR)]!!)
+        Pair("${c.get(hoursField)}", mHoursDimensions[c.get(hoursField)]!!)
 
     fun getMinutes(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair(padZero(c.get(Calendar.MINUTE)), mMinutesDimensions[c.get(Calendar.MINUTE)]!!)
+        Pair(padZero(c.get(minutesField)), mMinutesDimensions[c.get(minutesField)]!!)
 
     fun getSeconds(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair(padZero(c.get(Calendar.SECOND)), mSecondsDimensions[c.get(Calendar.SECOND)]!!)
+        Pair(padZero(c.get(secondsField)), mSecondsDimensions[c.get(secondsField)]!!)
 
     fun getDate(c: Calendar): Pair<String, Pair<Int, Int>> =
         Pair(

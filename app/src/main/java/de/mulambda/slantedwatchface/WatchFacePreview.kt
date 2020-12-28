@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.support.wearable.complications.ComplicationProviderInfo
 import android.util.AttributeSet
-import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
@@ -36,7 +35,6 @@ class WatchFacePreview(
 
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        Log.i(TAG, "onTouchEvent: event?.action = ${event?.action}")
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 val rotatedPoint = painter.rotate(event.x.toInt(), event.y.toInt())
@@ -50,7 +48,6 @@ class WatchFacePreview(
                 val id = complications.complicationIdByPoint(
                     rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
                 )
-                Log.i(TAG, "onTouchEvent: id = ${id}")
                 if (id != null) {
                     complications.onComplicationIdClick(id)
                     onComplicationIdClick(id)
