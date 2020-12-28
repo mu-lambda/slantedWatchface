@@ -3,5 +3,4 @@
     <string name="service_name">Slanted!</string>
     <string name="config_name">Slanted! Configuration</string>
     <string name="empty_provider">&lt;Empty&gt;</string>
-    <string name="complications">Complications</string>
 </resources>

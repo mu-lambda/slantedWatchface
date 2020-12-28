@@ -18,8 +18,6 @@ import java.lang.ref.WeakReference
 import java.util.*
 
 class WatchFace : CanvasWatchFaceService() {
-    private val TAG = WatchFace::class.qualifiedName!!
-
     override fun onCreateEngine(): Engine {
         return Engine()
     }
@@ -296,7 +294,6 @@ class WatchFace : CanvasWatchFaceService() {
         }
 
         private inner class ComplicationsHolder : WatchFacePainter.Complications {
-            private val TAG = ComplicationsHolder::class.qualifiedName
             private val mComplicationData = SparseArray<ComplicationData>(Complications.ALL.size)
             private val mComplicationBounds = SparseArray<Rect>(Complications.ALL.size)
             private val mComplicationDrawables =

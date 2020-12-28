@@ -7,9 +7,11 @@ import android.text.TextPaint
 import android.util.SparseArray
 import java.util.*
 
-class WatchFacePainter(val veneer: Veneer, val bounds: RectF, val complications: Complications) {
-    private val TAG = this::class.qualifiedName
-
+class WatchFacePainter(
+    private val veneer: Veneer,
+    private val bounds: RectF,
+    private val complications: Complications
+) {
     interface Complications {
         val ids: IntArray
         fun isComplicationEmpty(id: Int): Boolean
