@@ -69,7 +69,7 @@ class WatchFacePainter(
         val complicationAreaLeft = minutesX
         val complicationAreaTop = minutesY + largeInset
         val complicationAreaRight = mCenterX * 2
-        val complicationAreaBottom = hoursY
+        val complicationAreaBottom = (hoursY + mCenterY * 2) / 2
 
         var nonEmptyComplications = 0
         complications.ids.forEach {
