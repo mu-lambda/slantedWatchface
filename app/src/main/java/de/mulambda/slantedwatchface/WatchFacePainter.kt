@@ -44,13 +44,18 @@ class WatchFacePainter(
         color = veneer.secondsColor
         isAntiAlias = !veneer.isAmbient
     }
-    private val dateSize = secondsSize / 3
+    private val dateSize = secondsSize / 4
     private val datePaint = TextPaint().apply {
         typeface = veneer.typefaces.dateTypeface
         textSize = dateSize
-        textScaleX = 0.5f
         color = veneer.dateColor
         isAntiAlias = !veneer.isAmbient
+        textScaleX = this.let { // poor man's scaling estimate
+            val secondsSize = secondsPaint.measureText("00")
+            val dateSize = it.measureText("WED 00")
+            val scale = secondsSize / dateSize
+            if (scale < 1f) scale else 1f
+        }
     }
 
     private val geometry = Geometry(
