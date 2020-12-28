@@ -1,5 +1,6 @@
 package de.mulambda.slantedwatchface
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
@@ -31,9 +32,11 @@ class WatchFacePreview(
     )
     private lateinit var painter: WatchFacePainter
     private lateinit var complications: ComplicationsPreview
+    private lateinit var watchFaceClipPath: Path
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
 
 
+    @SuppressLint("ClickableViewAccessibility") // We provide alternative way of changing complications
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -66,17 +69,21 @@ class WatchFacePreview(
     }
 
     private fun initializePainter() {
-        val dim = watchfaceSize()
+        val dim = watchfaceSize().toFloat()
         complications = ComplicationsPreview()
         painter = WatchFacePainter(
             veneer,
             RectF(
-                paddingLeft.toFloat(), paddingTop.toFloat(),
-                (paddingLeft + dim).toFloat(),
-                (paddingTop + dim).toFloat()
+                paddingLeft.toFloat(),
+                paddingTop.toFloat(),
+                paddingLeft + dim,
+                paddingTop + dim
             ),
             complications
         )
+        watchFaceClipPath = Path().apply {
+            addCircle(paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2 + 2, Path.Direction.CW)
+        }
         complications.updateComplicationLocations()
     }
 
@@ -92,11 +99,8 @@ class WatchFacePreview(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val dim = watchfaceSize().toFloat()
         canvas.save()
-        canvas.clipPath(Path().apply {
-            addCircle(paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2 + 2, Path.Direction.CW)
-        })
+        canvas.clipPath(watchFaceClipPath)
         canvas.drawColor(Color.BLACK)
         painter.draw(Calendar.getInstance(), canvas)
         canvas.restore()
