@@ -5,5 +5,5 @@ import android.graphics.Typeface
 
 class Typefaces(assets: AssetManager) {
     val timeTypeface: Typeface = Typeface.createFromAsset(assets, "limelight.ttf")
-    val dateTypeface: Typeface = Typeface.createFromAsset(assets, "abel_regular.ttf")
+    val dateTypeface: Typeface = Typeface.DEFAULT
 }
