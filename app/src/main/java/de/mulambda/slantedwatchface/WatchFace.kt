@@ -68,27 +68,27 @@ class WatchFace : CanvasWatchFaceService() {
     inner class Engine : CanvasWatchFaceService.Engine() {
         private var mRegisteredTimeZoneReceiver = false
         private var mMuteMode: Boolean = false
-        private lateinit var mCalendar: Calendar
-        private var mCenterX: Float = 0F
-        private var mCenterY: Float = 0F
+        private lateinit var calendar: Calendar
+        private var centerX: Float = 0F
+        private var centerY: Float = 0F
 
-        private lateinit var mVeneer: NormalAmbient<Veneer>
+        private lateinit var veneer: NormalAmbient<Veneer>
 
-        private lateinit var mPainter: NormalAmbient<WatchFacePainter>
-        private lateinit var mComplications: ComplicationsHolder
+        private lateinit var painter: NormalAmbient<WatchFacePainter>
+        private lateinit var complications: ComplicationsHolder
 
         private lateinit var mTypefaces: Typefaces
 
-        private var mAmbient: Boolean = false
-        private var mLowBitAmbient: Boolean = false
-        private var mBurnInProtection: Boolean = false
+        private var isAmbient: Boolean = false
+        private var lowBitProtection: Boolean = false
+        private var burnInProtection: Boolean = false
 
         /* Handler to update the time once a second in interactive mode. */
-        private val mUpdateTimeHandler = EngineHandler(this)
+        private val updateTimeHandler = EngineHandler(this)
 
         private val mTimeZoneReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                mCalendar.timeZone = TimeZone.getDefault()
+                calendar.timeZone = TimeZone.getDefault()
                 invalidate()
             }
         }
@@ -103,10 +103,10 @@ class WatchFace : CanvasWatchFaceService() {
                     .build()
             )
 
-            mCalendar = Calendar.getInstance()
+            calendar = Calendar.getInstance()
             mTypefaces = Typefaces(this@WatchFace.assets)
 
-            mVeneer = NormalAmbient(
+            veneer = NormalAmbient(
                 normal = Veneer(
                     angle = Constants.ANGLE,
                     typefaces = mTypefaces,
@@ -127,8 +127,8 @@ class WatchFace : CanvasWatchFaceService() {
                 )
             )
 
-            mComplications = ComplicationsHolder()
-            setActiveComplications(*mComplications.ids)
+            complications = ComplicationsHolder()
+            setActiveComplications(*complications.ids)
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -139,20 +139,20 @@ class WatchFace : CanvasWatchFaceService() {
              * insets, so that, on round watches with a "chin", the watch face is centered on the
              * entire screen, not just the usable portion.
              */
-            mCenterX = width / 2f
-            mCenterY = height / 2f
+            centerX = width / 2f
+            centerY = height / 2f
 
             val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
-            mPainter = NormalAmbient(
-                normal = WatchFacePainter(mVeneer.normal, bounds, mComplications),
-                ambient = WatchFacePainter(mVeneer.ambient, bounds, mComplications)
+            painter = NormalAmbient(
+                normal = WatchFacePainter(veneer.normal, bounds, complications),
+                ambient = WatchFacePainter(veneer.ambient, bounds, complications)
             )
-            mComplications.updatePositions()
-            mComplications.setColors()
+            complications.updatePositions()
+            complications.setColors()
         }
 
         override fun onDestroy() {
-            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME)
+            updateTimeHandler.removeMessages(MSG_UPDATE_TIME)
             super.onDestroy()
         }
 
@@ -165,15 +165,15 @@ class WatchFace : CanvasWatchFaceService() {
             watchFaceComplicationId: Int, data: ComplicationData?
         ) {
             super.onComplicationDataUpdate(watchFaceComplicationId, data)
-            mComplications.onComplicationDataUpdate(watchFaceComplicationId, data)
+            complications.onComplicationDataUpdate(watchFaceComplicationId, data)
 
             invalidate()
         }
 
         override fun onAmbientModeChanged(inAmbientMode: Boolean) {
             super.onAmbientModeChanged(inAmbientMode)
-            mAmbient = inAmbientMode
-            mComplications.setInAmbientMode(inAmbientMode)
+            isAmbient = inAmbientMode
+            complications.setInAmbientMode(inAmbientMode)
 
             // Check and trigger whether or not timer should be running (only
             // in active mode).
@@ -183,10 +183,10 @@ class WatchFace : CanvasWatchFaceService() {
         override fun onPropertiesChanged(properties: Bundle) {
             super.onPropertiesChanged(properties)
 
-            mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false)
-            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false)
+            lowBitProtection = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false)
+            burnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false)
 
-            mComplications.setProperties(mLowBitAmbient, mBurnInProtection)
+            complications.setProperties(lowBitProtection, burnInProtection)
         }
 
 
@@ -214,10 +214,10 @@ class WatchFace : CanvasWatchFaceService() {
                     // The user has started a different gesture or otherwise cancelled the tap.
                 }
                 WatchFaceService.TAP_TYPE_TAP -> {
-                    if (mPainter.get(isInAmbientMode).isDateAreaTap(mCalendar, x, y)) {
+                    if (painter.get(isInAmbientMode).isDateAreaTap(calendar, x, y)) {
                         launchAgenda()
                     } else {
-                        mComplications.performTap(x, y)
+                        complications.performTap(x, y)
                     }
                 }
             }
@@ -225,9 +225,9 @@ class WatchFace : CanvasWatchFaceService() {
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
-            mCalendar.timeInMillis = System.currentTimeMillis()
+            calendar.timeInMillis = System.currentTimeMillis()
             canvas.drawColor(Color.BLACK)
-            mPainter.get(isInAmbientMode).draw(mCalendar, canvas)
+            painter.get(isInAmbientMode).draw(calendar, canvas)
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
@@ -236,7 +236,7 @@ class WatchFace : CanvasWatchFaceService() {
             if (visible) {
                 registerReceiver()
                 /* Update time zone in case it changed while we weren"t visible. */
-                mCalendar.timeZone = TimeZone.getDefault()
+                calendar.timeZone = TimeZone.getDefault()
                 invalidate()
             } else {
                 unregisterReceiver()
@@ -267,9 +267,9 @@ class WatchFace : CanvasWatchFaceService() {
          * Starts/stops the [.mUpdateTimeHandler] timer based on the state of the watch face.
          */
         private fun updateTimer() {
-            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME)
+            updateTimeHandler.removeMessages(MSG_UPDATE_TIME)
             if (shouldTimerBeRunning()) {
-                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME)
+                updateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME)
             }
         }
 
@@ -278,7 +278,7 @@ class WatchFace : CanvasWatchFaceService() {
          * should only run in active mode.
          */
         private fun shouldTimerBeRunning(): Boolean {
-            return isVisible && !mAmbient
+            return isVisible && !isAmbient
         }
 
         /**
@@ -289,7 +289,7 @@ class WatchFace : CanvasWatchFaceService() {
             if (shouldTimerBeRunning()) {
                 val timeMs = System.currentTimeMillis()
                 val delayMs = INTERACTIVE_UPDATE_RATE_MS - timeMs % INTERACTIVE_UPDATE_RATE_MS
-                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs)
+                updateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs)
             }
         }
 
@@ -370,7 +370,7 @@ class WatchFace : CanvasWatchFaceService() {
             // To save cycles, assume complication positions are the same
             // in normal and ambient mode.
             // Not a value because painters change on resize etc.
-            private fun painterForBounds() = mPainter.normal
+            private fun painterForBounds() = painter.normal
 
             private fun performComplicationTap(
                 complicationId: Int,
