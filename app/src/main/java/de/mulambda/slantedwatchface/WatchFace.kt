@@ -71,9 +71,9 @@ class WatchFace : CanvasWatchFaceService() {
         private var centerX: Float = 0F
         private var centerY: Float = 0F
 
-        private lateinit var veneer: Active<Veneer>
+        private lateinit var veneer: ActiveAmbient<Veneer>
 
-        private lateinit var painter: Active<WatchFacePainter>
+        private lateinit var painter: ActiveAmbient<WatchFacePainter>
         private val complications = ComplicationsHolder()
 
         private lateinit var typefaces: Typefaces
@@ -118,7 +118,7 @@ class WatchFace : CanvasWatchFaceService() {
             calendar = Calendar.getInstance()
             typefaces = Typefaces(this@WatchFace.assets)
 
-            veneer = Active(
+            veneer = ActiveAmbient(
                 active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
                 ambient = Veneer.fromSharedPreferences(sharedPreferences, typefaces, true)
             )
@@ -141,7 +141,7 @@ class WatchFace : CanvasWatchFaceService() {
 
         private fun initializePainter() {
             val bounds = RectF(0f, 0f, centerX * 2, centerY * 2)
-            painter = Active(
+            painter = ActiveAmbient(
                 active = WatchFacePainter(veneer.active, bounds, complications),
                 ambient = WatchFacePainter(veneer.ambient, bounds, complications)
             )
