@@ -24,7 +24,7 @@ class WatchFacePreview(
 ) : View(context, attrs), SharedPreferences.OnSharedPreferenceChangeListener {
     private val TAG = this::class.qualifiedName
     private lateinit var painter: WatchFacePainter
-    private lateinit var complications: ComplicationsPreview
+    private val complications = ComplicationsPreview()
     private lateinit var watchFaceClipPath: Path
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
     val sharedPreferences = context.getSharedPreferences(
@@ -74,7 +74,6 @@ class WatchFacePreview(
 
     private fun initializePainter() {
         val dim = watchfaceSize().toFloat()
-        complications = ComplicationsPreview()
         painter = WatchFacePainter(
             Veneer.fromSharedPreferences(sharedPreferences, Typefaces(context.assets), false),
             RectF(

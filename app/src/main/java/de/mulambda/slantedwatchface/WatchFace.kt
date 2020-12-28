@@ -104,6 +104,8 @@ class WatchFace : CanvasWatchFaceService() {
             )
 
             initialize(loadSavedPreverences())
+            complications = ComplicationsHolder()
+            setActiveComplications(*complications.ids)
         }
 
         private fun loadSavedPreverences(): SharedPreferences {
@@ -121,9 +123,6 @@ class WatchFace : CanvasWatchFaceService() {
                 active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
                 ambient = Veneer.fromSharedPreferences(sharedPreferences, typefaces, true)
             )
-
-            complications = ComplicationsHolder()
-            setActiveComplications(*complications.ids)
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
