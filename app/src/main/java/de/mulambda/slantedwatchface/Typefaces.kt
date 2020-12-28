@@ -5,5 +5,5 @@ import android.graphics.Typeface
 
 class Typefaces(assets: AssetManager) {
     val timeTypeface = Typeface.createFromAsset(assets, "limelight.ttf")
-    val dateTypeface = Typeface.DEFAULT_BOLD
+    val dateTypeface = Typeface.SANS_SERIF
 }
