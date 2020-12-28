@@ -2,7 +2,9 @@ package de.mulambda.slantedwatchface
 
 import android.app.Activity
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.wearable.complications.*
 import android.util.Log
@@ -11,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Switch
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.wear.widget.WearableRecyclerView
@@ -47,8 +50,9 @@ class ConfigActivity : Activity() {
 
     object MenuItems {
         const val PREVIEW = 0
-        const val TOP_COMPLICATION = 1
-        const val BOTTOM_COMPLICATION = 2
+        const val HANDEDNESS = 1
+        const val TOP_COMPLICATION = 2
+        const val BOTTOM_COMPLICATION = 3
     }
 
     fun requestCodeOf(complicationId: Int) = when (complicationId) {
@@ -79,6 +83,10 @@ class ConfigActivity : Activity() {
         private val mComplicationViews =
             SparseArray<ComplicationViewHolder>(WatchFace.Complications.ALL.size)
         private lateinit var preview: WatchFacePreview
+        val sharedPreferences = applicationContext.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             when (viewType) {
@@ -86,6 +94,9 @@ class ConfigActivity : Activity() {
                     return PreviewViewHolder(parent).also {
                         preview = it.view.apply { onComplicationIdClick = ::selectComplication }
                     }
+                MenuItems.HANDEDNESS ->
+                    return HandednessViewHolder(parent, sharedPreferences)
+
                 MenuItems.TOP_COMPLICATION ->
                     return complicationViewHolder(
                         parent, WatchFace.Complications.TOP,
@@ -108,6 +119,11 @@ class ConfigActivity : Activity() {
             when (holder.itemViewType) {
                 MenuItems.TOP_COMPLICATION, MenuItems.BOTTOM_COMPLICATION -> {
                     retrieveComplicationInfo(holder as ComplicationViewHolder)
+                    return
+                }
+                MenuItems.HANDEDNESS -> {
+                    val handednessViewHolder = holder as HandednessViewHolder
+                    handednessViewHolder.updateCurrentState()
                     return
                 }
                 MenuItems.PREVIEW -> {
@@ -163,17 +179,10 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 3
+            return 4
         }
 
-        override fun getItemViewType(position: Int): Int {
-            when (position) {
-                0 -> return MenuItems.PREVIEW
-                1 -> return MenuItems.TOP_COMPLICATION
-                2 -> return MenuItems.BOTTOM_COMPLICATION
-            }
-            throw UnsupportedOperationException()
-        }
+        override fun getItemViewType(position: Int): Int = position
 
         private fun complicationViewHolder(
             parent: ViewGroup, complicationId: Int, iconId: Int
@@ -204,24 +213,61 @@ class ConfigActivity : Activity() {
             .inflate(R.layout.complication, parent, false)
     ),
         View.OnClickListener {
-        private val mDataButton: Button = itemView.findViewById(R.id.data_button)
+        private val dataButton: Button = itemView.findViewById(R.id.data_button)
 
         init {
             itemView.setOnClickListener(this)
-            mDataButton.setCompoundDrawablesWithIntrinsicBounds(iconId, 0, 0, 0)
+            dataButton.setCompoundDrawablesWithIntrinsicBounds(iconId, 0, 0, 0)
         }
 
         fun setComplication(p1: ComplicationProviderInfo?) {
             if (p1 != null) {
-                mDataButton.text = p1.providerName
+                dataButton.text = p1.providerName
             } else {
-                mDataButton.setText(R.string.empty_provider)
+                dataButton.setText(R.string.empty_provider)
             }
         }
 
 
         override fun onClick(v: View?) {
             selectComplication(complicationId)
+        }
+    }
+
+    inner class HandednessViewHolder(
+        parent: ViewGroup,
+        private val sharedPreferences: SharedPreferences
+    ) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.handedness, parent, false)
+    ), View.OnClickListener {
+        private val switch: Switch = itemView.findViewById(R.id.handedness)
+
+        init {
+            itemView.setOnClickListener(this)
+        }
+
+        fun updateCurrentState() {
+            switch.setCompoundDrawablesWithIntrinsicBounds(
+                when (isOnRightHand(sharedPreferences)) {
+                    true -> R.drawable.ic_watch_right_hand
+                    false -> R.drawable.ic_watch_left_hand
+                },
+                0, 0, 0
+            )
+            switch.isChecked = isOnRightHand(sharedPreferences)
+        }
+
+        private fun isOnRightHand(sharedPreferences: SharedPreferences): Boolean =
+            Veneer.getAngle(sharedPreferences) < 0
+
+        override fun onClick(v: View?) {
+            Log.i(TAG(), "onClick")
+            val angle = Veneer.getAngle(sharedPreferences)
+            with(sharedPreferences.edit()) {
+                Veneer.setAngle(this, -angle)
+                apply()
+            }
+            updateCurrentState()
         }
     }
 

@@ -65,19 +65,18 @@ class WatchFace : CanvasWatchFaceService() {
     }
 
 
-    inner class Engine : CanvasWatchFaceService.Engine() {
+    inner class Engine : CanvasWatchFaceService.Engine(true) {
         private var mRegisteredTimeZoneReceiver = false
-        private var mMuteMode: Boolean = false
         private lateinit var calendar: Calendar
         private var centerX: Float = 0F
         private var centerY: Float = 0F
 
-        private lateinit var veneer: NormalAmbient<Veneer>
+        private lateinit var veneer: Active<Veneer>
 
-        private lateinit var painter: NormalAmbient<WatchFacePainter>
+        private lateinit var painter: Active<WatchFacePainter>
         private lateinit var complications: ComplicationsHolder
 
-        private lateinit var mTypefaces: Typefaces
+        private lateinit var typefaces: Typefaces
 
         private var isAmbient: Boolean = false
         private var lowBitProtection: Boolean = false
@@ -100,31 +99,27 @@ class WatchFace : CanvasWatchFaceService() {
                 WatchFaceStyle.Builder(this@WatchFace)
                     .setAcceptsTapEvents(true)
                     .setShowUnreadCountIndicator(true)
+                    .setHideNotificationIndicator(false)
                     .build()
             )
 
-            calendar = Calendar.getInstance()
-            mTypefaces = Typefaces(this@WatchFace.assets)
+            initialize(loadSavedPreverences())
+        }
 
-            veneer = NormalAmbient(
-                normal = Veneer(
-                    angle = Constants.ANGLE,
-                    typefaces = mTypefaces,
-                    hoursColor = Constants.HOURS_COLOR,
-                    minutesColor = Constants.MINUTES_COLOR,
-                    secondsColor = Constants.SECONDS_COLOR,
-                    dateColor = Constants.DATE_COLOR,
-                    isAmbient = false,
-                ),
-                ambient = Veneer(
-                    angle = Constants.ANGLE,
-                    typefaces = mTypefaces,
-                    hoursColor = Color.WHITE,
-                    minutesColor = Color.WHITE,
-                    secondsColor = Color.WHITE,
-                    dateColor = Color.WHITE,
-                    isAmbient = true,
-                )
+        private fun loadSavedPreverences(): SharedPreferences {
+            return applicationContext.getSharedPreferences(
+                getString(R.string.preference_file_key),
+                MODE_PRIVATE
+            )!!
+        }
+
+        private fun initialize(sharedPreferences: SharedPreferences) {
+            calendar = Calendar.getInstance()
+            typefaces = Typefaces(this@WatchFace.assets)
+
+            veneer = Active(
+                active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
+                ambient = Veneer.fromSharedPreferences(sharedPreferences, typefaces, true)
             )
 
             complications = ComplicationsHolder()
@@ -143,8 +138,8 @@ class WatchFace : CanvasWatchFaceService() {
             centerY = height / 2f
 
             val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
-            painter = NormalAmbient(
-                normal = WatchFacePainter(veneer.normal, bounds, complications),
+            painter = Active(
+                active = WatchFacePainter(veneer.active, bounds, complications),
                 ambient = WatchFacePainter(veneer.ambient, bounds, complications)
             )
             complications.updatePositions()
@@ -234,6 +229,7 @@ class WatchFace : CanvasWatchFaceService() {
             super.onVisibilityChanged(visible)
 
             if (visible) {
+                initialize(loadSavedPreverences())
                 registerReceiver()
                 /* Update time zone in case it changed while we weren"t visible. */
                 calendar.timeZone = TimeZone.getDefault()
@@ -370,7 +366,7 @@ class WatchFace : CanvasWatchFaceService() {
             // To save cycles, assume complication positions are the same
             // in normal and ambient mode.
             // Not a value because painters change on resize etc.
-            private fun painterForBounds() = painter.normal
+            private fun painterForBounds() = painter.active
 
             private fun performComplicationTap(
                 complicationId: Int,

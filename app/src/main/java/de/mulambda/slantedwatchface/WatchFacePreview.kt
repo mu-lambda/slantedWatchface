@@ -2,12 +2,14 @@ package de.mulambda.slantedwatchface
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.support.wearable.complications.ComplicationProviderInfo
 import android.util.AttributeSet
+import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
@@ -19,25 +21,24 @@ import java.util.*
 class WatchFacePreview(
     context: Context,
     attrs: AttributeSet?,
-) : View(context, attrs) {
+) : View(context, attrs), SharedPreferences.OnSharedPreferenceChangeListener {
     private val TAG = this::class.qualifiedName
-    private val veneer =
-        Typefaces(context.assets).let {
-            Veneer(
-                angle = WatchFace.Constants.ANGLE,
-                typefaces = it,
-                hoursColor = WatchFace.Constants.HOURS_COLOR,
-                minutesColor = WatchFace.Constants.MINUTES_COLOR,
-                secondsColor = WatchFace.Constants.SECONDS_COLOR,
-                dateColor = WatchFace.Constants.DATE_COLOR,
-                isAmbient = false
-            )
-        }
     private lateinit var painter: WatchFacePainter
     private lateinit var complications: ComplicationsPreview
     private lateinit var watchFaceClipPath: Path
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
+    val sharedPreferences = context.getSharedPreferences(
+        context.getString(R.string.preference_file_key),
+        Context.MODE_PRIVATE
+    ).apply {
+        registerOnSharedPreferenceChangeListener(this@WatchFacePreview)
+    }
 
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        Log.i(TAG(), "change listener")
+        initializePainter()
+        invalidate()
+    }
 
     @SuppressLint("ClickableViewAccessibility") // We provide alternative way of changing complications
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -75,7 +76,7 @@ class WatchFacePreview(
         val dim = watchfaceSize().toFloat()
         complications = ComplicationsPreview()
         painter = WatchFacePainter(
-            veneer,
+            Veneer.fromSharedPreferences(sharedPreferences, Typefaces(context.assets), false),
             RectF(
                 paddingLeft.toFloat(),
                 paddingTop.toFloat(),

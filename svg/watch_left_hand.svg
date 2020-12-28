@@ -1,0 +1,22 @@
+<svg height="82" preserveAspectRatio="xMidYMid meet" width="82" xmlns="http://www.w3.org/2000/svg">
+    <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+    <g>
+        <title>Layer 1</title>
+        <ellipse cx="41.05162" cy="40.84513" fill="#000000" id="svg_5" rx="21.63023" ry="20.72682"
+            stroke="#ffffff" stroke-width="5" />
+        <rect fill="#ffffff" height="10.53119" id="svg_6" stroke="#ffffff" stroke-width="5"
+            transform="rotate(-40.38831329345703 22.249713897705085,21.68185424804688) "
+            width="17.24224" x="13.62859" y="16.41626" />
+        <rect fill="#ffffff" height="10.53119" id="svg_7" stroke="#ffffff" stroke-width="5"
+            transform="rotate(-40.38831329345703 58.69588088989257,61.58679580688476) "
+            width="17.24224" x="50.07476" y="56.3212" />
+        <line fill="none" fill-opacity="null" id="svg_10" stroke="#ffffff" stroke-opacity="null"
+            stroke-width="4" x1="29.01239" x2="29.21888" y1="32.17239" y2="49.82761" />
+        <ellipse cx="37.68513" cy="41.10325" fill="#000000" id="svg_11" rx="3.40715" ry="6.73686"
+            stroke="#ffffff" stroke-width="4" />
+        <ellipse cx="53.71422" cy="33.94243" fill="#000000" fill-opacity="null" id="svg_13"
+            rx="1.00666" ry="0.80016" stroke="#ffffff" stroke-opacity="null" stroke-width="5" />
+        <ellipse cx="46.43531" cy="34.0973" fill="#000000" fill-opacity="null" id="svg_14"
+            rx="1.00666" ry="0.80016" stroke="#ffffff" stroke-opacity="null" stroke-width="5" />
+    </g>
+</svg>
