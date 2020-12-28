@@ -4,6 +4,7 @@ import android.content.*
 import android.graphics.*
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationHelperActivity
@@ -23,7 +24,7 @@ class WatchFace : CanvasWatchFaceService() {
         return Engine()
     }
 
-    private class EngineHandler(reference: Engine) : Handler() {
+    private class EngineHandler(reference: Engine) : Handler(Looper.getMainLooper()) {
         private val mWeakReference: WeakReference<Engine> = WeakReference(reference)
 
         override fun handleMessage(msg: Message) {
