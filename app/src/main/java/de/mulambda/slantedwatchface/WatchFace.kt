@@ -17,8 +17,8 @@ import android.view.SurfaceHolder
 import java.lang.ref.WeakReference
 import java.util.*
 
-class SlantedWatchface : CanvasWatchFaceService() {
-    private val TAG = SlantedWatchface::class.qualifiedName!!
+class WatchFace : CanvasWatchFaceService() {
+    private val TAG = WatchFace::class.qualifiedName!!
 
     override fun onCreateEngine(): Engine {
         return Engine()
@@ -76,7 +76,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
         private lateinit var mVeneer: NormalAmbient<Veneer>
 
-        private lateinit var mPainter: NormalAmbient<WatchfacePainter>
+        private lateinit var mPainter: NormalAmbient<WatchFacePainter>
         private lateinit var mComplications: ComplicationsHolder
 
         private lateinit var mTypeface: Typeface
@@ -99,7 +99,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
             super.onCreate(holder)
 
             setWatchFaceStyle(
-                WatchFaceStyle.Builder(this@SlantedWatchface)
+                WatchFaceStyle.Builder(this@WatchFace)
                     .setAcceptsTapEvents(true)
                     .setShowUnreadCountIndicator(true)
                     .build()
@@ -107,7 +107,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
             mCalendar = Calendar.getInstance()
             mTypeface =
-                Typeface.createFromAsset(this@SlantedWatchface.assets, "limelight.ttf")
+                Typeface.createFromAsset(this@WatchFace.assets, "limelight.ttf")
             mVeneer = NormalAmbient(
                 normal = Veneer(
                     angle = Constants.ANGLE,
@@ -146,8 +146,8 @@ class SlantedWatchface : CanvasWatchFaceService() {
 
             val bounds = RectF(0f, 0f, width.toFloat(), height.toFloat())
             mPainter = NormalAmbient(
-                normal = WatchfacePainter(mVeneer.normal, bounds, mComplications),
-                ambient = WatchfacePainter(mVeneer.ambient, bounds, mComplications)
+                normal = WatchFacePainter(mVeneer.normal, bounds, mComplications),
+                ambient = WatchFacePainter(mVeneer.ambient, bounds, mComplications)
             )
             mComplications.updatePositions()
             mComplications.setColors()
@@ -254,7 +254,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
             }
             mRegisteredTimeZoneReceiver = true
             val filter = IntentFilter(Intent.ACTION_TIMEZONE_CHANGED)
-            this@SlantedWatchface.registerReceiver(mTimeZoneReceiver, filter)
+            this@WatchFace.registerReceiver(mTimeZoneReceiver, filter)
         }
 
         private fun unregisterReceiver() {
@@ -262,7 +262,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
                 return
             }
             mRegisteredTimeZoneReceiver = false
-            this@SlantedWatchface.unregisterReceiver(mTimeZoneReceiver)
+            this@WatchFace.unregisterReceiver(mTimeZoneReceiver)
         }
 
         /**
@@ -295,7 +295,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
             }
         }
 
-        private inner class ComplicationsHolder : WatchfacePainter.Complications {
+        private inner class ComplicationsHolder : WatchFacePainter.Complications {
             private val TAG = ComplicationsHolder::class.qualifiedName
             private val mComplicationData = SparseArray<ComplicationData>(Complications.ALL.size)
             private val mComplicationBounds = SparseArray<Rect>(Complications.ALL.size)
@@ -406,7 +406,7 @@ class SlantedWatchface : CanvasWatchFaceService() {
                 applicationContext.startActivity(
                     ComplicationHelperActivity.createPermissionRequestHelperIntent(
                         applicationContext,
-                        ComponentName(applicationContext, SlantedWatchface::class.java)
+                        ComponentName(applicationContext, WatchFace::class.java)
                     ).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     })

@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/content"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black">
+    android:background="@color/dark_grey"
+    android:paddingStart="15dp"
+    android:paddingEnd="15dp">
 
     <androidx.wear.widget.WearableRecyclerView
         android:id="@+id/config_menu"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
-        app:boxedEdges="left|right" />
-
-    <TextView
-        android:id="@+id/header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:height="50sp"
-        android:background="@color/dark_grey"
-        android:fontFamily="sans-serif-condensed-light"
-        android:gravity="center"
-        android:text="@string/complications"
-        android:textColor="@color/black"
-        android:textSize="20sp" />
-</androidx.wear.widget.BoxInsetLayout>
+        android:paddingBottom="15dp" />
+</FrameLayout>

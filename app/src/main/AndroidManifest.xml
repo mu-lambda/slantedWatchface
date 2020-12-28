@@ -21,7 +21,7 @@
             android:value="true" />
 
         <service
-            android:name=".SlantedWatchface"
+            android:name=".WatchFace"
             android:label="@string/service_name"
             android:permission="android.permission.BIND_WALLPAPER">
             <meta-data

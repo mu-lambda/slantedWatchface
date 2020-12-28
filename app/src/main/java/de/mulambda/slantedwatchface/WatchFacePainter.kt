@@ -7,7 +7,9 @@ import android.text.TextPaint
 import android.util.SparseArray
 import java.util.*
 
-class WatchfacePainter(val veneer: Veneer, val bounds: RectF, val complications: Complications) {
+class WatchFacePainter(val veneer: Veneer, val bounds: RectF, val complications: Complications) {
+    private val TAG = this::class.qualifiedName
+
     interface Complications {
         val ids: IntArray
         fun isComplicationEmpty(id: Int): Boolean
@@ -24,7 +26,7 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF, val complications:
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
-    private val minutesSize = hoursSize / SlantedWatchface.Constants.RATIO
+    private val minutesSize = hoursSize / WatchFace.Constants.RATIO
     private val minutesPaint = TextPaint().apply {
         typeface = veneer.typeface
         textSize = minutesSize
@@ -49,15 +51,15 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF, val complications:
         isAntiAlias = !veneer.isAmbient
     }
 
-    private val boundsProvider = BoundsProvider(
+    private val geometry = Geometry(
         Calendar.getInstance(),
         hoursPaint, minutesPaint, secondsPaint, datePaint
     )
 
     fun updateComplicationBounds(complicationBounds: SparseArray<Rect>) {
         val largeInset = 10f
-        val maxHoursHeight = boundsProvider.calculateMaxHoursHeight()
-        val maxMinutesHeight = boundsProvider.calculateMaxMinutesHeight()
+        val maxHoursHeight = geometry.calculateMaxHoursHeight()
+        val maxMinutesHeight = geometry.calculateMaxMinutesHeight()
         val hoursY = mCenterY + maxHoursHeight / 2
         val minutesX = mCenterX + largeInset
         val minutesY = hoursY - maxHoursHeight + maxMinutesHeight
@@ -116,14 +118,14 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF, val complications:
         val (x1, y1) = rotate(x, y)
 
         val p = calculatePaintData(calendar)
-        val (_, secondsBounds) = boundsProvider.getSeconds(calendar)
+        val (_, secondsBounds) = geometry.getSeconds(calendar)
         val secondsRect = RectF(
             p.secondsX,
             p.secondsY - secondsBounds.second,
             p.secondsX + secondsBounds.first,
             p.secondsY
         )
-        val (_, dateBounds) = boundsProvider.getDate(calendar)
+        val (_, dateBounds) = geometry.getDate(calendar)
         val dateRect = RectF(
             p.dateX,
             p.dateY - dateBounds.second,
@@ -147,10 +149,10 @@ class WatchfacePainter(val veneer: Veneer, val bounds: RectF, val complications:
     }
 
     private fun calculatePaintData(calendar: Calendar): PaintData {
-        val (hours, hoursDim) = boundsProvider.getHours(calendar)
-        val (minutes, minutesDim) = boundsProvider.getMinutes(calendar)
-        val (seconds, _) = boundsProvider.getSeconds(calendar)
-        val (date, dateDim) = boundsProvider.getDate(calendar)
+        val (hours, hoursDim) = geometry.getHours(calendar)
+        val (minutes, minutesDim) = geometry.getMinutes(calendar)
+        val (seconds, _) = geometry.getSeconds(calendar)
+        val (date, dateDim) = geometry.getDate(calendar)
 
         val largeInset = 10f
         val smallInset = 2f

@@ -49,8 +49,15 @@ class ConfigActivity : Activity() {
     }
 
     object MenuItems {
-        const val TOP_COMPLICATION = 0
-        const val BOTTOM_COMPLICATION = 1
+        const val PREVIEW = 0
+        const val TOP_COMPLICATION = 1
+        const val BOTTOM_COMPLICATION = 2
+    }
+
+    fun requestCodeOf(complicationId: Int) = when (complicationId) {
+        WatchFace.Complications.TOP -> REQUEST_TOP_COMPLICATION
+        WatchFace.Complications.BOTTOM -> REQUEST_BOTTOM_COMPLICATION
+        else -> throw UnsupportedOperationException("complicationId = ${complicationId}")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -62,9 +69,9 @@ class ConfigActivity : Activity() {
 
         when (requestCode) {
             REQUEST_TOP_COMPLICATION ->
-                mAdapter.updateComplication(SlantedWatchface.Complications.TOP)
+                mAdapter.updateComplication(WatchFace.Complications.TOP)
             REQUEST_BOTTOM_COMPLICATION ->
-                mAdapter.updateComplication(SlantedWatchface.Complications.BOTTOM)
+                mAdapter.updateComplication(WatchFace.Complications.BOTTOM)
 
         }
     }
@@ -77,24 +84,26 @@ class ConfigActivity : Activity() {
                 Executors.newCachedThreadPool()
             ).apply { init() }
         private val mComplicationViews =
-            SparseArray<ComplicationViewHolder>(SlantedWatchface.Complications.ALL.size)
+            SparseArray<ComplicationViewHolder>(WatchFace.Complications.ALL.size)
+        private lateinit var preview: WatchFacePreview
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             Log.i(TAG, "onCreateViewHolder:${viewType}")
             when (viewType) {
+                MenuItems.PREVIEW ->
+                    return PreviewViewHolder(parent).also {
+                        preview = it.view.apply { onComplicationIdClick = ::selectComplication }
+                    }
                 MenuItems.TOP_COMPLICATION ->
                     return complicationViewHolder(
-                        parent,
-                        SlantedWatchface.Complications.TOP,
-                        REQUEST_TOP_COMPLICATION,
+                        parent, WatchFace.Complications.TOP,
                         R.drawable.ic_top_complication
                     )
 
                 MenuItems.BOTTOM_COMPLICATION ->
                     return complicationViewHolder(
                         parent,
-                        SlantedWatchface.Complications.BOTTOM,
-                        REQUEST_BOTTOM_COMPLICATION,
+                        WatchFace.Complications.BOTTOM,
                         R.drawable.ic_bottom_complication
                     )
 
@@ -110,18 +119,38 @@ class ConfigActivity : Activity() {
                     retrieveComplicationInfo(holder as ComplicationViewHolder)
                     return
                 }
+                MenuItems.PREVIEW -> {
+                    retrieveComplicationInfos((holder as PreviewViewHolder).view)
+                    return
+                }
             }
             throw UnsupportedOperationException()
+        }
+
+
+        private fun retrieveComplicationInfos(watchFacePreview: WatchFacePreview) {
+            mProviderInfoRetriever.retrieveProviderInfo(
+                object : ProviderInfoRetriever.OnProviderInfoReceivedCallback() {
+                    override fun onProviderInfoReceived(
+                        complicationId: Int,
+                        info: ComplicationProviderInfo?
+                    ) {
+                        watchFacePreview.setComplication(complicationId, info)
+                    }
+                },
+                ComponentName(this@ConfigActivity, WatchFace::class.java),
+                *WatchFace.Complications.ALL
+            )
         }
 
         private fun retrieveComplicationInfo(complicationViewHolder: ComplicationViewHolder) {
             mProviderInfoRetriever.retrieveProviderInfo(
                 object : ProviderInfoRetriever.OnProviderInfoReceivedCallback() {
-                    override fun onProviderInfoReceived(p0: Int, p1: ComplicationProviderInfo?) {
-                        complicationViewHolder.setComplication(p1)
+                    override fun onProviderInfoReceived(id: Int, info: ComplicationProviderInfo?) {
+                        complicationViewHolder.setComplication(info)
                     }
                 },
-                ComponentName(this@ConfigActivity, SlantedWatchface::class.java),
+                ComponentName(this@ConfigActivity, WatchFace::class.java),
                 complicationViewHolder.complicationId
             )
         }
@@ -129,14 +158,11 @@ class ConfigActivity : Activity() {
         fun updateComplication(complicationId: Int) {
             val complicationViewHolder = mComplicationViews[complicationId]
             if (complicationViewHolder != null) {
-                Log.w(
-                    TAG,
-                    "Retrieving data for complicationId = ${complicationViewHolder.complicationId}"
-                )
                 retrieveComplicationInfo(complicationViewHolder)
             } else {
                 Log.e(TAG, "No complicationViewHolder for complicationId=${complicationId}")
             }
+            retrieveComplicationInfos(preview)
         }
 
 
@@ -147,21 +173,22 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 2
+            return 3
         }
 
         override fun getItemViewType(position: Int): Int {
             when (position) {
-                0 -> return MenuItems.TOP_COMPLICATION
-                1 -> return MenuItems.BOTTOM_COMPLICATION
+                0 -> return MenuItems.PREVIEW
+                1 -> return MenuItems.TOP_COMPLICATION
+                2 -> return MenuItems.BOTTOM_COMPLICATION
             }
             throw UnsupportedOperationException()
         }
 
         private fun complicationViewHolder(
-            parent: ViewGroup, complicationId: Int, requestCode: Int, iconId: Int
+            parent: ViewGroup, complicationId: Int, iconId: Int
         ): ComplicationViewHolder {
-            return ComplicationViewHolder(parent, complicationId, requestCode, iconId).also {
+            return ComplicationViewHolder(parent, complicationId, iconId).also {
                 mComplicationViews.put(complicationId, it)
             }
         }
@@ -171,11 +198,15 @@ class ConfigActivity : Activity() {
         }
     }
 
+    inner class PreviewViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.preview, parent, false)
+    ) {
+        val view: WatchFacePreview = itemView.findViewById(R.id.preview)
+    }
 
     inner class ComplicationViewHolder(
         parent: ViewGroup,
         val complicationId: Int,
-        val requestCode: Int,
         iconId: Int
     ) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.complication, parent, false)
@@ -201,16 +232,19 @@ class ConfigActivity : Activity() {
         override fun onClick(v: View?) {
             Log.i(TAG, "OnClick")
 
-            this@ConfigActivity.startActivityForResult(
-                ComplicationHelperActivity.createProviderChooserHelperIntent(
-                    this@ConfigActivity,
-                    ComponentName(this@ConfigActivity, SlantedWatchface::class.java),
-                    complicationId,
-                    ComplicationData.TYPE_SHORT_TEXT
-                ),
-                requestCode
-            )
-
+            selectComplication(complicationId)
         }
+    }
+
+    private fun selectComplication(complicationId: Int) {
+        this@ConfigActivity.startActivityForResult(
+            ComplicationHelperActivity.createProviderChooserHelperIntent(
+                this,
+                ComponentName(this, WatchFace::class.java),
+                complicationId,
+                ComplicationData.TYPE_SHORT_TEXT
+            ),
+            requestCodeOf(complicationId)
+        )
     }
 }

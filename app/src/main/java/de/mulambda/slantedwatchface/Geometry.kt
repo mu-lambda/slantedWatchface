@@ -5,7 +5,7 @@ import android.text.TextPaint
 import java.util.*
 import kotlin.collections.HashMap
 
-class BoundsProvider(
+class Geometry(
     val mCalendar: Calendar,
     mHoursPaint: TextPaint,
     mMinutesPaint: TextPaint,

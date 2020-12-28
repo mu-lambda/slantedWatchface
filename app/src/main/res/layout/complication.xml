@@ -4,5 +4,5 @@
     style="@style/ButtonConfigurationStyle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:drawableLeft="@drawable/ic_top_complication"
+    android:drawableStart="@drawable/ic_top_complication"
     android:text="Data" />
