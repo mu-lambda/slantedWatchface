@@ -184,7 +184,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 4
+            return 5
         }
 
         override fun getItemViewType(position: Int): Int = position
