@@ -40,7 +40,7 @@ class WatchFacePreview(
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        Log.i(TAG(), "change listener")
+        Log.i(TAG(), "onSharedPreferenceChanged")
         initializePainter()
         invalidate()
     }

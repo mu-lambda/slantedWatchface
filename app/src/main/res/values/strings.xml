@@ -6,4 +6,8 @@
     <string name="preference_file_key">de.mulambda.slantedwatchface.PREFERENCE_FILE_KEY</string>
     <string name="right_handed">Watch on right hand</string>
     <string name="more">more</string>
+    <string name="pick_color_rainbow">Rainbow color</string>
+    <string name="pick_color_shades">Shades and hues</string>
+    <string name="color_theme">Color theme</string>
+    <string name="apply_picked_color">Use this color</string>
 </resources>

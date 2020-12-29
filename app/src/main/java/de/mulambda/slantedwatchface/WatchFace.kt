@@ -57,11 +57,6 @@ class WatchFace : CanvasWatchFaceService() {
     object Constants {
         const val GOLDEN = 1.61803398875f
         const val RATIO = GOLDEN
-        const val ANGLE = 30f
-        const val HOURS_COLOR = Color.GREEN
-        const val MINUTES_COLOR = Color.WHITE
-        const val SECONDS_COLOR = Color.GREEN
-        const val DATE_COLOR = Color.YELLOW
     }
 
 
@@ -122,7 +117,7 @@ class WatchFace : CanvasWatchFaceService() {
                 active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
                 ambient = Veneer.fromSharedPreferences(sharedPreferences, typefaces, true)
             )
-            complications.setColors()
+            complications.setColors(veneer.active)
         }
 
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -350,10 +345,12 @@ class WatchFace : CanvasWatchFaceService() {
 
             }
 
-            fun setColors() {
+            fun setColors(veneer: Veneer) {
                 for (id in Complications.ALL) {
-                    mComplicationDrawables[id].setTextColorActive(Color.GREEN)
-                    mComplicationDrawables[id].setTextColorAmbient(Color.WHITE)
+                    mComplicationDrawables[id].setTextColorActive(veneer.complicationTextColor)
+                    mComplicationDrawables[id].setTextColorAmbient(Veneer.AMBIENT_COLOR)
+                    mComplicationDrawables[id].setIconColorActive(veneer.complicationIconColor)
+                    mComplicationDrawables[id].setTextColorAmbient(Veneer.AMBIENT_COLOR)
                     mComplicationDrawables[id].setBackgroundColorActive(Color.BLACK)
                     mComplicationDrawables[id].setBackgroundColorAmbient(Color.BLACK)
                 }

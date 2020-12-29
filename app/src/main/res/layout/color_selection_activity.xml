@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="0dp"
+    android:layout_marginBottom="20dp"
+    android:background="@android:color/transparent"
+    tools:context=".ColorSelectionActivity"
+    tools:deviceIds="wear">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_box="all">
+
+        <TextView
+            android:id="@+id/color_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/dark_grey"
+            android:gravity="center"
+            android:text=""
+            app:layout_constraintBottom_toTopOf="@id/picked_color_panel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/picked_color_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            app:layout_constraintBottom_toTopOf="@id/pick_color_rainbow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/color_description">
+
+            <View
+                android:id="@+id/picked_color_view"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="@color/green"
+                android:gravity="start|center_vertical"
+                app:layout_constrainedHeight="true" />
+
+            <Button
+                android:id="@+id/apply_picked_color"
+                style="@style/ButtonConfigurationStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|center"
+                android:text="@string/apply_picked_color" />
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/pick_color_rainbow"
+            style="@style/ButtonConfigurationStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            android:text="@string/pick_color_rainbow"
+            app:layout_constraintBottom_toTopOf="@id/pick_color_shades"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/picked_color_panel" />
+
+        <Button
+            android:id="@+id/pick_color_shades"
+            style="@style/ButtonConfigurationStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            android:text="@string/pick_color_shades"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/pick_color_rainbow" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.wear.widget.BoxInsetLayout>

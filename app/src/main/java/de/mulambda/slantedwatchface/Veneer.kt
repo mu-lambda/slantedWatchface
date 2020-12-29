@@ -4,45 +4,57 @@ import android.content.SharedPreferences
 import android.graphics.Color
 
 // Typeface and color settings for a watchface
-class Veneer(
+data class Veneer(
     val angle: Float,
     val typefaces: Typefaces,
     val hoursColor: Int,
     val minutesColor: Int,
     val secondsColor: Int,
     val dateColor: Int,
+    val complicationIconColor: Int,
+    val complicationTextColor: Int,
     val isAmbient: Boolean
 ) {
-
-
     companion object {
-        const val ANGLE_KEY = "angle"
+        val AMBIENT_COLOR = Color.WHITE
+
         fun fromSharedPreferences(
-            sharedPreferences: SharedPreferences,
+            p: SharedPreferences,
             typefaces: Typefaces,
             isAmbient: Boolean
         ) =
             Veneer(
-                angle = getAngle(sharedPreferences),
+                angle = Settings.ANGLE.get(p),
                 typefaces = typefaces,
-                hoursColor = if (!isAmbient) WatchFace.Constants.HOURS_COLOR else Color.WHITE,
-                minutesColor = if (!isAmbient) WatchFace.Constants.MINUTES_COLOR else Color.WHITE,
-                secondsColor = if (!isAmbient) WatchFace.Constants.SECONDS_COLOR else Color.WHITE,
-                dateColor = if (!isAmbient) WatchFace.Constants.DATE_COLOR else Color.WHITE,
+                hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR,
+                minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
+                secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR,
+                dateColor = if (!isAmbient) Settings.DATE_COLOR.get(p) else AMBIENT_COLOR,
+                complicationIconColor = if (!isAmbient) Settings.COMPLICATION_ICON_COLOR.get(p) else AMBIENT_COLOR,
+                complicationTextColor = if (!isAmbient) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
                 isAmbient = isAmbient,
             )
 
-        fun getAngle(sharedPreferences: SharedPreferences) =
-            sharedPreferences.getFloat(ANGLE_KEY, WatchFace.Constants.ANGLE)
-
-        fun applyDefault(editor: SharedPreferences.Editor) =
-            editor.let {
-                setAngle(it, WatchFace.Constants.ANGLE)
-            }
-
-        fun setAngle(editor: SharedPreferences.Editor, angle: Float) =
-            editor.putFloat(ANGLE_KEY, angle)
-
     }
 
+    fun put(editor: SharedPreferences.Editor): SharedPreferences.Editor =
+        if (isAmbient) editor // not preferences yet for ambient mode
+        else {
+            Settings.ANGLE.put(editor, angle)
+            Settings.HOURS_COLOR.put(editor, hoursColor)
+            Settings.MINUTES_COLOR.put(editor, minutesColor)
+            Settings.SECONDS_COLOR.put(editor, secondsColor)
+            Settings.DATE_COLOR.put(editor, dateColor)
+            Settings.COMPLICATION_ICON_COLOR.put(editor, complicationIconColor)
+            Settings.COMPLICATION_TEXT_COLOR.put(editor, complicationTextColor)
+        }
+
+    fun withColorScheme(baseColor: Int) =
+        copy(
+            hoursColor = baseColor,
+            minutesColor = Color.WHITE,
+            secondsColor = baseColor,
+            complicationIconColor = Color.WHITE,
+            complicationTextColor = baseColor
+        )
 }

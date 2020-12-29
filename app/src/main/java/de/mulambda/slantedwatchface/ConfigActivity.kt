@@ -23,13 +23,29 @@ class ConfigActivity : Activity() {
     companion object {
         const val REQUEST_TOP_COMPLICATION = 1001
         const val REQUEST_BOTTOM_COMPLICATION = 1002
+        const val REQUEST_PICK_COLOR_THEME = 1003
+
+        object MenuItems {
+            const val PREVIEW = 0
+            const val MORE = 1
+            const val HANDEDNESS = 2
+            const val COLOR_THEME = 3
+            const val TOP_COMPLICATION = 4
+            const val BOTTOM_COMPLICATION = 5
+        }
+
     }
+
+    private lateinit var sharedPreferences: SharedPreferences
 
     private lateinit var mConfigMenu: WearableRecyclerView
     private lateinit var mAdapter: Adapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        sharedPreferences = applicationContext.getSharedPreferences(
+            getString(R.string.preference_file_key),
+            Context.MODE_PRIVATE
+        )
         setContentView(R.layout.config_activity)
 
         mAdapter = Adapter()
@@ -48,14 +64,6 @@ class ConfigActivity : Activity() {
         mAdapter.destroy()
     }
 
-    object MenuItems {
-        const val PREVIEW = 0
-        const val MORE = 1
-        const val HANDEDNESS = 2
-        const val TOP_COMPLICATION = 3
-        const val BOTTOM_COMPLICATION = 4
-    }
-
     fun requestCodeOf(complicationId: Int) = when (complicationId) {
         WatchFace.Complications.TOP -> REQUEST_TOP_COMPLICATION
         WatchFace.Complications.BOTTOM -> REQUEST_BOTTOM_COMPLICATION
@@ -63,6 +71,7 @@ class ConfigActivity : Activity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Log.i(TAG(), "onActivityResult: requestCode=${requestCode} resultCode =${resultCode}")
         if (resultCode != RESULT_OK) return
 
         when (requestCode) {
@@ -70,6 +79,11 @@ class ConfigActivity : Activity() {
                 mAdapter.updateComplication(WatchFace.Complications.TOP)
             REQUEST_BOTTOM_COMPLICATION ->
                 mAdapter.updateComplication(WatchFace.Complications.BOTTOM)
+            REQUEST_PICK_COLOR_THEME -> {
+                if (data?.hasExtra(ColorSelectionActivity.RESULT) == true) {
+                    mAdapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
+                }
+            }
 
         }
     }
@@ -84,10 +98,6 @@ class ConfigActivity : Activity() {
         private val mComplicationViews =
             SparseArray<ComplicationViewHolder>(WatchFace.Complications.ALL.size)
         private lateinit var preview: WatchFacePreview
-        val sharedPreferences = applicationContext.getSharedPreferences(
-            getString(R.string.preference_file_key),
-            Context.MODE_PRIVATE
-        )
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             when (viewType) {
@@ -99,7 +109,10 @@ class ConfigActivity : Activity() {
                     return MoreViewHolder(parent)
 
                 MenuItems.HANDEDNESS ->
-                    return HandednessViewHolder(parent, sharedPreferences)
+                    return HandednessViewHolder(parent)
+
+                MenuItems.COLOR_THEME ->
+                    return ColorThemeViewHolder(parent)
 
                 MenuItems.TOP_COMPLICATION ->
                     return complicationViewHolder(
@@ -125,10 +138,8 @@ class ConfigActivity : Activity() {
                     retrieveComplicationInfo(holder as ComplicationViewHolder)
                     return
                 }
-                MenuItems.MORE -> return
+                MenuItems.MORE, MenuItems.COLOR_THEME -> return
                 MenuItems.HANDEDNESS -> {
-                    val handednessViewHolder = holder as HandednessViewHolder
-                    handednessViewHolder.updateCurrentState()
                     return
                 }
                 MenuItems.PREVIEW -> {
@@ -184,7 +195,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 5
+            return 6
         }
 
         override fun getItemViewType(position: Int): Int = position
@@ -200,6 +211,44 @@ class ConfigActivity : Activity() {
         fun destroy() {
             mProviderInfoRetriever.release()
         }
+
+        private val typefaces = Typefaces(assets)
+
+        fun updateColorTheme(color: Int?) {
+            Log.i(TAG(), "updateColorTheme: color = ${color}")
+            if (color == null) return
+            val newVeneer = Veneer
+                .fromSharedPreferences(sharedPreferences, typefaces, false)
+                .withColorScheme(color)
+            with(sharedPreferences.edit()) {
+                newVeneer.put(this)
+                apply()
+            }
+        }
+    }
+
+    inner class ColorThemeViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.color_theme, parent, false)
+    ), View.OnClickListener {
+        private val button: Button = itemView.findViewById(R.id.color_theme_button)
+
+        init {
+            itemView.setOnClickListener(this)
+            // dataButton.setCompoundDrawablesWithIntrinsicBounds(iconId, 0, 0, 0)
+        }
+
+        override fun onClick(v: View?) {
+            startActivityForResult(
+                Intent(this@ConfigActivity, ColorSelectionActivity::class.java)
+                    .putExtra(ColorSelectionActivity.NAME, button.text)
+                    .putExtra(
+                        ColorSelectionActivity.ORIGINAL_COLOR,
+                        Settings.HOURS_COLOR.get(sharedPreferences)
+                    ),
+                REQUEST_PICK_COLOR_THEME
+            )
+        }
+
     }
 
     class MoreViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
@@ -245,14 +294,15 @@ class ConfigActivity : Activity() {
 
     inner class HandednessViewHolder(
         parent: ViewGroup,
-        private val sharedPreferences: SharedPreferences
     ) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.handedness, parent, false)
-    ), View.OnClickListener {
+    ), View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
         private val switch: Switch = itemView.findViewById(R.id.handedness)
 
         init {
             itemView.setOnClickListener(this)
+            sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+            updateCurrentState()
         }
 
         fun updateCurrentState() {
@@ -267,17 +317,21 @@ class ConfigActivity : Activity() {
         }
 
         private fun isOnRightHand(sharedPreferences: SharedPreferences): Boolean =
-            Veneer.getAngle(sharedPreferences) < 0
+            Settings.ANGLE.get(sharedPreferences) < 0
 
         override fun onClick(v: View?) {
             Log.i(TAG(), "onClick")
-            val angle = Veneer.getAngle(sharedPreferences)
+            val angle = Settings.ANGLE.get(sharedPreferences)
             with(sharedPreferences.edit()) {
-                Veneer.setAngle(this, -angle)
+                Settings.ANGLE.put(this, -angle)
                 apply()
             }
-            updateCurrentState()
         }
+
+        override fun onSharedPreferenceChanged(
+            sharedPreferences: SharedPreferences?,
+            key: String?
+        ) = updateCurrentState()
     }
 
     private fun selectComplication(complicationId: Int) {
