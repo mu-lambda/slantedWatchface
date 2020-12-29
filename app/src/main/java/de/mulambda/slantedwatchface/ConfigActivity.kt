@@ -50,9 +50,10 @@ class ConfigActivity : Activity() {
 
     object MenuItems {
         const val PREVIEW = 0
-        const val HANDEDNESS = 1
-        const val TOP_COMPLICATION = 2
-        const val BOTTOM_COMPLICATION = 3
+        const val MORE = 1
+        const val HANDEDNESS = 2
+        const val TOP_COMPLICATION = 3
+        const val BOTTOM_COMPLICATION = 4
     }
 
     fun requestCodeOf(complicationId: Int) = when (complicationId) {
@@ -94,6 +95,9 @@ class ConfigActivity : Activity() {
                     return PreviewViewHolder(parent).also {
                         preview = it.view.apply { onComplicationIdClick = ::selectComplication }
                     }
+                MenuItems.MORE ->
+                    return MoreViewHolder(parent)
+
                 MenuItems.HANDEDNESS ->
                     return HandednessViewHolder(parent, sharedPreferences)
 
@@ -121,6 +125,7 @@ class ConfigActivity : Activity() {
                     retrieveComplicationInfo(holder as ComplicationViewHolder)
                     return
                 }
+                MenuItems.MORE -> return
                 MenuItems.HANDEDNESS -> {
                     val handednessViewHolder = holder as HandednessViewHolder
                     handednessViewHolder.updateCurrentState()
@@ -196,6 +201,10 @@ class ConfigActivity : Activity() {
             mProviderInfoRetriever.release()
         }
     }
+
+    class MoreViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.more_options, parent, false)
+    )
 
     inner class PreviewViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.preview, parent, false)
