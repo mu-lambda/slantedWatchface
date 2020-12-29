@@ -32,6 +32,12 @@ class WatchFacePreview(
     ).apply {
         registerOnSharedPreferenceChangeListener(this@WatchFacePreview)
     }
+    private val borderPaint = Paint().apply {
+        style = Paint.Style.STROKE
+        color = Color.DKGRAY
+        strokeWidth = 4f
+        isAntiAlias = true
+    }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         Log.i(TAG(), "change listener")
@@ -84,7 +90,7 @@ class WatchFacePreview(
             complications
         )
         watchFaceClipPath = Path().apply {
-            addCircle(paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2 + 2, Path.Direction.CW)
+            addCircle(paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2, Path.Direction.CW)
         }
         complications.updateComplicationLocations()
     }
@@ -106,7 +112,10 @@ class WatchFacePreview(
         canvas.drawColor(Color.BLACK)
         painter.draw(Calendar.getInstance(), canvas)
         canvas.restore()
-
+        val dim = watchfaceSize().toFloat()
+        canvas.drawCircle(
+            paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2 - 1, borderPaint
+        )
     }
 
     fun setComplication(complicationId: Int, info: ComplicationProviderInfo?) {
