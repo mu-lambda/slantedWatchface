@@ -93,7 +93,6 @@ class WatchFaceService : CanvasWatchFaceService() {
             setWatchFaceStyle(
                 WatchFaceStyle.Builder(this@WatchFaceService)
                     .setAcceptsTapEvents(true)
-                    .setShowUnreadCountIndicator(true)
                     .setHideNotificationIndicator(false)
                     .build()
             )

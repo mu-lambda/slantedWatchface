@@ -86,7 +86,7 @@ class WatchFacePainter(
         if (nonEmptyComplications == 0) {
             complications.ids.forEach { complicationBounds.put(it, emptyRect) }
         } else {
-            val inset = if (nonEmptyComplications > 1) 1 else 0
+            val inset = if (nonEmptyComplications > 1) 3 else 0
             val delta = (complicationAreaBottom - complicationAreaTop) / nonEmptyComplications
             var indexOfNonEmpty = 0
             complications.ids.forEach {

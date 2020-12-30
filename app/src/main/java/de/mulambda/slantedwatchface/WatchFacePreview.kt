@@ -132,21 +132,30 @@ class WatchFacePreview(
             color = Color.WHITE
             style = Paint.Style.STROKE
             strokeWidth = 2f
-            pathEffect = DashPathEffect(floatArrayOf(4f, 2f), 0f)
+            strokeJoin = Paint.Join.ROUND
+            strokeCap = Paint.Cap.ROUND
+            isAntiAlias = true
+            pathEffect =
+                ComposePathEffect(
+                    DashPathEffect(floatArrayOf(4f, 4f), 0f),
+                    CornerPathEffect(10f)
+                )
         }
+        private lateinit var borderPath: Path
         private val highlightPaint = Paint().apply {
             color = Color.DKGRAY
             style = Paint.Style.FILL
+            strokeJoin = Paint.Join.ROUND
+            strokeCap = Paint.Cap.ROUND
         }
         private val handler = Handler(Looper.getMainLooper())
-        private var highlightedId: Int? = null
+        private var highlightedPath: Path? = null
         private val unhighlightRunnable: Runnable = object : Runnable {
             override fun run() {
-                highlightedId = null
+                highlightedPath = null
                 invalidate()
             }
         }
-
 
         override val ids: IntArray
             get() = WatchFaceService.Complications.ALL
@@ -154,40 +163,45 @@ class WatchFacePreview(
         override fun isComplicationEmpty(id: Int): Boolean = false
 
         override fun draw(canvas: Canvas, currentTimeMillis: Long) {
-            val path = Path()
-            highlightedId?.let {
-                canvas.drawPath(Path().rect(complicationBounds[it]), highlightPaint)
-            }
+            highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
             for (id in ids) {
-                val rect = complicationBounds[id]
-                path.rect(rect)
-                val drawable = complicationIcons.get(id, null)
-                if (drawable != null) {
-                    val w = drawable.minimumWidth
-                    val h = drawable.minimumHeight
-                    drawable.setBounds(
-                        rect.centerX() - w / 2,
-                        rect.centerY() - h / 2,
-                        rect.centerX() + w / 2,
-                        rect.centerY() + h / 2
-                    )
-                    drawable.draw(canvas)
-                }
+                complicationIcons.get(id, null)?.draw(canvas)
             }
-            canvas.drawPath(path, borderPaint)
+            canvas.drawPath(borderPath, borderPaint)
+        }
+
+        private fun setIconBounds(id: Int) {
+            val rect = complicationBounds[id]
+            val drawable = complicationIcons.get(id, null)
+            if (drawable != null) {
+                val w = drawable.minimumWidth
+                val h = drawable.minimumHeight
+                drawable.setBounds(
+                    rect.centerX() - w / 2,
+                    rect.centerY() - h / 2,
+                    rect.centerX() + w / 2,
+                    rect.centerY() + h / 2
+                )
+            }
         }
 
         private fun Path.rect(rect: Rect): Path {
-            moveTo(rect.left.toFloat(), rect.top.toFloat())
+            // start from middle of edge to get nice round corners.
+            val xMidTopEdge = (rect.left + rect.right).toFloat() / 2
+            val yMidTopEdge = rect.top.toFloat()
+            moveTo(xMidTopEdge, yMidTopEdge)
             lineTo(rect.right.toFloat(), rect.top.toFloat())
-            lineTo(rect.right.toFloat(), rect.bottom.toFloat())
-            lineTo(rect.left.toFloat(), rect.bottom.toFloat())
+            lineTo(rect.right.toFloat(), (rect.bottom).toFloat())
+            lineTo(rect.left.toFloat(), (rect.bottom).toFloat())
             lineTo(rect.left.toFloat(), rect.top.toFloat())
+            lineTo(xMidTopEdge, yMidTopEdge)
             return this
         }
 
         fun updateComplicationLocations() {
             painter.updateComplicationBounds(complicationBounds)
+            borderPath = Path().apply { ids.forEach { id -> rect(complicationBounds[id]) } }
+            ids.forEach(::setIconBounds)
         }
 
         fun complicationIdByPoint(x: Int, y: Int): Int? =
@@ -198,7 +212,11 @@ class WatchFacePreview(
             if (info?.providerIcon != null) {
                 info.providerIcon.loadDrawableAsync(
                     context,
-                    { drawable -> complicationIcons.put(complicationId, drawable); invalidate() },
+                    { drawable ->
+                        complicationIcons.put(complicationId, drawable)
+                        setIconBounds(complicationId)
+                        invalidate()
+                    },
                     handler
                 )
             } else {
@@ -208,7 +226,7 @@ class WatchFacePreview(
         }
 
         fun onComplicationIdClick(id: Int) {
-            highlightedId = id
+            highlightedPath = Path().rect(complicationBounds[id])
             invalidate()
             handler.removeCallbacks(unhighlightRunnable)
             handler.postDelayed(unhighlightRunnable, 100L)

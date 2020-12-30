@@ -18,9 +18,9 @@ object Settings {
     val SECONDS_COLOR =
         Binding("seconds-color", Color.GREEN, getInt, putInt)
     val COMPLICATION_ICON_COLOR =
-        Binding("compliation-icon-color", Color.WHITE, getInt, putInt)
+        Binding("complication-icon-color", Color.WHITE, getInt, putInt)
     val COMPLICATION_TEXT_COLOR =
-        Binding("compliation-text-color", Color.GREEN, getInt, putInt)
+        Binding("complication-text-color", Color.GREEN, getInt, putInt)
     val DATE_COLOR =
         Binding("date-color", Color.YELLOW, getInt, putInt)
 
