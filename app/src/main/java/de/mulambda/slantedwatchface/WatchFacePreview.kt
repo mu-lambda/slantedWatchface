@@ -142,17 +142,11 @@ class WatchFacePreview(
                 )
         }
         private lateinit var borderPath: Path
-        private val highlightPaint = Paint().apply {
-            color = Color.DKGRAY
-            style = Paint.Style.FILL
-            strokeJoin = Paint.Join.ROUND
-            strokeCap = Paint.Cap.ROUND
-        }
         private val handler = Handler(Looper.getMainLooper())
-        private var highlightedPath: Path? = null
+
         private val unhighlightRunnable: Runnable = object : Runnable {
             override fun run() {
-                highlightedPath = null
+                painter.unhighlight()
                 invalidate()
             }
         }
@@ -163,7 +157,6 @@ class WatchFacePreview(
         override fun isComplicationEmpty(id: Int): Boolean = false
 
         override fun draw(canvas: Canvas, currentTimeMillis: Long) {
-            highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
             for (id in ids) {
                 complicationIcons.get(id, null)?.draw(canvas)
             }
@@ -183,19 +176,6 @@ class WatchFacePreview(
                     rect.centerY() + h / 2
                 )
             }
-        }
-
-        private fun Path.rect(rect: Rect): Path {
-            // start from middle of edge to get nice round corners.
-            val xMidTopEdge = (rect.left + rect.right).toFloat() / 2
-            val yMidTopEdge = rect.top.toFloat()
-            moveTo(xMidTopEdge, yMidTopEdge)
-            lineTo(rect.right.toFloat(), rect.top.toFloat())
-            lineTo(rect.right.toFloat(), (rect.bottom).toFloat())
-            lineTo(rect.left.toFloat(), (rect.bottom).toFloat())
-            lineTo(rect.left.toFloat(), rect.top.toFloat())
-            lineTo(xMidTopEdge, yMidTopEdge)
-            return this
         }
 
         fun updateComplicationLocations() {
@@ -226,7 +206,7 @@ class WatchFacePreview(
         }
 
         fun onComplicationIdClick(id: Int) {
-            highlightedPath = Path().rect(complicationBounds[id])
+            painter.highlightRect(complicationBounds[id])
             invalidate()
             handler.removeCallbacks(unhighlightRunnable)
             handler.postDelayed(unhighlightRunnable, 100L)

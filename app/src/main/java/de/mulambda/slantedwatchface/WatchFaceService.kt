@@ -192,6 +192,16 @@ class WatchFaceService : CanvasWatchFaceService() {
             })
         }
 
+        private val handler = Handler(Looper.getMainLooper())
+        private val unhighlightRunnable: Runnable = object : Runnable {
+            override fun run() {
+                painter.get(true).unhighlight()
+                painter.get(false).unhighlight()
+                invalidate()
+            }
+
+        }
+
         /**
          * Captures tap event (and tap type). The [WatchFaceService.TAP_TYPE_TAP] case can be
          * used for implementing specific logic to handle the gesture.
@@ -205,7 +215,14 @@ class WatchFaceService : CanvasWatchFaceService() {
                     // The user has started a different gesture or otherwise cancelled the tap.
                 }
                 WatchFaceService.TAP_TYPE_TAP -> {
-                    if (painter.get(isInAmbientMode).isDateAreaTap(calendar, x, y)) {
+                    val currentPainter = painter.get(isInAmbientMode)
+                    if (currentPainter.isDateSecondAreaTap(calendar, x, y)) {
+                        val dateAreaRect = currentPainter.dateSecondRect(calendar)
+                        dateAreaRect.inset(-4f, -4f)
+                        currentPainter.highlightRect(dateAreaRect.toIntRect())
+                        invalidate()
+                        handler.removeCallbacks(unhighlightRunnable)
+                        handler.postDelayed(unhighlightRunnable, 100L)
                         launchAgenda()
                     } else {
                         complications.performTap(x, y)

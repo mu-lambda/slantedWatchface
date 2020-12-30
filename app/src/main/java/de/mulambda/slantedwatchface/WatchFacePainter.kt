@@ -1,8 +1,6 @@
 package de.mulambda.slantedwatchface
 
-import android.graphics.Canvas
-import android.graphics.Rect
-import android.graphics.RectF
+import android.graphics.*
 import android.text.TextPaint
 import android.util.SparseArray
 import java.util.*
@@ -17,6 +15,7 @@ class WatchFacePainter(
         fun isComplicationEmpty(id: Int): Boolean
         fun draw(canvas: Canvas, currentTimeMillis: Long)
     }
+
 
     private val mCenterX = bounds.width() / 2f
     private val mCenterY = bounds.height() / 2f
@@ -62,6 +61,24 @@ class WatchFacePainter(
         Calendar.getInstance(),
         hoursPaint, minutesPaint, secondsPaint, datePaint
     )
+
+    private val highlightPaint = Paint().apply {
+        color = Color.DKGRAY
+        style = Paint.Style.FILL
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+        isAntiAlias = true
+        pathEffect = CornerPathEffect(10f)
+    }
+    private var highlightedPath: Path? = null
+
+    fun highlightRect(rect: Rect) {
+        highlightedPath = Path().apply { rect(rect) }
+    }
+
+    fun unhighlight() {
+        highlightedPath = null
+    }
 
     fun updateComplicationBounds(complicationBounds: SparseArray<Rect>) {
         val largeInset = 10f
@@ -121,9 +138,13 @@ class WatchFacePainter(
         val dateY: Float
     )
 
-    fun isDateAreaTap(calendar: Calendar, x: Int, y: Int): Boolean {
+    fun isDateSecondAreaTap(calendar: Calendar, x: Int, y: Int): Boolean {
         val (x1, y1) = rotate(x, y)
 
+        return dateSecondRect(calendar).contains(x1, y1)
+    }
+
+    fun dateSecondRect(calendar: Calendar): RectF {
         val p = calculatePaintData(calendar)
         val (_, secondsBounds) = geometry.getSeconds(calendar)
         val secondsRect = RectF(
@@ -141,7 +162,7 @@ class WatchFacePainter(
         )
         dateRect.union(secondsRect)
         dateRect.offset(bounds.left, bounds.top)
-        return dateRect.contains(x1, y1)
+        return dateRect
     }
 
     fun rotate(x: Int, y: Int): Pair<Float, Float> {
@@ -191,6 +212,7 @@ class WatchFacePainter(
     fun draw(mCalendar: Calendar, canvas: Canvas) {
         canvas.save()
         canvas.rotate(veneer.angle, bounds.left + mCenterX, bounds.top + mCenterY)
+        highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
         with(calculatePaintData(mCalendar)) {
             canvas.drawText(
                 hours, bounds.left + hoursX, bounds.top + hoursY, hoursPaint
