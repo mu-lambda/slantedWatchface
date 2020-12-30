@@ -1,5 +1,6 @@
 package de.mulambda.slantedwatchface
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
@@ -83,6 +84,8 @@ class ConfigActivity : Activity() {
                     mAdapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
                 }
             }
+            REQUEST_TOP_COMPLICATION, REQUEST_BOTTOM_COMPLICATION ->
+                mAdapter.updateComplications()
             REQUEST_PICK_HOURS_COLOR -> updateIndividualColor(Settings.HOURS_COLOR, data)
             REQUEST_PICK_MINUTES_COLOR -> updateIndividualColor(Settings.MINUTES_COLOR, data)
             REQUEST_PICK_SECONDS_COLOR -> updateIndividualColor(Settings.SECONDS_COLOR, data)
@@ -136,7 +139,7 @@ class ConfigActivity : Activity() {
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             when (holder.itemViewType) {
                 MenuItems.PREVIEW -> {
-                    retrieveComplicationInfos((holder as PreviewViewHolder).view)
+                    updateComplications()
                     return
                 }
                 MenuItems.MORE, MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
@@ -148,14 +151,14 @@ class ConfigActivity : Activity() {
         }
 
 
-        private fun retrieveComplicationInfos(watchFacePreview: WatchFacePreview) {
+        fun updateComplications() {
             mProviderInfoRetriever.retrieveProviderInfo(
                 object : ProviderInfoRetriever.OnProviderInfoReceivedCallback() {
                     override fun onProviderInfoReceived(
                         complicationId: Int,
                         info: ComplicationProviderInfo?
                     ) {
-                        watchFacePreview.setComplication(complicationId, info)
+                        preview.setComplication(complicationId, info)
                     }
                 },
                 ComponentName(this@ConfigActivity, WatchFaceService::class.java),
@@ -269,6 +272,7 @@ class ConfigActivity : Activity() {
     ) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.handedness, parent, false)
     ), View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        @SuppressLint("UseSwitchCompatOrMaterialCode") // TOD0(#14)
         private val switch: Switch = itemView.findViewById(R.id.handedness)
 
         init {
