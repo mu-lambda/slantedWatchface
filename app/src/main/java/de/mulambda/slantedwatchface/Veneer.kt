@@ -49,12 +49,19 @@ data class Veneer(
             Settings.COMPLICATION_TEXT_COLOR.put(editor, complicationTextColor)
         }
 
+    fun whiteOf(baseColor: Int) =
+        Color.HSVToColor(Color.alpha(baseColor), floatArrayOf(0f, 0f, 0f).also {
+            Color.colorToHSV(baseColor, it)
+            it[0] = 0f // hue
+            it[1] = 0f // saturation
+        })
+
     fun withColorScheme(baseColor: Int) =
         copy(
             hoursColor = baseColor,
-            minutesColor = Color.WHITE,
+            minutesColor = whiteOf(baseColor),
             secondsColor = baseColor,
-            complicationIconColor = Color.WHITE,
+            complicationIconColor = whiteOf(baseColor),
             complicationTextColor = baseColor
         )
 }
