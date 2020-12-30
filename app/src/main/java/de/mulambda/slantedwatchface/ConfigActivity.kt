@@ -65,8 +65,8 @@ class ConfigActivity : Activity() {
     }
 
     fun requestCodeOf(complicationId: Int) = when (complicationId) {
-        WatchFace.Complications.TOP -> REQUEST_TOP_COMPLICATION
-        WatchFace.Complications.BOTTOM -> REQUEST_BOTTOM_COMPLICATION
+        WatchFaceService.Complications.TOP -> REQUEST_TOP_COMPLICATION
+        WatchFaceService.Complications.BOTTOM -> REQUEST_BOTTOM_COMPLICATION
         else -> throw UnsupportedOperationException("complicationId = ${complicationId}")
     }
 
@@ -76,9 +76,9 @@ class ConfigActivity : Activity() {
 
         when (requestCode) {
             REQUEST_TOP_COMPLICATION ->
-                mAdapter.updateComplication(WatchFace.Complications.TOP)
+                mAdapter.updateComplication(WatchFaceService.Complications.TOP)
             REQUEST_BOTTOM_COMPLICATION ->
-                mAdapter.updateComplication(WatchFace.Complications.BOTTOM)
+                mAdapter.updateComplication(WatchFaceService.Complications.BOTTOM)
             REQUEST_PICK_COLOR_THEME -> {
                 if (data?.hasExtra(ColorSelectionActivity.RESULT) == true) {
                     mAdapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
@@ -96,7 +96,7 @@ class ConfigActivity : Activity() {
                 Executors.newCachedThreadPool()
             ).apply { init() }
         private val mComplicationViews =
-            SparseArray<ComplicationViewHolder>(WatchFace.Complications.ALL.size)
+            SparseArray<ComplicationViewHolder>(WatchFaceService.Complications.ALL.size)
         private lateinit var preview: WatchFacePreview
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -116,14 +116,14 @@ class ConfigActivity : Activity() {
 
                 MenuItems.TOP_COMPLICATION ->
                     return complicationViewHolder(
-                        parent, WatchFace.Complications.TOP,
+                        parent, WatchFaceService.Complications.TOP,
                         R.drawable.ic_top_complication
                     )
 
                 MenuItems.BOTTOM_COMPLICATION ->
                     return complicationViewHolder(
                         parent,
-                        WatchFace.Complications.BOTTOM,
+                        WatchFaceService.Complications.BOTTOM,
                         R.drawable.ic_bottom_complication
                     )
 
@@ -161,8 +161,8 @@ class ConfigActivity : Activity() {
                         watchFacePreview.setComplication(complicationId, info)
                     }
                 },
-                ComponentName(this@ConfigActivity, WatchFace::class.java),
-                *WatchFace.Complications.ALL
+                ComponentName(this@ConfigActivity, WatchFaceService::class.java),
+                *WatchFaceService.Complications.ALL
             )
         }
 
@@ -173,7 +173,7 @@ class ConfigActivity : Activity() {
                         complicationViewHolder.setComplication(info)
                     }
                 },
-                ComponentName(this@ConfigActivity, WatchFace::class.java),
+                ComponentName(this@ConfigActivity, WatchFaceService::class.java),
                 complicationViewHolder.complicationId
             )
         }
@@ -338,7 +338,7 @@ class ConfigActivity : Activity() {
         this@ConfigActivity.startActivityForResult(
             ComplicationHelperActivity.createProviderChooserHelperIntent(
                 this,
-                ComponentName(this, WatchFace::class.java),
+                ComponentName(this, WatchFaceService::class.java),
                 complicationId,
                 ComplicationData.TYPE_SHORT_TEXT
             ),

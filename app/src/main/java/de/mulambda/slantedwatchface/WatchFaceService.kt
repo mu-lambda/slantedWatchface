@@ -17,7 +17,7 @@ import android.view.SurfaceHolder
 import java.lang.ref.WeakReference
 import java.util.*
 
-class WatchFace : CanvasWatchFaceService() {
+class WatchFaceService : CanvasWatchFaceService() {
     override fun onCreateEngine(): Engine {
         return Engine()
     }
@@ -91,7 +91,7 @@ class WatchFace : CanvasWatchFaceService() {
             super.onCreate(holder)
 
             setWatchFaceStyle(
-                WatchFaceStyle.Builder(this@WatchFace)
+                WatchFaceStyle.Builder(this@WatchFaceService)
                     .setAcceptsTapEvents(true)
                     .setShowUnreadCountIndicator(true)
                     .setHideNotificationIndicator(false)
@@ -111,7 +111,7 @@ class WatchFace : CanvasWatchFaceService() {
 
         private fun initialize(sharedPreferences: SharedPreferences) {
             calendar = Calendar.getInstance()
-            typefaces = Typefaces(this@WatchFace.assets)
+            typefaces = Typefaces(this@WatchFaceService.assets)
 
             veneer = ActiveAmbient(
                 active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
@@ -246,7 +246,7 @@ class WatchFace : CanvasWatchFaceService() {
             }
             mRegisteredTimeZoneReceiver = true
             val filter = IntentFilter(Intent.ACTION_TIMEZONE_CHANGED)
-            this@WatchFace.registerReceiver(mTimeZoneReceiver, filter)
+            this@WatchFaceService.registerReceiver(mTimeZoneReceiver, filter)
         }
 
         private fun unregisterReceiver() {
@@ -254,7 +254,7 @@ class WatchFace : CanvasWatchFaceService() {
                 return
             }
             mRegisteredTimeZoneReceiver = false
-            this@WatchFace.unregisterReceiver(mTimeZoneReceiver)
+            this@WatchFaceService.unregisterReceiver(mTimeZoneReceiver)
         }
 
         /**
@@ -393,7 +393,7 @@ class WatchFace : CanvasWatchFaceService() {
                 applicationContext.startActivity(
                     ComplicationHelperActivity.createPermissionRequestHelperIntent(
                         applicationContext,
-                        ComponentName(applicationContext, WatchFace::class.java)
+                        ComponentName(applicationContext, WatchFaceService::class.java)
                     ).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     })

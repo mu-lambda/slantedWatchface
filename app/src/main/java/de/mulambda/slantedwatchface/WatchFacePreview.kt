@@ -123,10 +123,11 @@ class WatchFacePreview(
     }
 
     inner class ComplicationsPreview : WatchFacePainter.Complications {
-        private val complicationBounds = SparseArray<Rect>(WatchFace.Complications.ALL.size)
+        private val complicationBounds = SparseArray<Rect>(WatchFaceService.Complications.ALL.size)
         private val complicationInfos =
-            SparseArray<ComplicationProviderInfo?>(WatchFace.Complications.ALL.size)
-        private val complicationIcons = SparseArray<Drawable?>(WatchFace.Complications.ALL.size)
+            SparseArray<ComplicationProviderInfo?>(WatchFaceService.Complications.ALL.size)
+        private val complicationIcons =
+            SparseArray<Drawable?>(WatchFaceService.Complications.ALL.size)
         private val borderPaint = Paint().apply {
             color = Color.WHITE
             style = Paint.Style.STROKE
@@ -148,7 +149,7 @@ class WatchFacePreview(
 
 
         override val ids: IntArray
-            get() = WatchFace.Complications.ALL
+            get() = WatchFaceService.Complications.ALL
 
         override fun isComplicationEmpty(id: Int): Boolean = false
 

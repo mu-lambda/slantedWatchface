@@ -28,7 +28,7 @@ class WatchFacePainter(
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
-    private val minutesSize = hoursSize / WatchFace.Constants.RATIO
+    private val minutesSize = hoursSize / WatchFaceService.Constants.RATIO
     private val minutesPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = minutesSize
