@@ -10,8 +10,8 @@
     <string name="pick_color_shades">Tints and shades</string>
     <string name="color_theme">Color theme</string>
     <string name="apply_picked_color">Apply</string>
-    <string name="hours_color">Hours color</string>
-    <string name="minutes_color">mintes_color</string>
+    <string name="hours_color">Hours</string>
+    <string name="minutes_color">Minutes</string>
     <string name="seconds_color">Seconds</string>
     <string name="date_color">Date</string>
     <string name="reset_settings">Reset settings</string>
