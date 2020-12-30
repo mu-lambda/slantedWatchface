@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.os.Handler
-import android.os.Looper
 import android.support.wearable.complications.ComplicationProviderInfo
 import android.util.AttributeSet
 import android.util.Log
@@ -23,9 +21,11 @@ class WatchFacePreview(
     attrs: AttributeSet?,
 ) : View(context, attrs), SharedPreferences.OnSharedPreferenceChangeListener {
     private lateinit var painter: WatchFacePainter
+    private val calendar = Calendar.getInstance()
     private val complications = ComplicationsPreview()
     private lateinit var watchFaceClipPath: Path
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
+    var onColorSettingClick: (Settings.Binding<Int>) -> Unit = { _ -> }
     val sharedPreferences = context.getSharedPreferences(
         context.getString(R.string.preference_file_key),
         Context.MODE_PRIVATE
@@ -49,27 +49,64 @@ class WatchFacePreview(
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
-                val rotatedPoint = painter.rotate(event.x.toInt(), event.y.toInt())
-                val id = complications.complicationIdByPoint(
-                    rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
-                )
-                return id != null
+                val id = touchedComplicationId(event)
+                if (id != null) return true
+                for (s in touchableAreas) {
+                    if (s.checker(painter, calendar, event.x.toInt(), event.y.toInt())) return true
+                }
             }
             MotionEvent.ACTION_UP -> {
-                val rotatedPoint = painter.rotate(event.x.toInt(), event.y.toInt())
-                val id = complications.complicationIdByPoint(
-                    rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
-                )
+                val id = touchedComplicationId(event)
                 if (id != null) {
                     complications.onComplicationIdClick(id)
                     onComplicationIdClick(id)
                     return true
+                }
+                for (s in touchableAreas) {
+                    if (s.checker(painter, calendar, event.x.toInt(), event.y.toInt())) {
+                        highlightRect(s.recter(painter, calendar).toIntRect())
+                        onColorSettingClick(s.binding)
+                        return true
+                    }
                 }
 
             }
         }
         return super.onTouchEvent(event)
     }
+
+    private fun touchedComplicationId(event: MotionEvent): Int? {
+        val rotatedPoint = painter.rotate(event.x.toInt(), event.y.toInt())
+        val id = complications.complicationIdByPoint(
+            rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
+        )
+        return id
+    }
+
+    private data class ColorSetting(
+        val binding: Settings.Binding<Int>,
+        val checker: (WatchFacePainter, Calendar, Int, Int) -> Boolean,
+        val recter: (WatchFacePainter, Calendar) -> RectF
+    )
+
+    private val touchableAreas = arrayOf(
+        ColorSetting(
+            Settings.HOURS_COLOR,
+            WatchFacePainter::isHoursTap,
+            WatchFacePainter::hoursRect
+        ),
+        ColorSetting(
+            Settings.MINUTES_COLOR,
+            WatchFacePainter::isMinutesTap,
+            WatchFacePainter::minutesRect
+        ),
+        ColorSetting(
+            Settings.SECONDS_COLOR,
+            WatchFacePainter::isSecondsTap,
+            WatchFacePainter::secondsRect
+        ),
+        ColorSetting(Settings.DATE_COLOR, WatchFacePainter::isDateTap, WatchFacePainter::dateRect),
+    )
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -110,7 +147,7 @@ class WatchFacePreview(
         canvas.save()
         canvas.clipPath(watchFaceClipPath)
         canvas.drawColor(Color.BLACK)
-        painter.draw(Calendar.getInstance(), canvas)
+        painter.draw(calendar, canvas)
         canvas.restore()
         val dim = watchfaceSize().toFloat()
         canvas.drawCircle(
@@ -142,14 +179,6 @@ class WatchFacePreview(
                 )
         }
         private lateinit var borderPath: Path
-        private val handler = Handler(Looper.getMainLooper())
-
-        private val unhighlightRunnable: Runnable = object : Runnable {
-            override fun run() {
-                painter.unhighlight()
-                invalidate()
-            }
-        }
 
         override val ids: IntArray
             get() = WatchFaceService.Complications.ALL
@@ -206,11 +235,23 @@ class WatchFacePreview(
         }
 
         fun onComplicationIdClick(id: Int) {
-            painter.highlightRect(complicationBounds[id])
-            invalidate()
-            handler.removeCallbacks(unhighlightRunnable)
-            handler.postDelayed(unhighlightRunnable, 100L)
+            val rect = complicationBounds[id]
+            highlightRect(rect)
         }
+    }
+
+    private val unhighlightRunnable: Runnable = object : Runnable {
+        override fun run() {
+            painter.unhighlight()
+            invalidate()
+        }
+    }
+
+    private fun highlightRect(rect: Rect) {
+        painter.highlightRect(rect)
+        invalidate()
+        handler.removeCallbacks(unhighlightRunnable)
+        handler.postDelayed(unhighlightRunnable, 100L)
     }
 
 }

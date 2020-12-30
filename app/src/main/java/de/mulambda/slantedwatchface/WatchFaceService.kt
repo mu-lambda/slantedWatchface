@@ -216,10 +216,13 @@ class WatchFaceService : CanvasWatchFaceService() {
                 }
                 WatchFaceService.TAP_TYPE_TAP -> {
                     val currentPainter = painter.get(isInAmbientMode)
-                    if (currentPainter.isDateSecondAreaTap(calendar, x, y)) {
-                        val dateAreaRect = currentPainter.dateSecondRect(calendar)
-                        dateAreaRect.inset(-4f, -4f)
-                        currentPainter.highlightRect(dateAreaRect.toIntRect())
+                    if (currentPainter.isDateTap(calendar, x, y)
+                        || currentPainter.isSecondsTap(calendar, x, y)
+                    ) {
+                        val rect = currentPainter.dateRect(calendar)
+                            .apply { union(currentPainter.secondsRect(calendar)) }
+                        rect.inset(-4f, -4f)
+                        currentPainter.highlightRect(rect.toIntRect())
                         invalidate()
                         handler.removeCallbacks(unhighlightRunnable)
                         handler.postDelayed(unhighlightRunnable, 100L)

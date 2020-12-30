@@ -10,27 +10,36 @@ object Settings {
     private val putFloat = SharedPreferences.Editor::putFloat
 
     val ANGLE =
-        Binding("angle", 30f, getFloat, putFloat)
+        Binding("angle", 30f, 0, getFloat, putFloat)
     val HOURS_COLOR =
-        Binding("hours-color", Color.GREEN, getInt, putInt)
+        Binding("hours-color", Color.GREEN, R.string.hours_color, getInt, putInt)
     val MINUTES_COLOR =
-        Binding("minutes-color", Color.WHITE, getInt, putInt)
+        Binding("minutes-color", Color.WHITE, R.string.minutes_color, getInt, putInt)
     val SECONDS_COLOR =
-        Binding("seconds-color", Color.GREEN, getInt, putInt)
+        Binding("seconds-color", Color.GREEN, R.string.seconds_color, getInt, putInt)
     val COMPLICATION_ICON_COLOR =
-        Binding("complication-icon-color", Color.WHITE, getInt, putInt)
+        Binding("complication-icon-color", Color.WHITE, 0, getInt, putInt)
     val COMPLICATION_TEXT_COLOR =
-        Binding("complication-text-color", Color.GREEN, getInt, putInt)
+        Binding("complication-text-color", Color.GREEN, 0, getInt, putInt)
     val DATE_COLOR =
-        Binding("date-color", Color.YELLOW, getInt, putInt)
+        Binding("date-color", Color.YELLOW, R.string.date_color, getInt, putInt)
 
     val BINDINGS =
-        arrayOf(ANGLE, HOURS_COLOR, MINUTES_COLOR, SECONDS_COLOR, DATE_COLOR)
+        arrayOf(
+            ANGLE,
+            HOURS_COLOR,
+            MINUTES_COLOR,
+            SECONDS_COLOR,
+            DATE_COLOR,
+            COMPLICATION_ICON_COLOR,
+            COMPLICATION_TEXT_COLOR
+        )
 
 
-    class Binding<T>(
+    data class Binding<T>(
         private val key: String,
         val default: T,
+        val stringId: Int,
         private val getter: (SharedPreferences, String, T) -> T,
         private val putter: (SharedPreferences.Editor, String, T) -> SharedPreferences.Editor
     ) {

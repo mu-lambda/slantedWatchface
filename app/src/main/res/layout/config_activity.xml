@@ -7,5 +7,5 @@
     android:background="@android:color/transparent"
     android:paddingStart="15dp"
     android:paddingEnd="15dp"
-    android:paddingBottom="15dp"
+    android:paddingBottom="30dp"
     android:scrollbars="vertical" />

@@ -25,7 +25,6 @@ class ColorSelectionActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         setContentView(R.layout.color_selection_activity)
         pickColor(intent?.getIntExtra(ORIGINAL_COLOR, Color.GREEN) ?: Color.GREEN)
         findViewById<TextView>(R.id.color_description).text = intent?.getStringExtra(NAME) ?: ""
@@ -60,10 +59,10 @@ class ColorSelectionActivity : Activity() {
                             Color.LTGRAY,
                             Color.WHITE,
                             Color.RED,
-                            Color.GREEN,
-                            Color.BLUE,
                             Color.YELLOW,
+                            Color.GREEN,
                             Color.CYAN,
+                            Color.BLUE,
                             Color.MAGENTA,
                             0xFFBB00DD.toInt()
                         )

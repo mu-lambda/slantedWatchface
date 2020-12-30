@@ -8,7 +8,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.wearable.complications.*
 import android.util.Log
-import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,13 +24,17 @@ class ConfigActivity : Activity() {
         const val REQUEST_BOTTOM_COMPLICATION = 1002
         const val REQUEST_PICK_COLOR_THEME = 1003
 
+        const val REQUEST_PICK_HOURS_COLOR = 1004
+        const val REQUEST_PICK_MINUTES_COLOR = 1005
+        const val REQUEST_PICK_SECONDS_COLOR = 1006
+        const val REQUEST_PICK_DATE_COLOR = 1007
+
         object MenuItems {
             const val PREVIEW = 0
             const val MORE = 1
-            const val HANDEDNESS = 2
-            const val COLOR_THEME = 3
-            const val TOP_COMPLICATION = 4
-            const val BOTTOM_COMPLICATION = 5
+            const val COLOR_THEME = 2
+            const val HANDEDNESS = 3
+            const val RESET_SETTINGS = 4
         }
 
     }
@@ -75,35 +78,44 @@ class ConfigActivity : Activity() {
         if (resultCode != RESULT_OK) return
 
         when (requestCode) {
-            REQUEST_TOP_COMPLICATION ->
-                mAdapter.updateComplication(WatchFaceService.Complications.TOP)
-            REQUEST_BOTTOM_COMPLICATION ->
-                mAdapter.updateComplication(WatchFaceService.Complications.BOTTOM)
             REQUEST_PICK_COLOR_THEME -> {
                 if (data?.hasExtra(ColorSelectionActivity.RESULT) == true) {
                     mAdapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
                 }
             }
+            REQUEST_PICK_HOURS_COLOR -> updateIndividualColor(Settings.HOURS_COLOR, data)
+            REQUEST_PICK_MINUTES_COLOR -> updateIndividualColor(Settings.MINUTES_COLOR, data)
+            REQUEST_PICK_SECONDS_COLOR -> updateIndividualColor(Settings.SECONDS_COLOR, data)
+            REQUEST_PICK_DATE_COLOR -> updateIndividualColor(Settings.DATE_COLOR, data)
+        }
+    }
 
+    private fun updateIndividualColor(binding: Settings.Binding<Int>, data: Intent?) {
+        if (data?.hasExtra(ColorSelectionActivity.RESULT) == true) {
+            val color = data.getIntExtra(ColorSelectionActivity.RESULT, 0)
+            with(sharedPreferences.edit()) {
+                binding.put(this, color)
+                apply()
+            }
         }
     }
 
     inner class Adapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-        private val TAG = Adapter::class.qualifiedName
         private val mProviderInfoRetriever: ProviderInfoRetriever =
             ProviderInfoRetriever(
                 this@ConfigActivity,
                 Executors.newCachedThreadPool()
             ).apply { init() }
-        private val mComplicationViews =
-            SparseArray<ComplicationViewHolder>(WatchFaceService.Complications.ALL.size)
         private lateinit var preview: WatchFacePreview
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             when (viewType) {
                 MenuItems.PREVIEW ->
                     return PreviewViewHolder(parent).also {
-                        preview = it.view.apply { onComplicationIdClick = ::selectComplication }
+                        preview = it.view.apply {
+                            onComplicationIdClick = ::selectComplication
+                            onColorSettingClick = ::selectColor
+                        }
                     }
                 MenuItems.MORE ->
                     return MoreViewHolder(parent)
@@ -114,36 +126,21 @@ class ConfigActivity : Activity() {
                 MenuItems.COLOR_THEME ->
                     return ColorThemeViewHolder(parent)
 
-                MenuItems.TOP_COMPLICATION ->
-                    return complicationViewHolder(
-                        parent, WatchFaceService.Complications.TOP,
-                        R.drawable.ic_top_complication
-                    )
-
-                MenuItems.BOTTOM_COMPLICATION ->
-                    return complicationViewHolder(
-                        parent,
-                        WatchFaceService.Complications.BOTTOM,
-                        R.drawable.ic_bottom_complication
-                    )
+                MenuItems.RESET_SETTINGS ->
+                    return ResetSettingsViewHolder(parent)
 
             }
             throw UnsupportedOperationException()
         }
 
-
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             when (holder.itemViewType) {
-                MenuItems.TOP_COMPLICATION, MenuItems.BOTTOM_COMPLICATION -> {
-                    retrieveComplicationInfo(holder as ComplicationViewHolder)
-                    return
-                }
-                MenuItems.MORE, MenuItems.COLOR_THEME -> return
-                MenuItems.HANDEDNESS -> {
-                    return
-                }
                 MenuItems.PREVIEW -> {
                     retrieveComplicationInfos((holder as PreviewViewHolder).view)
+                    return
+                }
+                MenuItems.MORE, MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
+                MenuItems.HANDEDNESS -> {
                     return
                 }
             }
@@ -166,28 +163,6 @@ class ConfigActivity : Activity() {
             )
         }
 
-        private fun retrieveComplicationInfo(complicationViewHolder: ComplicationViewHolder) {
-            mProviderInfoRetriever.retrieveProviderInfo(
-                object : ProviderInfoRetriever.OnProviderInfoReceivedCallback() {
-                    override fun onProviderInfoReceived(id: Int, info: ComplicationProviderInfo?) {
-                        complicationViewHolder.setComplication(info)
-                    }
-                },
-                ComponentName(this@ConfigActivity, WatchFaceService::class.java),
-                complicationViewHolder.complicationId
-            )
-        }
-
-        fun updateComplication(complicationId: Int) {
-            val complicationViewHolder = mComplicationViews[complicationId]
-            if (complicationViewHolder != null) {
-                retrieveComplicationInfo(complicationViewHolder)
-            } else {
-                Log.e(TAG, "No complicationViewHolder for complicationId=${complicationId}")
-            }
-            retrieveComplicationInfos(preview)
-        }
-
 
         override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
             mProviderInfoRetriever.release()
@@ -195,18 +170,10 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 6
+            return 5
         }
 
         override fun getItemViewType(position: Int): Int = position
-
-        private fun complicationViewHolder(
-            parent: ViewGroup, complicationId: Int, iconId: Int
-        ): ComplicationViewHolder {
-            return ComplicationViewHolder(parent, complicationId, iconId).also {
-                mComplicationViews.put(complicationId, it)
-            }
-        }
 
         fun destroy() {
             mProviderInfoRetriever.release()
@@ -225,6 +192,26 @@ class ConfigActivity : Activity() {
                 apply()
             }
         }
+    }
+
+    private fun selectColor(binding: Settings.Binding<Int>) {
+        val requestCode = when (binding) {
+            Settings.HOURS_COLOR -> REQUEST_PICK_HOURS_COLOR
+            Settings.MINUTES_COLOR -> REQUEST_PICK_MINUTES_COLOR
+            Settings.SECONDS_COLOR -> REQUEST_PICK_SECONDS_COLOR
+            Settings.DATE_COLOR -> REQUEST_PICK_DATE_COLOR
+            else -> throw UnsupportedOperationException("$binding")
+        }
+        startActivityForResult(
+            Intent(this@ConfigActivity, ColorSelectionActivity::class.java)
+                .putExtra(ColorSelectionActivity.NAME, getString(binding.stringId))
+                .putExtra(
+                    ColorSelectionActivity.ORIGINAL_COLOR,
+                    binding.get(sharedPreferences)
+                ),
+            requestCode
+        )
+
     }
 
     inner class ColorThemeViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
@@ -261,36 +248,21 @@ class ConfigActivity : Activity() {
         val view: WatchFacePreview = itemView.findViewById(R.id.preview)
     }
 
-    inner class ComplicationViewHolder(
-        parent: ViewGroup,
-        val complicationId: Int,
-        iconId: Int
-    ) : RecyclerView.ViewHolder(
-        LayoutInflater
-            .from(parent.context)
-            .inflate(R.layout.complication, parent, false)
-    ),
-        View.OnClickListener {
-        private val dataButton: Button = itemView.findViewById(R.id.data_button)
-
+    inner class ResetSettingsViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.reset_settings, parent, false)
+    ), View.OnClickListener {
         init {
             itemView.setOnClickListener(this)
-            dataButton.setCompoundDrawablesWithIntrinsicBounds(iconId, 0, 0, 0)
         }
-
-        fun setComplication(p1: ComplicationProviderInfo?) {
-            if (p1 != null) {
-                dataButton.text = p1.providerName
-            } else {
-                dataButton.setText(R.string.empty_provider)
-            }
-        }
-
 
         override fun onClick(v: View?) {
-            selectComplication(complicationId)
+            with(sharedPreferences.edit()) {
+                Settings.applyDefault(this)
+                apply()
+            }
         }
     }
+
 
     inner class HandednessViewHolder(
         parent: ViewGroup,

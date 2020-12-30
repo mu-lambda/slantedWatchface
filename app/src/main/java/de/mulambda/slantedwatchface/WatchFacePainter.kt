@@ -138,31 +138,43 @@ class WatchFacePainter(
         val dateY: Float
     )
 
-    fun isDateSecondAreaTap(calendar: Calendar, x: Int, y: Int): Boolean {
-        val (x1, y1) = rotate(x, y)
+    fun isHoursTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::hoursRect)
+    fun isMinutesTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::minutesRect)
+    fun isSecondsTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::secondsRect)
+    fun isDateTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::dateRect)
 
-        return dateSecondRect(calendar).contains(x1, y1)
+    private fun isTap(calendar: Calendar, x: Int, y: Int, f: (Calendar) -> RectF): Boolean {
+        val (x1, y1) = rotate(x, y)
+        return f(calendar).contains(x1, y1)
     }
 
-    fun dateSecondRect(calendar: Calendar): RectF {
+
+    fun hoursRect(calendar: Calendar): RectF {
         val p = calculatePaintData(calendar)
-        val (_, secondsBounds) = geometry.getSeconds(calendar)
-        val secondsRect = RectF(
-            p.secondsX,
-            p.secondsY - secondsBounds.second,
-            p.secondsX + secondsBounds.first,
-            p.secondsY
-        )
-        val (_, dateBounds) = geometry.getDate(calendar)
-        val dateRect = RectF(
-            p.dateX,
-            p.dateY - dateBounds.second,
-            p.dateX + dateBounds.first,
-            p.dateY
-        )
-        dateRect.union(secondsRect)
-        dateRect.offset(bounds.left, bounds.top)
-        return dateRect
+        return getDataRect(p.hoursX, p.hoursY, geometry.getHours(calendar).second)
+    }
+
+    fun minutesRect(calendar: Calendar): RectF {
+        val p = calculatePaintData(calendar)
+        return getDataRect(p.minutesX, p.minutesY, geometry.getMinutes(calendar).second)
+    }
+
+
+    fun secondsRect(calendar: Calendar): RectF {
+        val p = calculatePaintData(calendar)
+        return getDataRect(p.secondsX, p.secondsY, geometry.getSeconds(calendar).second)
+    }
+
+    fun dateRect(calendar: Calendar): RectF {
+        val p = calculatePaintData(calendar)
+        return getDataRect(p.dateX, p.dateY, geometry.getDate(calendar).second)
+    }
+
+
+    private fun getDataRect(x: Float, y: Float, dataBounds: Pair<Int, Int>): RectF {
+        val secondsRect = RectF(x, y - dataBounds.second, x + dataBounds.first, y)
+        secondsRect.offset(bounds.left, bounds.top)
+        return secondsRect
     }
 
     fun rotate(x: Int, y: Int): Pair<Float, Float> {
