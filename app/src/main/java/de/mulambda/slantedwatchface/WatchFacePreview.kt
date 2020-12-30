@@ -74,7 +74,7 @@ class WatchFacePreview(
         invalidate()
     }
 
-    @SuppressLint("ClickableViewAccessibility") // We provide alternative way of changing complications
+    @SuppressLint("ClickableViewAccessibility") // TODO(#15): fix this
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
