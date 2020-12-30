@@ -6,8 +6,8 @@ import android.util.SparseArray
 import java.util.*
 
 class WatchFacePainter(
-    private val veneer: Veneer,
-    private val bounds: RectF,
+    val veneer: Veneer,
+    val bounds: RectF,
     private val complications: Complications
 ) {
     interface Complications {
@@ -17,9 +17,9 @@ class WatchFacePainter(
     }
 
 
-    private val mCenterX = bounds.width() / 2f
-    private val mCenterY = bounds.height() / 2f
-    private val hoursSize = mCenterY * 2
+    val centerX = bounds.width() / 2f
+    val centerY = bounds.height() / 2f
+    private val hoursSize = centerY * 2
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = hoursSize
@@ -84,14 +84,14 @@ class WatchFacePainter(
         val largeInset = 10f
         val maxHoursHeight = geometry.calculateMaxHoursHeight()
         val maxMinutesHeight = geometry.calculateMaxMinutesHeight()
-        val hoursY = mCenterY + maxHoursHeight / 2
-        val minutesX = mCenterX + largeInset
+        val hoursY = centerY + maxHoursHeight / 2
+        val minutesX = centerX + largeInset
         val minutesY = hoursY - maxHoursHeight + maxMinutesHeight
 
         val complicationAreaLeft = minutesX
         val complicationAreaTop = minutesY + largeInset
-        val complicationAreaRight = mCenterX * 2
-        val complicationAreaBottom = (hoursY + mCenterY * 2) / 2
+        val complicationAreaRight = centerX * 2
+        val complicationAreaBottom = (hoursY + centerY * 2) / 2
 
         var nonEmptyComplications = 0
         complications.ids.forEach {
@@ -178,13 +178,13 @@ class WatchFacePainter(
     }
 
     fun rotate(x: Int, y: Int): Pair<Float, Float> {
-        val dx = x - mCenterX - bounds.left
-        val dy = y - mCenterY - bounds.top
+        val dx = x - centerX - bounds.left
+        val dy = y - centerY - bounds.top
         val a = -veneer.angle / 180f * Math.PI
         val dx1 = dx * Math.cos(a) - dy * Math.sin(a)
         val dy1 = dx * Math.sin(a) + dy * Math.cos(a)
-        val x1 = bounds.left + mCenterX + dx1
-        val y1 = bounds.top + mCenterY + dy1
+        val x1 = bounds.left + centerX + dx1
+        val y1 = bounds.top + centerY + dy1
         return Pair(x1.toFloat(), y1.toFloat())
     }
 
@@ -196,14 +196,14 @@ class WatchFacePainter(
 
         val largeInset = 10f
         val smallInset = 2f
-        val hoursX = mCenterX - hoursDim.first
-        val hoursY = mCenterY + hoursDim.second / 2
-        val minutesX = mCenterX + largeInset
+        val hoursX = centerX - hoursDim.first
+        val hoursY = centerY + hoursDim.second / 2
+        val minutesX = centerX + largeInset
         val minutesY = hoursY - hoursDim.second + minutesDim.second
         val dateX = minutesX + minutesDim.first + largeInset
         val dateY = minutesY
         val secondsX = dateX
-        val secondsY = dateY - dateDim.second - smallInset
+        val secondsY = dateY - dateDim.second - 4 * smallInset
 
         return PaintData(
             hours = hours,
@@ -223,7 +223,7 @@ class WatchFacePainter(
 
     fun draw(mCalendar: Calendar, canvas: Canvas) {
         canvas.save()
-        canvas.rotate(veneer.angle, bounds.left + mCenterX, bounds.top + mCenterY)
+        canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
         highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
         with(calculatePaintData(mCalendar)) {
             canvas.drawText(

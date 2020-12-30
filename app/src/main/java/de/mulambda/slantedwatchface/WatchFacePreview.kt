@@ -38,6 +38,35 @@ class WatchFacePreview(
         strokeWidth = 4f
         isAntiAlias = true
     }
+    private val tochableBorderPaint = Paint().apply {
+        color = Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = 2f
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+        isAntiAlias = true
+        pathEffect =
+            ComposePathEffect(
+                DashPathEffect(floatArrayOf(4f, 4f), 0f),
+                CornerPathEffect(10f)
+            )
+    }
+    private val tochableColorBorderPaint = Paint().apply {
+        color = Color.DKGRAY
+        style = Paint.Style.STROKE
+        strokeWidth = 1f
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+        isAntiAlias = true
+        pathEffect =
+            ComposePathEffect(
+                DashPathEffect(floatArrayOf(4f, 4f), 0f),
+                CornerPathEffect(10f)
+            )
+    }
+
+    private lateinit var touchableBorderPath: Path
+
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         Log.i(TAG(), "onSharedPreferenceChanged")
@@ -129,6 +158,11 @@ class WatchFacePreview(
         watchFaceClipPath = Path().apply {
             addCircle(paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2, Path.Direction.CW)
         }
+        touchableBorderPath = Path().apply {
+            for (touchableArea in touchableAreas) {
+                rect(touchableArea.recter(painter, calendar).toIntRect())
+            }
+        }
         complications.updateComplicationLocations()
     }
 
@@ -147,6 +181,14 @@ class WatchFacePreview(
         canvas.save()
         canvas.clipPath(watchFaceClipPath)
         canvas.drawColor(Color.BLACK)
+
+        canvas.save()
+        with(painter) {
+            canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
+        }
+        canvas.drawPath(touchableBorderPath, tochableColorBorderPaint)
+        canvas.restore()
+
         painter.draw(calendar, canvas)
         canvas.restore()
         val dim = watchfaceSize().toFloat()
@@ -165,19 +207,6 @@ class WatchFacePreview(
             SparseArray<ComplicationProviderInfo?>(WatchFaceService.Complications.ALL.size)
         private val complicationIcons =
             SparseArray<Drawable?>(WatchFaceService.Complications.ALL.size)
-        private val borderPaint = Paint().apply {
-            color = Color.WHITE
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-            strokeJoin = Paint.Join.ROUND
-            strokeCap = Paint.Cap.ROUND
-            isAntiAlias = true
-            pathEffect =
-                ComposePathEffect(
-                    DashPathEffect(floatArrayOf(4f, 4f), 0f),
-                    CornerPathEffect(10f)
-                )
-        }
         private lateinit var borderPath: Path
 
         override val ids: IntArray
@@ -189,7 +218,7 @@ class WatchFacePreview(
             for (id in ids) {
                 complicationIcons.get(id, null)?.draw(canvas)
             }
-            canvas.drawPath(borderPath, borderPaint)
+            canvas.drawPath(borderPath, tochableBorderPaint)
         }
 
         private fun setIconBounds(id: Int) {
