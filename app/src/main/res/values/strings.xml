@@ -9,5 +9,5 @@
     <string name="pick_color_primary">Primary color</string>
     <string name="pick_color_shades">Tints and shades</string>
     <string name="color_theme">Color theme</string>
-    <string name="apply_picked_color">Use this color</string>
+    <string name="apply_picked_color">Apply</string>
 </resources>
