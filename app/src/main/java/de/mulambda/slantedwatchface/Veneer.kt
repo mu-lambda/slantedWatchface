@@ -62,6 +62,17 @@ data class Veneer(
             minutesColor = whiteOf(baseColor),
             secondsColor = baseColor,
             complicationIconColor = whiteOf(baseColor),
-            complicationTextColor = baseColor
+            complicationTextColor = baseColor,
+            dateColor = applyColorValue(dateColor, baseColor)
         )
+
+    private fun applyColorValue(color: Int, valueSource: Int): Int {
+        val colorHSV = floatArrayOf(0f, 0f, 0f)
+        val sourceHSV = floatArrayOf(0f, 0f, 0f)
+        Color.colorToHSV(color, colorHSV)
+        Color.colorToHSV(valueSource, sourceHSV)
+        return Color.HSVToColor(
+            Color.alpha(color), floatArrayOf(colorHSV[0], colorHSV[1], sourceHSV[2])
+        )
+    }
 }
