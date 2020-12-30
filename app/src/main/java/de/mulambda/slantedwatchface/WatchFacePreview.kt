@@ -34,7 +34,7 @@ class WatchFacePreview(
     }
     private val borderPaint = Paint().apply {
         style = Paint.Style.STROKE
-        color = Color.DKGRAY
+        color = Color.LTGRAY
         strokeWidth = 4f
         isAntiAlias = true
     }
@@ -52,9 +52,9 @@ class WatchFacePreview(
             )
     }
     private val tochableColorBorderPaint = Paint().apply {
-        color = Color.DKGRAY
+        color = Color.LTGRAY
         style = Paint.Style.STROKE
-        strokeWidth = 1f
+        strokeWidth = 2f
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
         isAntiAlias = true
