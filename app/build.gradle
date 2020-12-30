@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId 'de.mulambda.slantedWatchface'
-        minSdkVersion 28
+        minSdkVersion 27
         targetSdkVersion 30
         versionCode 1
         versionName "dev"
