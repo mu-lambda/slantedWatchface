@@ -1,2 +1,2 @@
-include ':wearable'
+include ':android-wear-color-picker:library', ':wearable'
 rootProject.name = "SlantedWatchface"

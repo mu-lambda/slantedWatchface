@@ -50,5 +50,6 @@ dependencies {
     implementation 'androidx.palette:palette:1.0.0'
     implementation 'androidx.wear:wear:1.1.0'
 
-    implementation 'org.jraf:android-wear-color-picker:2.2.2'
+    //implementation 'org.jraf:android-wear-color-picker:2.2.2'
+    implementation project(':android-wear-color-picker:library')
 }

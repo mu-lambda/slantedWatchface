@@ -1,0 +1,3 @@
+[submodule "android-wear-color-picker"]
+	path = android-wear-color-picker
+	url = git@github.com:mu-lambda/android-wear-color-picker.git
