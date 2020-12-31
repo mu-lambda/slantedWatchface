@@ -3,8 +3,8 @@
 /local.properties
 /.idea
 .DS_Store
-/app/build
-/app/release
+/wearable/build
+/wearable/release
 /build
 /captures
 /release
