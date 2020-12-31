@@ -8,4 +8,9 @@
     android:paddingStart="15dp"
     android:paddingEnd="15dp"
     android:paddingBottom="30dp"
-    android:scrollbars="vertical" />
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:scrollbars="vertical">
+
+    <requestFocus />
+</androidx.wear.widget.WearableRecyclerView>
