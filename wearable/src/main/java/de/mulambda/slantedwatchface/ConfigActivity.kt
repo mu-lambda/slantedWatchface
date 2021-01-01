@@ -21,14 +21,17 @@ import java.util.concurrent.Executors
 
 class ConfigActivity : Activity() {
     companion object {
-        const val REQUEST_TOP_COMPLICATION = 1001
-        const val REQUEST_BOTTOM_COMPLICATION = 1002
-        const val REQUEST_PICK_COLOR_THEME = 1003
+        val REQUESTS_COMPLICATIONS = Complications.RANGE
+        private fun requestCodeOf(complicationId: Int) =
+            if (complicationId in Complications.RANGE) complicationId
+            else throw UnsupportedOperationException("complicationId = ${complicationId}")
 
-        const val REQUEST_PICK_HOURS_COLOR = 1004
-        const val REQUEST_PICK_MINUTES_COLOR = 1005
-        const val REQUEST_PICK_SECONDS_COLOR = 1006
-        const val REQUEST_PICK_DATE_COLOR = 1007
+        const val REQUEST_PICK_COLOR_THEME = Complications.BOTTOM + 1
+
+        const val REQUEST_PICK_HOURS_COLOR = Complications.BOTTOM + 2
+        const val REQUEST_PICK_MINUTES_COLOR = Complications.BOTTOM + 3
+        const val REQUEST_PICK_SECONDS_COLOR = Complications.BOTTOM + 4
+        const val REQUEST_PICK_DATE_COLOR = Complications.BOTTOM + 5
 
         object MenuItems {
             const val PREVIEW = 0
@@ -68,11 +71,6 @@ class ConfigActivity : Activity() {
         mAdapter.destroy()
     }
 
-    fun requestCodeOf(complicationId: Int) = when (complicationId) {
-        WatchFaceService.Complications.TOP -> REQUEST_TOP_COMPLICATION
-        WatchFaceService.Complications.BOTTOM -> REQUEST_BOTTOM_COMPLICATION
-        else -> throw UnsupportedOperationException("complicationId = ${complicationId}")
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         Log.i(TAG(), "onActivityResult: requestCode=${requestCode} resultCode =${resultCode}")
@@ -84,8 +82,7 @@ class ConfigActivity : Activity() {
                     mAdapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
                 }
             }
-            REQUEST_TOP_COMPLICATION, REQUEST_BOTTOM_COMPLICATION ->
-                mAdapter.updateComplications()
+            in REQUESTS_COMPLICATIONS -> mAdapter.updateComplications()
             REQUEST_PICK_HOURS_COLOR -> updateIndividualColor(Settings.HOURS_COLOR, data)
             REQUEST_PICK_MINUTES_COLOR -> updateIndividualColor(Settings.MINUTES_COLOR, data)
             REQUEST_PICK_SECONDS_COLOR -> updateIndividualColor(Settings.SECONDS_COLOR, data)
@@ -168,7 +165,7 @@ class ConfigActivity : Activity() {
                     }
                 },
                 ComponentName(this@ConfigActivity, WatchFaceService::class.java),
-                *WatchFaceService.Complications.ALL
+                *Complications.ALL
             )
         }
 
@@ -287,7 +284,7 @@ class ConfigActivity : Activity() {
             updateCurrentState()
         }
 
-        fun updateCurrentState() {
+        private fun updateCurrentState() {
             switch.setCompoundDrawablesWithIntrinsicBounds(
                 when (isOnRightHand(sharedPreferences)) {
                     true -> R.drawable.ic_watch_right_hand

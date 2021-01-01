@@ -3,6 +3,14 @@ package de.mulambda.slantedwatchface
 import android.content.SharedPreferences
 import android.graphics.Color
 
+object Complications {
+    const val TOP = 2021
+    const val BOTTOM = 2022
+
+    val ALL = intArrayOf(TOP, BOTTOM)
+    val RANGE = TOP..BOTTOM
+}
+
 object Settings {
     private val getInt = SharedPreferences::getInt
     private val putInt = SharedPreferences.Editor::putInt

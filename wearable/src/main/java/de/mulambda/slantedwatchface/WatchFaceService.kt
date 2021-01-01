@@ -48,12 +48,6 @@ class WatchFaceService : CanvasWatchFaceService() {
         private const val MSG_UPDATE_TIME = 0
     }
 
-    object Complications {
-        const val TOP = 1001
-        const val BOTTOM = 1002
-        val ALL = intArrayOf(TOP, BOTTOM)
-    }
-
     object Constants {
         const val GOLDEN = 1.61803398875f
         const val RATIO = GOLDEN
