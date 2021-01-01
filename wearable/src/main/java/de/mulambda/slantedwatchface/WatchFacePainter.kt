@@ -11,7 +11,7 @@ class WatchFacePainter(
     private val complications: Complications
 ) {
     interface Complications {
-        val ids: IntArray
+        val ids: IntRange
         fun isComplicationEmpty(id: Int): Boolean
         fun draw(canvas: Canvas, currentTimeMillis: Long)
     }

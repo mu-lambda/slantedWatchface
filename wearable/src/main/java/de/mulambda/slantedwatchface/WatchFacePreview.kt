@@ -202,15 +202,15 @@ class WatchFacePreview(
     }
 
     inner class ComplicationsPreview : WatchFacePainter.Complications {
-        private val complicationBounds = SparseArray<Rect>(Complications.ALL.size)
+        private val complicationBounds = SparseArray<Rect>(Complications.NUMBER_OF_SLOTS)
         private val complicationInfos =
-            SparseArray<ComplicationProviderInfo?>(Complications.ALL.size)
+            SparseArray<ComplicationProviderInfo?>(Complications.NUMBER_OF_SLOTS)
         private val complicationIcons =
-            SparseArray<Drawable?>(Complications.ALL.size)
+            SparseArray<Drawable?>(Complications.NUMBER_OF_SLOTS)
         private lateinit var borderPath: Path
 
-        override val ids: IntArray
-            get() = Complications.ALL
+        override val ids: IntRange
+            get() = Complications.RANGE
 
         override fun isComplicationEmpty(id: Int): Boolean = false
 

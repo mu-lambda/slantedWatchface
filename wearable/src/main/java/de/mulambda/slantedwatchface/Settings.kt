@@ -4,10 +4,10 @@ import android.content.SharedPreferences
 import android.graphics.Color
 
 object Complications {
+    const val NUMBER_OF_SLOTS = 2
     const val TOP = 2021
-    const val BOTTOM = 2022
+    const val BOTTOM = TOP + NUMBER_OF_SLOTS - 1
 
-    val ALL = intArrayOf(TOP, BOTTOM)
     val RANGE = TOP..BOTTOM
 }
 

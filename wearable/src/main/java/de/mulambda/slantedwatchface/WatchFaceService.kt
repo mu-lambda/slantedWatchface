@@ -92,7 +92,7 @@ class WatchFaceService : CanvasWatchFaceService() {
             )
 
             initialize(loadSavedPreverences())
-            setActiveComplications(*complications.ids)
+            setActiveComplications(*complications.ids.toList().toIntArray())
         }
 
         private fun loadSavedPreverences(): SharedPreferences {
@@ -301,15 +301,16 @@ class WatchFaceService : CanvasWatchFaceService() {
         }
 
         private inner class ComplicationsHolder : WatchFacePainter.Complications {
-            private val complicationData = SparseArray<ComplicationData>(Complications.ALL.size)
-            private val complicationBounds = SparseArray<Rect>(Complications.ALL.size)
+            private val complicationData =
+                SparseArray<ComplicationData>(Complications.NUMBER_OF_SLOTS)
+            private val complicationBounds = SparseArray<Rect>(Complications.NUMBER_OF_SLOTS)
             private val complicationDrawables =
-                SparseArray<ComplicationDrawable>(Complications.ALL.size).apply {
-                    for (id in Complications.ALL)
+                SparseArray<ComplicationDrawable>(Complications.NUMBER_OF_SLOTS).apply {
+                    for (id in Complications.RANGE)
                         put(id, ComplicationDrawable(applicationContext))
                 }
 
-            override val ids: IntArray = Complications.ALL
+            override val ids: IntRange = Complications.RANGE
 
             override fun isComplicationEmpty(id: Int): Boolean =
                 isEmptyComplicationData(complicationData.get(id))
@@ -336,20 +337,20 @@ class WatchFaceService : CanvasWatchFaceService() {
 
             fun updatePositions() {
                 painterForBounds().updateComplicationBounds(complicationBounds)
-                for (id in Complications.ALL) {
+                for (id in Complications.RANGE) {
                     complicationDrawables[id].bounds = complicationBounds[id]
                 }
             }
 
             fun setInAmbientMode(inAmbientMode: Boolean) {
-                for (id in Complications.ALL) {
+                for (id in Complications.RANGE) {
                     complicationDrawables[id].setInAmbientMode(inAmbientMode)
                 }
                 // We assume complication positions are the same in normal and ambient mode.
             }
 
             fun setProperties(lowBitAmbient: Boolean, burnInProtection: Boolean) {
-                for (id in Complications.ALL) {
+                for (id in Complications.RANGE) {
                     val complicationDrawable = complicationDrawables.get(id)
 
                     complicationDrawable.setLowBitAmbient(lowBitAmbient)
@@ -359,7 +360,7 @@ class WatchFaceService : CanvasWatchFaceService() {
             }
 
             fun setColors(veneer: Veneer) {
-                for (id in Complications.ALL) {
+                for (id in Complications.RANGE) {
                     complicationDrawables[id].setTextColorActive(veneer.complicationTextColor)
                     complicationDrawables[id].setTextColorAmbient(Veneer.AMBIENT_COLOR)
                     complicationDrawables[id].setIconColorActive(veneer.complicationIconColor)
@@ -371,7 +372,7 @@ class WatchFaceService : CanvasWatchFaceService() {
 
             fun performTap(x: Int, y: Int) {
                 val rotatedPoint = painterForBounds().rotate(x, y)
-                for (id in Complications.ALL) {
+                for (id in Complications.RANGE) {
                     performComplicationTap(id, rotatedPoint)
                 }
             }

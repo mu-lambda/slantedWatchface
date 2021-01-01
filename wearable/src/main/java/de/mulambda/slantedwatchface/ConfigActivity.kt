@@ -165,7 +165,7 @@ class ConfigActivity : Activity() {
                     }
                 },
                 ComponentName(this@ConfigActivity, WatchFaceService::class.java),
-                *Complications.ALL
+                *Complications.RANGE.toList().toIntArray()
             )
         }
 
