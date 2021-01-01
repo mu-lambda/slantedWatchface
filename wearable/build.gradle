@@ -11,8 +11,8 @@ android {
         applicationId 'de.mulambda.slantedWatchface'
         minSdkVersion 27
         targetSdkVersion 30
-        versionCode 1
-        versionName "dev"
+        versionCode 3
+        versionName "1.0"
 
     }
 
