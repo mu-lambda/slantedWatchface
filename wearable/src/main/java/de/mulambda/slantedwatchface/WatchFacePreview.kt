@@ -11,6 +11,7 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.content.ContextCompat
 import java.util.*
 
 /**
@@ -24,6 +25,7 @@ class WatchFacePreview(
     private val calendar = Calendar.getInstance()
     private val complications = ComplicationsPreview()
     private lateinit var watchFaceClipPath: Path
+    val iconMore = ContextCompat.getDrawable(context, R.drawable.ic_more)!!
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
     var onColorSettingClick: (Settings.Binding<Int>) -> Unit = { _ -> }
     val sharedPreferences = context.getSharedPreferences(
@@ -155,14 +157,22 @@ class WatchFacePreview(
             ),
             complications
         )
+        val centerX = paddingLeft + dim / 2
+        val centerY = paddingTop + dim / 2
         watchFaceClipPath = Path().apply {
-            addCircle(paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2, Path.Direction.CW)
+            addCircle(centerX, centerY, dim / 2, Path.Direction.CW)
         }
         touchableBorderPath = Path().apply {
             for (touchableArea in touchableAreas) {
                 rect(touchableArea.recter(painter, calendar).toIntRect())
             }
         }
+        iconMore.setBounds(
+            (centerX - iconMore.minimumWidth / 2).toInt(),
+            (paddingTop + dim - iconMore.minimumHeight).toInt(),
+            (centerX + iconMore.minimumWidth / 2).toInt(),
+            (paddingTop + dim).toInt()
+        )
         complications.updateComplicationLocations()
     }
 
@@ -195,6 +205,7 @@ class WatchFacePreview(
         canvas.drawCircle(
             paddingLeft + dim / 2, paddingTop + dim / 2, dim / 2 - 1, borderPaint
         )
+        iconMore.draw(canvas)
     }
 
     fun setComplication(complicationId: Int, info: ComplicationProviderInfo?) {

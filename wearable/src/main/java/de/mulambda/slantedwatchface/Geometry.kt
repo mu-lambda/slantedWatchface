@@ -6,7 +6,7 @@ import java.util.*
 import kotlin.collections.HashMap
 
 class Geometry(
-    val calendar: Calendar,
+    private val calendar: Calendar,
     mHoursPaint: TextPaint,
     mMinutesPaint: TextPaint,
     mSecondsPaint: TextPaint,

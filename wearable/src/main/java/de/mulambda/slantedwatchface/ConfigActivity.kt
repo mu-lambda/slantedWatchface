@@ -35,10 +35,9 @@ class ConfigActivity : Activity() {
 
         object MenuItems {
             const val PREVIEW = 0
-            const val MORE = 1
-            const val COLOR_THEME = 2
-            const val HANDEDNESS = 3
-            const val RESET_SETTINGS = 4
+            const val COLOR_THEME = 1
+            const val HANDEDNESS = 2
+            const val RESET_SETTINGS = 3
         }
 
     }
@@ -123,8 +122,6 @@ class ConfigActivity : Activity() {
                             onColorSettingClick = ::selectColor
                         }
                     }
-                MenuItems.MORE ->
-                    return MoreViewHolder(parent)
 
                 MenuItems.HANDEDNESS ->
                     return HandednessViewHolder(parent)
@@ -145,10 +142,7 @@ class ConfigActivity : Activity() {
                     updateComplications()
                     return
                 }
-                MenuItems.MORE, MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
-                MenuItems.HANDEDNESS -> {
-                    return
-                }
+                MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS, MenuItems.HANDEDNESS -> return
             }
             throw UnsupportedOperationException()
         }
@@ -176,7 +170,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 5
+            return 4
         }
 
         override fun getItemViewType(position: Int): Int = position
@@ -243,10 +237,6 @@ class ConfigActivity : Activity() {
         }
 
     }
-
-    class MoreViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.more_options, parent, false)
-    )
 
     inner class PreviewViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.preview, parent, false)
