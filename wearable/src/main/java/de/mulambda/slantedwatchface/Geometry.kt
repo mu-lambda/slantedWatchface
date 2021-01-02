@@ -6,7 +6,7 @@ import java.util.*
 import kotlin.collections.HashMap
 
 class Geometry(
-    val mCalendar: Calendar,
+    val calendar: Calendar,
     mHoursPaint: TextPaint,
     mMinutesPaint: TextPaint,
     mSecondsPaint: TextPaint,
@@ -26,26 +26,38 @@ class Geometry(
         getDimensions(mMinutesPaint, range(minutesField), ::padZero)
     private val mSecondsDimensions =
         getDimensions(mSecondsPaint, range(secondsField), ::padZero)
-    private val mDateDimensions = getDimensions(
-        mDatePaint,
-        sequence {
-            for (dayOfMonth in range(Calendar.DAY_OF_MONTH))
-                for (dayOfWeek in range(Calendar.DAY_OF_WEEK))
-                    yield(Pair(dayOfMonth, dayOfWeek))
-        }.asIterable(),
-        ::formatDate
-    )
+    private val mDateDimensions: HashMap<Int, HashMap<Int, Item>> =
+        HashMap<Int, HashMap<Int, Item>>().also {
+            val bounds = Rect()
+            val c = Calendar.getInstance()
+            for (dayOfMonth in range(Calendar.DAY_OF_MONTH)) {
+                val m = HashMap<Int, Item>()
+                it.put(dayOfMonth, m)
+                for (dayOfWeek in range(Calendar.DAY_OF_WEEK)) {
+                    c.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                    c.set(Calendar.DAY_OF_WEEK, dayOfWeek)
+
+                    val text = formatDate(c)
+                    mDatePaint.getTextBounds(text, 0, text.length, bounds)
+                    m.put(
+                        dayOfWeek,
+                        Item(text = text, width = bounds.width(), height = bounds.height())
+                    )
+
+                }
+            }
+        }
 
     private fun range(calendarField: Int): IntRange {
-        return mCalendar.getMinimum(calendarField)..mCalendar.getMaximum(calendarField)
+        return calendar.getMinimum(calendarField)..calendar.getMaximum(calendarField)
     }
 
-    private fun <T> getDimensions(
+    private fun getDimensions(
         textPaint: TextPaint,
-        range: Iterable<T>,
-        getText: (T) -> String
-    ): HashMap<T, Item> {
-        val m = HashMap<T, Item>()
+        range: IntRange,
+        getText: (Int) -> String
+    ): HashMap<Int, Item> {
+        val m = HashMap<Int, Item>()
         val valueBounds = Rect()
         for (value in range) {
             val text = getText(value)
@@ -59,13 +71,6 @@ class Geometry(
     }
 
     private fun padZero(i: Int) = if (i < 10) "0$i" else "$i"
-
-    private fun formatDate(p: Pair<Int, Int>): String {
-        val c = Calendar.getInstance()
-        c.set(Calendar.DAY_OF_MONTH, p.first)
-        c.set(Calendar.DAY_OF_WEEK, p.second)
-        return formatDate(c)
-    }
 
     private fun formatDate(c: Calendar) =
         "${
@@ -87,7 +92,7 @@ class Geometry(
         mSecondsDimensions[c.get(secondsField)]!!
 
     fun getDate(c: Calendar): Item =
-        mDateDimensions[Pair(c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.DAY_OF_WEEK))]!!
+        mDateDimensions[c.get(Calendar.DAY_OF_MONTH)]!![c.get(Calendar.DAY_OF_WEEK)]!!
 
     private fun calculateMaxHeight(dimensions: HashMap<Int, Item>): Int {
         var max = 0
