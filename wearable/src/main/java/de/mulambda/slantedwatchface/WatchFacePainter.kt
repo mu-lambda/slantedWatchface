@@ -127,15 +127,18 @@ class WatchFacePainter(
 
     // Data is in Painter coordinates
     private data class PaintData(
-        var hours: String,
-        var hoursX: Float, val hoursY: Float,
-        var minutes: String,
-        var minutesX: Float, val minutesY: Float,
-        var seconds: String,
-        var secondsX: Float, val secondsY: Float,
-        var date: String,
-        var dateX: Float,
-        val dateY: Float
+        var hours: String = "",
+        var hoursX: Float = 0f,
+        var hoursY: Float = 0f,
+        var minutes: String = "",
+        var minutesX: Float = 0f,
+        var minutesY: Float = 0f,
+        var seconds: String = "",
+        var secondsX: Float = 0f,
+        var secondsY: Float = 0f,
+        var date: String = "",
+        var dateX: Float = 0f,
+        var dateY: Float = 0f
     )
 
     fun isHoursTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::hoursRect)
@@ -150,29 +153,33 @@ class WatchFacePainter(
 
 
     fun hoursRect(calendar: Calendar): RectF {
-        val p = calculatePaintData(calendar)
-        return getDataRect(p.hoursX, p.hoursY, geometry.getHours(calendar).second)
+        val p = PaintData()
+        calculatePaintData(calendar, p)
+        return getDataRect(p.hoursX, p.hoursY, geometry.getHours(calendar))
     }
 
     fun minutesRect(calendar: Calendar): RectF {
-        val p = calculatePaintData(calendar)
-        return getDataRect(p.minutesX, p.minutesY, geometry.getMinutes(calendar).second)
+        val p = PaintData()
+        calculatePaintData(calendar, p)
+        return getDataRect(p.minutesX, p.minutesY, geometry.getMinutes(calendar))
     }
 
 
     fun secondsRect(calendar: Calendar): RectF {
-        val p = calculatePaintData(calendar)
-        return getDataRect(p.secondsX, p.secondsY, geometry.getSeconds(calendar).second)
+        val p = PaintData()
+        calculatePaintData(calendar, p)
+        return getDataRect(p.secondsX, p.secondsY, geometry.getSeconds(calendar))
     }
 
     fun dateRect(calendar: Calendar): RectF {
-        val p = calculatePaintData(calendar)
-        return getDataRect(p.dateX, p.dateY, geometry.getDate(calendar).second)
+        val p = PaintData()
+        calculatePaintData(calendar, p)
+        return getDataRect(p.dateX, p.dateY, geometry.getDate(calendar))
     }
 
 
-    private fun getDataRect(x: Float, y: Float, dataBounds: Pair<Int, Int>): RectF {
-        val secondsRect = RectF(x, y - dataBounds.second, x + dataBounds.first, y)
+    private fun getDataRect(x: Float, y: Float, dataBounds: Geometry.Item): RectF {
+        val secondsRect = RectF(x, y - dataBounds.height, x + dataBounds.width, y)
         secondsRect.offset(bounds.left, bounds.top)
         return secondsRect
     }
@@ -188,44 +195,40 @@ class WatchFacePainter(
         return Pair(x1.toFloat(), y1.toFloat())
     }
 
-    private fun calculatePaintData(calendar: Calendar): PaintData {
-        val (hours, hoursDim) = geometry.getHours(calendar)
-        val (minutes, minutesDim) = geometry.getMinutes(calendar)
-        val (seconds, _) = geometry.getSeconds(calendar)
-        val (date, dateDim) = geometry.getDate(calendar)
+    private fun calculatePaintData(calendar: Calendar, outPaintData: PaintData) {
+        val h = geometry.getHours(calendar)
+        val m = geometry.getMinutes(calendar)
+        val s = geometry.getSeconds(calendar)
+        val d = geometry.getDate(calendar)
 
         val largeInset = 10f
         val smallInset = 2f
-        val hoursX = centerX - hoursDim.first
-        val hoursY = centerY + hoursDim.second / 2
-        val minutesX = centerX + largeInset
-        val minutesY = hoursY - hoursDim.second + minutesDim.second
-        val dateX = minutesX + minutesDim.first + largeInset
-        val dateY = minutesY
-        val secondsX = dateX
-        val secondsY = dateY - dateDim.second - 4 * smallInset
+        with(outPaintData) {
+            hours = h.text
+            hoursX = centerX - h.width
+            hoursY = centerY + h.height / 2
 
-        return PaintData(
-            hours = hours,
-            hoursX = hoursX,
-            hoursY = hoursY,
-            minutes = minutes,
-            minutesX = minutesX,
-            minutesY = minutesY,
-            seconds = seconds,
-            secondsX = secondsX,
-            secondsY = secondsY,
-            date = date,
-            dateX = dateX,
-            dateY = dateY,
-        )
+            minutes = m.text
+            minutesX = centerX + largeInset
+            minutesY = hoursY - h.height + m.height
+
+            date = d.text
+            dateX = minutesX + m.width + largeInset
+            dateY = minutesY
+
+            seconds = s.text
+            secondsX = dateX
+            secondsY = dateY - d.height - 4 * smallInset
+        }
     }
 
-    fun draw(mCalendar: Calendar, canvas: Canvas) {
+    private var paintData = PaintData()
+    fun draw(calendar: Calendar, canvas: Canvas) {
         canvas.save()
         canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
         highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
-        with(calculatePaintData(mCalendar)) {
+        calculatePaintData(calendar, paintData)
+        with(paintData) {
             canvas.drawText(
                 hours, bounds.left + hoursX, bounds.top + hoursY, hoursPaint
             )
@@ -241,7 +244,7 @@ class WatchFacePainter(
                 )
             }
         }
-        complications.draw(canvas, mCalendar.timeInMillis)
+        complications.draw(canvas, calendar.timeInMillis)
         canvas.restore()
     }
 }

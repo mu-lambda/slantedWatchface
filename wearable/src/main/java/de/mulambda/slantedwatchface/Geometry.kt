@@ -17,6 +17,8 @@ class Geometry(
     private val minutesField = Calendar.MINUTE
     private val secondsField = Calendar.SECOND
 
+    data class Item(val text: String, val height: Int, val width: Int)
+
 
     private val mHoursDimensions =
         getDimensions(mHoursPaint, range(hoursField)) { i -> "$i" }
@@ -42,13 +44,16 @@ class Geometry(
         textPaint: TextPaint,
         range: Iterable<T>,
         getText: (T) -> String
-    ): HashMap<T, Pair<Int, Int>> {
-        val m = HashMap<T, Pair<Int, Int>>()
+    ): HashMap<T, Item> {
+        val m = HashMap<T, Item>()
         val valueBounds = Rect()
         for (value in range) {
             val text = getText(value)
             textPaint.getTextBounds(text, 0, text.length, valueBounds)
-            m.put(value, Pair(valueBounds.width(), valueBounds.height()))
+            m.put(
+                value,
+                Item(text = text, width = valueBounds.width(), height = valueBounds.height())
+            )
         }
         return m
     }
@@ -72,25 +77,22 @@ class Geometry(
         } " + "${c.get(Calendar.DAY_OF_MONTH)}"
 
 
-    fun getHours(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair("${c.get(hoursField)}", mHoursDimensions[c.get(hoursField)]!!)
+    fun getHours(c: Calendar): Item =
+        mHoursDimensions[c.get(hoursField)]!!
 
-    fun getMinutes(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair(padZero(c.get(minutesField)), mMinutesDimensions[c.get(minutesField)]!!)
+    fun getMinutes(c: Calendar): Item =
+        mMinutesDimensions[c.get(minutesField)]!!
 
-    fun getSeconds(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair(padZero(c.get(secondsField)), mSecondsDimensions[c.get(secondsField)]!!)
+    fun getSeconds(c: Calendar): Item =
+        mSecondsDimensions[c.get(secondsField)]!!
 
-    fun getDate(c: Calendar): Pair<String, Pair<Int, Int>> =
-        Pair(
-            formatDate(c),
-            mDateDimensions[Pair(c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.DAY_OF_WEEK))]!!
-        )
+    fun getDate(c: Calendar): Item =
+        mDateDimensions[Pair(c.get(Calendar.DAY_OF_MONTH), c.get(Calendar.DAY_OF_WEEK))]!!
 
-    private fun calculateMaxHeight(dimensions: HashMap<Int, Pair<Int, Int>>): Int {
+    private fun calculateMaxHeight(dimensions: HashMap<Int, Item>): Int {
         var max = 0
         for ((_, v) in dimensions) {
-            if (v.second > max) max = v.second
+            if (v.height > max) max = v.height
         }
         return max
     }
