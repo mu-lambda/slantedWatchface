@@ -148,7 +148,7 @@ class WatchFacePreview(
     private fun initializePainter() {
         val dim = watchfaceSize().toFloat()
         painter = WatchFacePainter(
-            Veneer.fromSharedPreferences(sharedPreferences, Typefaces(context.assets), false),
+            Veneer.fromSharedPreferences(sharedPreferences, context.assets, false),
             RectF(
                 paddingLeft.toFloat(),
                 paddingTop.toFloat(),

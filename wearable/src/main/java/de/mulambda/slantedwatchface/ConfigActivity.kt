@@ -179,13 +179,11 @@ class ConfigActivity : Activity() {
             mProviderInfoRetriever.release()
         }
 
-        private val typefaces = Typefaces(assets)
-
         fun updateColorTheme(color: Int?) {
             Log.i(TAG(), "updateColorTheme: color = ${color}")
             if (color == null) return
             val newVeneer = Veneer
-                .fromSharedPreferences(sharedPreferences, typefaces, false)
+                .fromSharedPreferences(sharedPreferences, assets, false)
                 .withColorScheme(color)
             with(sharedPreferences.edit()) {
                 newVeneer.put(this)

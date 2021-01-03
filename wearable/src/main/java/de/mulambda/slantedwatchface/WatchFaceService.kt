@@ -65,8 +65,6 @@ class WatchFaceService : CanvasWatchFaceService() {
         private lateinit var painter: ActiveAmbient<WatchFacePainter>
         private val complications = ComplicationsHolder()
 
-        private lateinit var typefaces: Typefaces
-
         private var isAmbient: Boolean = false
         private var lowBitProtection: Boolean = false
         private var burnInProtection: Boolean = false
@@ -104,11 +102,10 @@ class WatchFaceService : CanvasWatchFaceService() {
 
         private fun initialize(sharedPreferences: SharedPreferences) {
             calendar = Calendar.getInstance()
-            typefaces = Typefaces(this@WatchFaceService.assets)
 
             veneer = ActiveAmbient(
-                active = Veneer.fromSharedPreferences(sharedPreferences, typefaces, false),
-                ambient = Veneer.fromSharedPreferences(sharedPreferences, typefaces, true)
+                active = Veneer.fromSharedPreferences(sharedPreferences, assets, false),
+                ambient = Veneer.fromSharedPreferences(sharedPreferences, assets, true)
             )
             complications.setColors(veneer.active)
         }

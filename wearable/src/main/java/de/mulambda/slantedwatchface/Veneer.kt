@@ -1,6 +1,7 @@
 package de.mulambda.slantedwatchface
 
 import android.content.SharedPreferences
+import android.content.res.AssetManager
 import android.graphics.Color
 
 // Typeface and color settings for a watchface
@@ -20,12 +21,12 @@ data class Veneer(
 
         fun fromSharedPreferences(
             p: SharedPreferences,
-            typefaces: Typefaces,
+            assets: AssetManager,
             isAmbient: Boolean
         ) =
             Veneer(
                 angle = Settings.ANGLE.get(p),
-                typefaces = typefaces,
+                typefaces = Typefaces(assets, Typefaces.DEFAULT),
                 hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR,
                 minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
                 secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR,

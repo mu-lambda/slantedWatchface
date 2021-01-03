@@ -23,7 +23,7 @@ class WatchFacePainter(
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = hoursSize
-        textScaleX = 0.4f
+        textScaleX = veneer.typefaces.config.hourScaleX
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
@@ -31,7 +31,7 @@ class WatchFacePainter(
     private val minutesPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = minutesSize
-        textScaleX = 0.33f
+        textScaleX = veneer.typefaces.config.minutesScaleX
         color = veneer.minutesColor
         isAntiAlias = !veneer.isAmbient
     }
@@ -39,7 +39,7 @@ class WatchFacePainter(
     private val secondsPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = secondsSize
-        textScaleX = 0.4f
+        textScaleX = veneer.typefaces.config.secondsScaleX
         color = veneer.secondsColor
         isAntiAlias = !veneer.isAmbient
     }
