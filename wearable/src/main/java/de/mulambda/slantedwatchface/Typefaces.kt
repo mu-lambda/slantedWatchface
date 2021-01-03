@@ -26,9 +26,9 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 displayName = "Vaccine",
                 assetName = "Vaccine.ttf",
                 hourScaleX = 0.7f,
-                minutesScaleX = 0.5f,
-                secondsScaleX = 0.5f
+                minutesScaleX = 0.4f,
+                secondsScaleX = 0.4f
             )
-        val DEFAULT = VACCINE
+        val DEFAULT = LIMELIGHT
     }
 }
