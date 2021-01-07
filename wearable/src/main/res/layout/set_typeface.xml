@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Button xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/reset_button"
+    android:id="@+id/set_font_button"
     style="@style/ButtonConfigurationStyle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="30dp"
-    android:drawableStart="@drawable/ic_reset"
+    android:drawableStart="@drawable/ic_styles"
     android:paddingStart="@dimen/menu_start"
-    android:text="@string/reset_settings"
+    android:text="@string/set_font"
     tools:ignore="RtlSymmetry" />

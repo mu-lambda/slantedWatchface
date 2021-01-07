@@ -15,4 +15,5 @@
     <string name="seconds_color">Seconds</string>
     <string name="date_color">Date</string>
     <string name="reset_settings">Reset settings</string>
+    <string name="set_font">Font</string>
 </resources>

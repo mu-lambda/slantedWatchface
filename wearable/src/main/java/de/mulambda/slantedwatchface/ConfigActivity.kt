@@ -33,19 +33,22 @@ class ConfigActivity : Activity() {
         const val REQUEST_PICK_SECONDS_COLOR = Complications.BOTTOM + 4
         const val REQUEST_PICK_DATE_COLOR = Complications.BOTTOM + 5
 
+        const val REQUEST_PICK_TYPEFACE = Complications.BOTTOM + 6
+
         object MenuItems {
             const val PREVIEW = 0
             const val COLOR_THEME = 1
             const val HANDEDNESS = 2
-            const val RESET_SETTINGS = 3
+            const val TYPEFACE = 3
+            const val RESET_SETTINGS = 4
         }
 
     }
 
     private lateinit var sharedPreferences: SharedPreferences
 
-    private lateinit var mConfigMenu: WearableRecyclerView
-    private lateinit var mAdapter: Adapter
+    private lateinit var configMenu: WearableRecyclerView
+    private lateinit var adapter: Adapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sharedPreferences = applicationContext.getSharedPreferences(
@@ -54,20 +57,20 @@ class ConfigActivity : Activity() {
         )
         setContentView(R.layout.config_activity)
 
-        mAdapter = Adapter()
+        adapter = Adapter()
 
-        mConfigMenu = findViewById(R.id.config_menu)
-        mConfigMenu.layoutManager = LinearLayoutManager(this)
-        mConfigMenu.apply {
+        configMenu = findViewById(R.id.config_menu)
+        configMenu.layoutManager = LinearLayoutManager(this)
+        configMenu.apply {
             isEdgeItemsCenteringEnabled = true
             setHasFixedSize(true)
-            adapter = mAdapter
+            adapter = this@ConfigActivity.adapter
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mAdapter.destroy()
+        adapter.destroy()
     }
 
 
@@ -78,14 +81,15 @@ class ConfigActivity : Activity() {
         when (requestCode) {
             REQUEST_PICK_COLOR_THEME -> {
                 if (data?.hasExtra(ColorSelectionActivity.RESULT) == true) {
-                    mAdapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
+                    adapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
                 }
             }
-            in REQUESTS_COMPLICATIONS -> mAdapter.updateComplications()
+            in REQUESTS_COMPLICATIONS -> adapter.updateComplications()
             REQUEST_PICK_HOURS_COLOR -> updateIndividualColor(Settings.HOURS_COLOR, data)
             REQUEST_PICK_MINUTES_COLOR -> updateIndividualColor(Settings.MINUTES_COLOR, data)
             REQUEST_PICK_SECONDS_COLOR -> updateIndividualColor(Settings.SECONDS_COLOR, data)
             REQUEST_PICK_DATE_COLOR -> updateIndividualColor(Settings.DATE_COLOR, data)
+            REQUEST_PICK_TYPEFACE -> updateTypeface(Settings.TYPEFACE, data)
         }
     }
 
@@ -100,6 +104,20 @@ class ConfigActivity : Activity() {
                     Settings.MINUTES_COLOR ->
                         Settings.COMPLICATION_ICON_COLOR.put(this, color)
                 }
+                apply()
+            }
+        }
+    }
+
+    private fun updateTypeface(binding: Settings.Binding<String>, data: Intent?) {
+        Log.i(TAG(), "updateTypeface")
+        if (data?.hasExtra(TypefaceSelectionActivity.TYPEFACE) == true) {
+            val typeface =
+                data.getStringExtra(TypefaceSelectionActivity.TYPEFACE)
+                    ?: Typefaces.DEFAULT.displayName
+            Log.i(TAG(), "typeface=${typeface}")
+            with(sharedPreferences.edit()) {
+                binding.put(this, typeface)
                 apply()
             }
         }
@@ -129,6 +147,9 @@ class ConfigActivity : Activity() {
                 MenuItems.COLOR_THEME ->
                     return ColorThemeViewHolder(parent)
 
+                MenuItems.TYPEFACE ->
+                    return SetTypefaceViewHolder(parent)
+
                 MenuItems.RESET_SETTINGS ->
                     return ResetSettingsViewHolder(parent)
 
@@ -142,7 +163,8 @@ class ConfigActivity : Activity() {
                     updateComplications()
                     return
                 }
-                MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS, MenuItems.HANDEDNESS -> return
+                MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
+                MenuItems.HANDEDNESS, MenuItems.TYPEFACE -> return
             }
             throw UnsupportedOperationException()
         }
@@ -170,7 +192,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 4
+            return 5
         }
 
         override fun getItemViewType(position: Int): Int = position
@@ -218,7 +240,7 @@ class ConfigActivity : Activity() {
         private val button: Button = itemView.findViewById(R.id.color_theme_button)
 
         init {
-            itemView.setOnClickListener(this)
+            button.setOnClickListener(this)
             // dataButton.setCompoundDrawablesWithIntrinsicBounds(iconId, 0, 0, 0)
         }
 
@@ -231,6 +253,28 @@ class ConfigActivity : Activity() {
                         Settings.HOURS_COLOR.get(sharedPreferences)
                     ),
                 REQUEST_PICK_COLOR_THEME
+            )
+        }
+
+    }
+
+    inner class SetTypefaceViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.set_typeface, parent, false)
+    ), View.OnClickListener {
+        private val button: Button = itemView.findViewById(R.id.set_font_button)
+
+        init {
+            itemView.setOnClickListener(this)
+        }
+
+        override fun onClick(v: View?) {
+            startActivityForResult(
+                Intent(this@ConfigActivity, TypefaceSelectionActivity::class.java)
+                    .putExtra(
+                        TypefaceSelectionActivity.TYPEFACE,
+                        Settings.TYPEFACE.get(sharedPreferences)
+                    ),
+                REQUEST_PICK_TYPEFACE
             )
         }
 

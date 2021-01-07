@@ -29,14 +29,6 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 minutesScaleX = 0.4f,
                 secondsScaleX = 0.4f
             )
-        val REALLYFREE =
-            Config(
-                displayName = "Really Free",
-                assetName = "reallyfree.ttf",
-                hourScaleX = 1f,
-                minutesScaleX = 0.7f,
-                secondsScaleX = 0.7f
-            )
         val SWEET_HIPSTER =
             Config(
                 displayName = "Sweet Hipster",
@@ -47,5 +39,8 @@ class Typefaces(assets: AssetManager, val config: Config) {
             )
 
         val DEFAULT = LIMELIGHT
+        val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER)
+        fun configByString(displayName: String) =
+            ALL.find { c -> displayName.equals(c.displayName) } ?: DEFAULT
     }
 }

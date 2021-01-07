@@ -5,6 +5,6 @@
     style="@style/ButtonConfigurationStyle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/config_menu_start"
+    android:paddingStart="@dimen/menu_start"
     android:text="@string/right_handed"
     tools:ignore="RtlSymmetry,UseSwitchCompatOrMaterialXml" />

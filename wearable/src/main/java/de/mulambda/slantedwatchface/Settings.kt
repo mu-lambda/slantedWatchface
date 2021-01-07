@@ -16,6 +16,11 @@ object Settings {
     private val putInt = SharedPreferences.Editor::putInt
     private val getFloat = SharedPreferences::getFloat
     private val putFloat = SharedPreferences.Editor::putFloat
+    private val getString =
+        { sp: SharedPreferences, key: String, defaultValue: String ->
+            sp.getString(key, defaultValue)!!
+        }
+    private val putString = SharedPreferences.Editor::putString
 
     val ANGLE =
         Binding("angle", 30f, 0, getFloat, putFloat)
@@ -31,6 +36,8 @@ object Settings {
         Binding("complication-text-color", Color.GREEN, 0, getInt, putInt)
     val DATE_COLOR =
         Binding("date-color", Color.YELLOW, R.string.date_color, getInt, putInt)
+    val TYPEFACE =
+        Binding("typeface", Typefaces.LIMELIGHT.displayName, 0, getString, putString)
 
     val BINDINGS =
         arrayOf(
@@ -40,7 +47,8 @@ object Settings {
             SECONDS_COLOR,
             DATE_COLOR,
             COMPLICATION_ICON_COLOR,
-            COMPLICATION_TEXT_COLOR
+            COMPLICATION_TEXT_COLOR,
+            TYPEFACE,
         )
 
 

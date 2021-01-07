@@ -26,7 +26,7 @@ data class Veneer(
         ) =
             Veneer(
                 angle = Settings.ANGLE.get(p),
-                typefaces = Typefaces(assets, Typefaces.DEFAULT),
+                typefaces = Typefaces(assets, Typefaces.configByString(Settings.TYPEFACE.get(p))),
                 hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR,
                 minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
                 secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR,
