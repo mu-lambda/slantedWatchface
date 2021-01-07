@@ -22,6 +22,21 @@ class ColorSelectionActivity : Activity() {
 
     private var pickedColor: Int = Color.GREEN
 
+    private val list = listOf(
+        Color.BLACK,
+        Color.DKGRAY,
+        Color.GRAY,
+        Color.LTGRAY,
+        Color.WHITE,
+        Color.RED,
+        0xFF_FF_A5_00.toInt(), // Orange
+        Color.YELLOW,
+        Color.GREEN,
+        Color.CYAN,
+        Color.BLUE,
+        Color.MAGENTA,
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -52,20 +67,7 @@ class ColorSelectionActivity : Activity() {
                 ColorPickActivity.IntentBuilder()
                     .oldColor(pickedColor)
                     .colors(
-                        listOf(
-                            Color.BLACK,
-                            Color.DKGRAY,
-                            Color.GRAY,
-                            Color.LTGRAY,
-                            Color.WHITE,
-                            Color.RED,
-                            Color.YELLOW,
-                            Color.GREEN,
-                            Color.CYAN,
-                            Color.BLUE,
-                            Color.MAGENTA,
-                            0xFFBB00DD.toInt()
-                        )
+                        list
                     )
                     .build(this),
                 REQUEST_PICK_COLOR
