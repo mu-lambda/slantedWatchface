@@ -37,7 +37,7 @@ object Settings {
     val DATE_COLOR =
         Binding("date-color", Color.YELLOW, R.string.date_color, getInt, putInt)
     val TYPEFACE =
-        Binding("typeface", Typefaces.LIMELIGHT.displayName, 0, getString, putString)
+        Binding("typeface", Typefaces.DEFAULT.displayName, 0, getString, putString)
 
     val BINDINGS =
         arrayOf(
