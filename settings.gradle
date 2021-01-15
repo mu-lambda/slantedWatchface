@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-include ':android-wear-color-picker:library', ':wearable'
+include ':wearable'
 rootProject.name = "SlantedWatchface"
