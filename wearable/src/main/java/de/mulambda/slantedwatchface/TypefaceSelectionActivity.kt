@@ -61,7 +61,7 @@ class TypefaceSelectionActivity : Activity() {
             (itemView as RadioButton).apply {
                 text = context.getString(R.string.typeface_representative_text)
                 typeface = Typefaces(assets, config).timeTypeface
-                textSize = textSize * config.ySizeRatio
+                textSize *= config.ySizeRatio
                 textScaleX = config.hourScaleX
                 isChecked = config.displayName.equals(originalTypeface)
                 setOnClickListener(this@FontHolder)
