@@ -35,7 +35,7 @@ class WatchFacePainter(
 
     val centerX = bounds.width() / 2f
     val centerY = bounds.height() / 2f
-    private val hoursSize = centerY * 2
+    private val hoursSize = centerY * 2 * veneer.typefaces.config.ySizeRatio
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = hoursSize

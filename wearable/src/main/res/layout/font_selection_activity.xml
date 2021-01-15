@@ -25,7 +25,7 @@
     android:paddingStart="0dp"
     android:paddingEnd="0dp"
     android:scrollbars="vertical"
-    tools:context=".ColorSelectionActivity"
+    tools:context=".TypefaceSelectionActivity"
     tools:deviceIds="wear">
 
     <requestFocus />

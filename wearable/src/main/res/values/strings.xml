@@ -32,4 +32,5 @@
     <string name="date_color">Date</string>
     <string name="reset_settings">Reset settings</string>
     <string name="set_font">Font</string>
+    <string name="typeface_representative_text">12:34:56.7890</string>
 </resources>

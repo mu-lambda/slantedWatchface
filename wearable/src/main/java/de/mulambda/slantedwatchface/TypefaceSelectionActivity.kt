@@ -19,7 +19,6 @@ package de.mulambda.slantedwatchface
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,22 +52,23 @@ class TypefaceSelectionActivity : Activity() {
         }
     }
 
-    inner class FontHolder(parent: ViewGroup, val typefaceIndex: Int) : RecyclerView.ViewHolder(
+    inner class FontHolder(parent: ViewGroup, typefaceIndex: Int) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.typeface_button, parent, false)
     ), View.OnClickListener {
         val config = Typefaces.ALL[typefaceIndex]
-        val button = itemView as RadioButton
-
 
         init {
-            button.text = config.displayName
-            button.typeface = Typefaces(assets, config).timeTypeface
-            button.isChecked = config.displayName.equals(originalTypeface)
-            button.setOnClickListener(this)
+            (itemView as RadioButton).apply {
+                text = context.getString(R.string.typeface_representative_text)
+                typeface = Typefaces(assets, config).timeTypeface
+                textSize = textSize * config.ySizeRatio
+                textScaleX = config.hourScaleX
+                isChecked = config.displayName.equals(originalTypeface)
+                setOnClickListener(this@FontHolder)
+            }
         }
 
         override fun onClick(v: View?) {
-            Log.i(TAG(), "Clicked: ${config.displayName} index=$typefaceIndex")
             setResult(RESULT_OK, Intent().putExtra(TYPEFACE, config.displayName))
             finish()
         }
