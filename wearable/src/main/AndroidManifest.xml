@@ -15,9 +15,11 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="de.mulambda.slantedwatchface">
     <!-- Required to act as a custom watch face. -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- Required for complications to receive complication data and open the provider chooser. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Required for complications to receive complication data and open the provider chooser. -->
     <uses-permission android:name="com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA" />
 
     <uses-feature android:name="android.hardware.type.watch" />
@@ -27,8 +29,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault">
-        <activity android:name=".TypefaceSelectionActivity" />
+        android:theme="@android:style/Theme.DeviceDefault"
+        tools:ignore="AllowBackup">
 
         <meta-data
             android:name="com.google.android.wearable.standalone"
@@ -72,6 +74,7 @@
         <activity
             android:name=".ColorSelectionActivity"
             android:label="Color selection" />
+        <activity android:name=".TypefaceSelectionActivity" />
 
         <meta-data
             android:name="com.google.android.gms.version"
