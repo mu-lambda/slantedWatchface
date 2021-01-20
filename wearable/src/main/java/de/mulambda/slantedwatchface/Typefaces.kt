@@ -52,10 +52,10 @@ class Typefaces(assets: AssetManager, val config: Config) {
             Config(
                 displayName = "Sweet Hipster",
                 assetName = "sweethipster.ttf",
-                ySizeRatio = 1.2f,
-                hourScaleX = 0.8f,
+                ySizeRatio = 1.3f,
+                hourScaleX = 0.9f,
                 minutesScaleX = 0.7f,
-                secondsScaleX = 0.7f
+                secondsScaleX = 0.6f
             )
 
         val DEFAULT = LIMELIGHT
