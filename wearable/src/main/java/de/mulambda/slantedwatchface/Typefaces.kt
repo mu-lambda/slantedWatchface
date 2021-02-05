@@ -20,38 +20,66 @@ import android.content.res.AssetManager
 import android.graphics.Typeface
 
 class Typefaces(assets: AssetManager, val config: Config) {
-    val timeTypeface: Typeface = Typeface.createFromAsset(assets, config.assetName)
-    val dateTypeface: Typeface = Typeface.DEFAULT
+  val timeTypeface: Typeface = Typeface.createFromAsset(assets, config.assetName)
+  val dateTypeface: Typeface = Typeface.DEFAULT
 
-    data class Config(
-        val displayName: String, val assetName: String,
-        val ySizeRatio: Float,
-        val hourScaleX: Float, val minutesScaleX: Float, val secondsScaleX: Float
-    )
+  data class Config(
+      val displayName: String, val assetName: String,
+      val ySizeRatio: Float,
+      val hourScaleX: Float, val minutesScaleX: Float, val secondsScaleX: Float
+  )
 
-    companion object {
-        val LIMELIGHT =
-            Config(
-                displayName = "Limelight",
-                assetName = "limelight.ttf",
-                ySizeRatio = 1f,
-                hourScaleX = 0.4f,
-                minutesScaleX = 0.33f,
-                secondsScaleX = 0.4f
-            )
-        val SWEET_HIPSTER =
-            Config(
-                displayName = "Sweet Hipster",
-                assetName = "sweethipster.ttf",
-                ySizeRatio = 1.3f,
-                hourScaleX = 0.9f,
-                minutesScaleX = 0.7f,
-                secondsScaleX = 0.6f
-            )
+  companion object {
+    val LIMELIGHT =
+        Config(
+            displayName = "Limelight",
+            assetName = "limelight.ttf",
+            ySizeRatio = 1f,
+            hourScaleX = 0.4f,
+            minutesScaleX = 0.33f,
+            secondsScaleX = 0.4f
+        )
+    val SWEET_HIPSTER =
+        Config(
+            displayName = "Sweet Hipster",
+            assetName = "sweethipster.ttf",
+            ySizeRatio = 1.3f,
+            hourScaleX = 0.9f,
+            minutesScaleX = 0.7f,
+            secondsScaleX = 0.6f
+        )
+    val OUT_OF_AFRICA =
+        Config(
+            displayName = "Out Of Africa",
+            assetName = "OutOfAfrica.ttf",
+            ySizeRatio = 1f,
+            hourScaleX = 0.5f,
+            minutesScaleX = 0.45f,
+            secondsScaleX = 0.45f
+        )
+    val GRAFIK_TEXT =
+        Config(
+            displayName = "Grafik Text",
+            assetName = "GrafikText.ttf",
+            ySizeRatio = 1f,
+            hourScaleX = 0.5f,
+            minutesScaleX = 0.5f,
+            secondsScaleX = 0.5f
+        )
+    val FENWICK_WOODTYPE =
+        Config(
+            displayName = "Fenwick Woodtype",
+            assetName = "FenwickWoodtype.ttf",
+            ySizeRatio = 1.0f,
+            hourScaleX = 0.7f,
+            minutesScaleX = 0.6f,
+            secondsScaleX = 0.5f
+        )
 
-        val DEFAULT = LIMELIGHT
-        val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER)
-        fun configByString(displayName: String) =
-            ALL.find { c -> displayName.equals(c.displayName) } ?: DEFAULT
-    }
+
+    val DEFAULT = LIMELIGHT
+    val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER, OUT_OF_AFRICA, GRAFIK_TEXT, FENWICK_WOODTYPE)
+    fun configByString(displayName: String) =
+        ALL.find { c -> displayName.equals(c.displayName) } ?: DEFAULT
+  }
 }
