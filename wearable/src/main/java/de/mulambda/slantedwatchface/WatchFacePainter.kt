@@ -22,16 +22,17 @@ import android.util.SparseArray
 import java.util.*
 
 class WatchFacePainter(
+    calendar: Calendar,
     val veneer: Veneer,
     val bounds: RectF,
     private val complications: Complications
 ) {
+    private val sampleCalendar: Calendar = calendar.clone() as Calendar
     interface Complications {
         val ids: IntRange
         fun isComplicationEmpty(id: Int): Boolean
         fun draw(canvas: Canvas, currentTimeMillis: Long)
     }
-
 
     val centerX = bounds.width() / 2f
     val centerY = bounds.height() / 2f
@@ -74,16 +75,29 @@ class WatchFacePainter(
         isAntiAlias = !veneer.isAmbient
         textScaleX = this.let { // poor man's scaling estimate
             val secondsSize = secondsPaint.measureText("00")
-            val dateSize = it.measureText("WED 00")
-            val scale = secondsSize / dateSize
+            val dateSize = it.measureText(Geometry.formatDate(sampleCalendar))
+            val scale = secondsSize * 0.95f / dateSize
             if (scale < 1f) scale else 1f
         }
     }
 
     private val geometry = Geometry(
-        Calendar.getInstance(),
-        hoursPaint, minutesPaint, secondsPaint, datePaint
+        sampleCalendar,
+        hoursPaint,
+        minutesPaint,
+        secondsPaint,
+        datePaint
     )
+
+    fun shouldUpdate(newCalendar: Calendar): Boolean {
+        val newNonEmptyComplications = complications.ids.count {
+                id -> !complications.isComplicationEmpty(id)
+        }
+        if (newNonEmptyComplications != nonEmptyComplications) return true
+        return sampleCalendar.get(Calendar.DAY_OF_WEEK) != newCalendar.get(Calendar.DAY_OF_WEEK) ||
+                sampleCalendar.get(Calendar.DAY_OF_MONTH) != newCalendar.get(Calendar.DAY_OF_MONTH)
+    }
+
 
     private val highlightPaint = Paint().apply {
         color = Color.DKGRAY

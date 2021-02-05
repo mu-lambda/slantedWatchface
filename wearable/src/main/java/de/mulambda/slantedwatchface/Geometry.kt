@@ -26,7 +26,7 @@ class Geometry(
     mHoursPaint: TextPaint,
     mMinutesPaint: TextPaint,
     mSecondsPaint: TextPaint,
-    mDatePaint: TextPaint
+    private val mDatePaint: TextPaint
 ) {
     // TODO(#5): Handle AM/PM
     private val hoursField = Calendar.HOUR_OF_DAY
@@ -43,26 +43,7 @@ class Geometry(
     private val mSecondsDimensions =
         getDimensions(mSecondsPaint, range(secondsField), ::padZero)
     private val mDateDimensions: HashMap<Int, HashMap<Int, Item>> =
-        HashMap<Int, HashMap<Int, Item>>().also {
-            val bounds = Rect()
-            val c = Calendar.getInstance()
-            for (dayOfMonth in range(Calendar.DAY_OF_MONTH)) {
-                val m = HashMap<Int, Item>()
-                it.put(dayOfMonth, m)
-                for (dayOfWeek in range(Calendar.DAY_OF_WEEK)) {
-                    c.set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                    c.set(Calendar.DAY_OF_WEEK, dayOfWeek)
-
-                    val text = formatDate(c)
-                    mDatePaint.getTextBounds(text, 0, text.length, bounds)
-                    m.put(
-                        dayOfWeek,
-                        Item(text = text, width = bounds.width(), height = bounds.height())
-                    )
-
-                }
-            }
-        }
+        HashMap()
 
     private fun range(calendarField: Int): IntRange {
         return calendar.getMinimum(calendarField)..calendar.getMaximum(calendarField)
@@ -88,14 +69,16 @@ class Geometry(
 
     private fun padZero(i: Int) = if (i < 10) "0$i" else "$i"
 
-    private fun formatDate(c: Calendar) =
-        "${
-            c.getDisplayName(
-                Calendar.DAY_OF_WEEK,
-                Calendar.SHORT,
-                Locale.getDefault()
-            )
-        } " + "${c.get(Calendar.DAY_OF_MONTH)}"
+    companion object {
+        fun formatDate(c: Calendar) =
+            "${
+                c.getDisplayName(
+                    Calendar.DAY_OF_WEEK,
+                    Calendar.SHORT,
+                    Locale.getDefault()
+                )
+            } " + "${c.get(Calendar.DAY_OF_MONTH)}"
+    }
 
 
     fun getHours(c: Calendar): Item =
@@ -107,8 +90,21 @@ class Geometry(
     fun getSeconds(c: Calendar): Item =
         mSecondsDimensions[c.get(secondsField)]!!
 
-    fun getDate(c: Calendar): Item =
-        mDateDimensions[c.get(Calendar.DAY_OF_MONTH)]!![c.get(Calendar.DAY_OF_WEEK)]!!
+    private fun calculateDateItem(c: Calendar): Item {
+        val text = formatDate(c)
+        val bounds = Rect()
+        mDatePaint.getTextBounds(text, 0, text.length, bounds)
+        return Item(text = text, width = bounds.width(), height = bounds.height())
+    }
+
+    fun getDate(c: Calendar): Item {
+        val dayOfMonthCache = mDateDimensions[c.get(Calendar.DAY_OF_MONTH)] ?: HashMap<Int, Item> ().also {
+            mDateDimensions[c.get(Calendar.DAY_OF_MONTH)] = it
+        }
+        return dayOfMonthCache[c.get(Calendar.DAY_OF_WEEK)] ?: calculateDateItem(c).also {
+            dayOfMonthCache[c.get(Calendar.DAY_OF_WEEK)] = it
+        }
+    }
 
     private fun calculateMaxHeight(dimensions: HashMap<Int, Item>): Int {
         var max = 0

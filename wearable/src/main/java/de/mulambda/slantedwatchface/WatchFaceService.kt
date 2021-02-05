@@ -28,6 +28,7 @@ import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
 import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
+import android.util.Log
 import android.util.SparseArray
 import android.view.SurfaceHolder
 import java.lang.ref.WeakReference
@@ -143,8 +144,8 @@ class WatchFaceService : CanvasWatchFaceService() {
         private fun initializePainter() {
             val bounds = RectF(0f, 0f, centerX * 2, centerY * 2)
             painter = ActiveAmbient(
-                active = WatchFacePainter(veneer.active, bounds, complications),
-                ambient = WatchFacePainter(veneer.ambient, bounds, complications)
+                active = WatchFacePainter(calendar, veneer.active, bounds, complications),
+                ambient = WatchFacePainter(calendar, veneer.ambient, bounds, complications)
             )
             complications.updatePositionsFromPainter()
         }
@@ -164,6 +165,9 @@ class WatchFaceService : CanvasWatchFaceService() {
         ) {
             super.onComplicationDataUpdate(watchFaceComplicationId, data)
             complications.onComplicationDataUpdate(watchFaceComplicationId, data)
+            if (painter.get(isAmbient).shouldUpdate(calendar)) {
+                initializePainter()
+            }
 
             invalidate()
         }
@@ -245,6 +249,10 @@ class WatchFaceService : CanvasWatchFaceService() {
         override fun onDraw(canvas: Canvas, bounds: Rect) {
             calendar.timeInMillis = System.currentTimeMillis()
             canvas.drawColor(Color.BLACK)
+            if (painter.get(isInAmbientMode).shouldUpdate(calendar)) {
+                Log.i(TAG(), "Recalculating painter")
+                initializePainter()
+            }
             painter.get(isInAmbientMode).draw(calendar, canvas)
         }
 
@@ -257,6 +265,9 @@ class WatchFaceService : CanvasWatchFaceService() {
                 registerReceiver()
                 /* Update time zone in case it changed while we weren"t visible. */
                 calendar.timeZone = TimeZone.getDefault()
+                if (painter.get(isInAmbientMode).shouldUpdate(calendar)) {
+                    initializePainter()
+                }
                 invalidate()
             } else {
                 unregisterReceiver()
@@ -338,12 +349,7 @@ class WatchFaceService : CanvasWatchFaceService() {
             }
 
             fun onComplicationDataUpdate(watchFaceComplicationId: Int, data: ComplicationData?) {
-                val shouldUpdatePositions =
-                    isComplicationEmpty(watchFaceComplicationId) != isEmptyComplicationData(data)
                 complicationData.put(watchFaceComplicationId, data)
-                if (shouldUpdatePositions) {
-                    this@Engine.initializePainter()
-                }
                 val complicationDrawable = complicationDrawables.get(watchFaceComplicationId)
                 complicationDrawable.setComplicationData(data)
             }

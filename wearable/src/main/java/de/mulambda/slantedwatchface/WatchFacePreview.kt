@@ -164,6 +164,7 @@ class WatchFacePreview(
     private fun initializePainter() {
         val dim = watchfaceSize().toFloat()
         painter = WatchFacePainter(
+            Calendar.getInstance(),
             Veneer.fromSharedPreferences(sharedPreferences, context.assets, false),
             RectF(
                 paddingLeft.toFloat(),
