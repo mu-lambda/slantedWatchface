@@ -35,6 +35,9 @@ class WatchFacePainter(
 
     val centerX = bounds.width() / 2f
     val centerY = bounds.height() / 2f
+    private val nonEmptyComplications = complications.ids.count { id ->
+        !complications.isComplicationEmpty(id)
+    }
     private val hoursSize = centerY * 2 * veneer.typefaces.config.ySizeRatio
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
@@ -43,11 +46,15 @@ class WatchFacePainter(
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
-    private val minutesSize = hoursSize / WatchFaceService.Constants.RATIO
+    private val minutesRatio =
+        if (nonEmptyComplications <= 2) WatchFaceService.Constants.RATIO else 2f
+    private val textScaleFactor =
+        if (nonEmptyComplications <= 2) 1f else 2f / WatchFaceService.Constants.RATIO
+    private val minutesSize = hoursSize / minutesRatio
     private val minutesPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = minutesSize
-        textScaleX = veneer.typefaces.config.minutesScaleX
+        textScaleX = veneer.typefaces.config.minutesScaleX * textScaleFactor
         color = veneer.minutesColor
         isAntiAlias = !veneer.isAmbient
     }
@@ -55,7 +62,7 @@ class WatchFacePainter(
     private val secondsPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = secondsSize
-        textScaleX = veneer.typefaces.config.secondsScaleX
+        textScaleX = veneer.typefaces.config.secondsScaleX * textScaleFactor
         color = veneer.secondsColor
         isAntiAlias = !veneer.isAmbient
     }
@@ -109,12 +116,6 @@ class WatchFacePainter(
         val complicationAreaRight = centerX * 2
         val complicationAreaBottom = (hoursY + centerY * 2) / 2
 
-        var nonEmptyComplications = 0
-        complications.ids.forEach {
-            if (!complications.isComplicationEmpty(it)) {
-                nonEmptyComplications++
-            }
-        }
         val emptyRect = Rect()
         if (nonEmptyComplications == 0) {
             complications.ids.forEach { complicationBounds.put(it, emptyRect) }

@@ -146,7 +146,7 @@ class WatchFaceService : CanvasWatchFaceService() {
                 active = WatchFacePainter(veneer.active, bounds, complications),
                 ambient = WatchFacePainter(veneer.ambient, bounds, complications)
             )
-            complications.updatePositions()
+            complications.updatePositionsFromPainter()
         }
 
         override fun onDestroy() {
@@ -342,13 +342,13 @@ class WatchFaceService : CanvasWatchFaceService() {
                     isComplicationEmpty(watchFaceComplicationId) != isEmptyComplicationData(data)
                 complicationData.put(watchFaceComplicationId, data)
                 if (shouldUpdatePositions) {
-                    updatePositions()
+                    this@Engine.initializePainter()
                 }
                 val complicationDrawable = complicationDrawables.get(watchFaceComplicationId)
                 complicationDrawable.setComplicationData(data)
             }
 
-            fun updatePositions() {
+            fun updatePositionsFromPainter() {
                 painterForBounds().updateComplicationBounds(complicationBounds)
                 for (id in Complications.RANGE) {
                     complicationDrawables[id].bounds = complicationBounds[id]
