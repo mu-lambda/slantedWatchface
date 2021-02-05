@@ -28,6 +28,7 @@ class WatchFacePainter(
     private val complications: Complications
 ) {
     private val sampleCalendar: Calendar = calendar.clone() as Calendar
+
     interface Complications {
         val ids: IntRange
         fun isComplicationEmpty(id: Int): Boolean
@@ -36,9 +37,8 @@ class WatchFacePainter(
 
     val centerX = bounds.width() / 2f
     val centerY = bounds.height() / 2f
-    private val nonEmptyComplications = complications.ids.count { id ->
-        !complications.isComplicationEmpty(id)
-    }
+    private val nonEmptyComplications =
+        complications.ids.count { id -> !complications.isComplicationEmpty(id) }
     private val hoursSize = centerY * 2 * veneer.typefaces.config.ySizeRatio
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
@@ -90,9 +90,8 @@ class WatchFacePainter(
     )
 
     fun shouldUpdate(newCalendar: Calendar): Boolean {
-        val newNonEmptyComplications = complications.ids.count {
-                id -> !complications.isComplicationEmpty(id)
-        }
+        val newNonEmptyComplications =
+            complications.ids.count { id -> !complications.isComplicationEmpty(id) }
         if (newNonEmptyComplications != nonEmptyComplications) return true
         return sampleCalendar.get(Calendar.DAY_OF_WEEK) != newCalendar.get(Calendar.DAY_OF_WEEK) ||
                 sampleCalendar.get(Calendar.DAY_OF_MONTH) != newCalendar.get(Calendar.DAY_OF_MONTH)
