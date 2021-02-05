@@ -22,5 +22,6 @@
     android:layout_height="wrap_content"
     android:paddingStart="@dimen/menu_start"
     android:autoSizeTextType="none"
-    android:textSize="25dp"
+    android:textSize="20dp"
+    android:singleLine="true"
     tools:ignore="RtlSymmetry,SpUsage" />

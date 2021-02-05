@@ -39,15 +39,6 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 minutesScaleX = 0.33f,
                 secondsScaleX = 0.4f
             )
-        val VACCINE =
-            Config(
-                displayName = "Vaccine",
-                assetName = "Vaccine.ttf",
-                ySizeRatio = 1f,
-                hourScaleX = 0.6f,
-                minutesScaleX = 0.4f,
-                secondsScaleX = 0.4f
-            )
         val SWEET_HIPSTER =
             Config(
                 displayName = "Sweet Hipster",
@@ -59,7 +50,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
             )
 
         val DEFAULT = LIMELIGHT
-        val ALL = arrayOf(LIMELIGHT, VACCINE, SWEET_HIPSTER)
+        val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER)
         fun configByString(displayName: String) =
             ALL.find { c -> displayName.equals(c.displayName) } ?: DEFAULT
     }
