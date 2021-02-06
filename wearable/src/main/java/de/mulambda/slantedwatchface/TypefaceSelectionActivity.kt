@@ -25,6 +25,7 @@ import android.view.ViewGroup
 import android.widget.RadioButton
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.wear.widget.WearableLinearLayoutManager
 import androidx.wear.widget.WearableRecyclerView
 
 class TypefaceSelectionActivity : Activity() {
@@ -44,7 +45,7 @@ class TypefaceSelectionActivity : Activity() {
 
         contentView = findViewById(R.id.font_selection_activity)
         contentView.apply {
-            layoutManager = LinearLayoutManager(this@TypefaceSelectionActivity)
+            layoutManager = WearableLinearLayoutManager(this@TypefaceSelectionActivity)
             isEdgeItemsCenteringEnabled = true
             setHasFixedSize(true)
             adapter = this@TypefaceSelectionActivity.adapter
