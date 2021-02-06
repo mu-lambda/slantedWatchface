@@ -17,11 +17,12 @@
 <RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/typeface_button"
+    android:text="@string/typeface_representative_text"
     style="@style/ButtonConfigurationStyle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingStart="@dimen/menu_start"
     android:autoSizeTextType="none"
-    android:textSize="20dp"
+    android:textSize="22dp"
     android:singleLine="true"
     tools:ignore="RtlSymmetry,SpUsage" />

@@ -42,28 +42,28 @@ class TypefaceSelectionActivity : Activity() {
 
         originalTypeface = intent?.getStringExtra(TYPEFACE) ?: Typefaces.DEFAULT.displayName
 
-
         contentView = findViewById(R.id.font_selection_activity)
-        contentView.layoutManager = LinearLayoutManager(this)
         contentView.apply {
+            layoutManager = LinearLayoutManager(this@TypefaceSelectionActivity)
             isEdgeItemsCenteringEnabled = true
             setHasFixedSize(true)
             adapter = this@TypefaceSelectionActivity.adapter
         }
+        contentView.smoothScrollToPosition(
+            Typefaces.ALL.indexOfFirst { c -> c.displayName == originalTypeface } + 1)
     }
 
-    inner class FontHolder(parent: ViewGroup, typefaceIndex: Int) : RecyclerView.ViewHolder(
+   inner class FontHolder(parent: ViewGroup, typefaceIndex: Int) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.typeface_button, parent, false)
     ), View.OnClickListener {
         val config = Typefaces.ALL[typefaceIndex]
 
         init {
             (itemView as RadioButton).apply {
-                text = context.getString(R.string.typeface_representative_text)
                 typeface = Typefaces(assets, config).timeTypeface
                 textSize *= config.ySizeRatio
                 textScaleX = config.hourScaleX
-                isChecked = config.displayName.equals(originalTypeface)
+                isChecked = config.displayName == originalTypeface
                 setOnClickListener(this@FontHolder)
             }
         }
