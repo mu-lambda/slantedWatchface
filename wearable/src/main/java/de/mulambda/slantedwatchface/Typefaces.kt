@@ -48,16 +48,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 minutesScaleX = 0.7f,
                 secondsScaleX = 0.6f
             )
-        val OUT_OF_AFRICA =
-            Config(
-                displayName = "Out Of Africa",
-                assetName = "OutOfAfrica.ttf",
-                ySizeRatio = 1f,
-                hourScaleX = 0.5f,
-                minutesScaleX = 0.45f,
-                secondsScaleX = 0.45f
-            )
-        val GRAFIK_TEXT =
+       val GRAFIK_TEXT =
             Config(
                 displayName = "Grafik Text",
                 assetName = "GrafikText.ttf",
@@ -75,10 +66,27 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 minutesScaleX = 0.6f,
                 secondsScaleX = 0.5f
             )
-
+        val ORDINARY =
+            Config(
+                displayName = "Ordinary",
+                assetName = "Ordinary.ttf",
+                ySizeRatio = 1.2f,
+                hourScaleX = 0.6f,
+                minutesScaleX = 0.5f,
+                secondsScaleX = 0.5f
+            )
+        val BEBAS_KAI =
+            Config(
+                displayName = "Bebas Kai",
+                assetName = "BebasKai.ttf",
+                ySizeRatio = 1.0f,
+                hourScaleX = 0.6f,
+                minutesScaleX = 0.5f,
+                secondsScaleX = 0.5f
+            )
 
         val DEFAULT = LIMELIGHT
-        val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER, OUT_OF_AFRICA, GRAFIK_TEXT, FENWICK_WOODTYPE)
+        val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER, GRAFIK_TEXT, FENWICK_WOODTYPE, ORDINARY, BEBAS_KAI)
         fun configByString(displayName: String) =
             ALL.find { c -> displayName.equals(c.displayName) } ?: DEFAULT
     }
