@@ -14,7 +14,6 @@
  *    limitations under the License.
  *
  */
-include ':installer'
 
-include ':wearable'
-rootProject.name = "SlantedWatchface"
+@Suppress("unused")
+inline fun <reified T> T.TAG(): String = T::class.qualifiedName ?: T::class.java.name
