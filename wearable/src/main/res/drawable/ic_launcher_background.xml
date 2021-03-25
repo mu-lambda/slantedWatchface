@@ -16,23 +16,15 @@
   ~
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.mulambda.slantedwatchface">
-
-    <application
-        android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:roundIcon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.SlantedWatchface">
-        <activity android:name=".installer.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group android:scaleX="0.009259259"
+      android:scaleY="0.009259259">
+    <group android:scaleX="0.009259259"
+        android:scaleY="0.009259259">
+    </group>
+  </group>
+</vector>
