@@ -25,7 +25,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "de.mulambda.slantedwatchface"
+        applicationId "de.mulambda.slantedWatchface"
         minSdkVersion 28
         targetSdkVersion 30
         versionCode 1
