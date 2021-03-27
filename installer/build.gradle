@@ -28,8 +28,8 @@ android {
         applicationId "de.mulambda.slantedWatchface"
         minSdkVersion 28
         targetSdkVersion 30
-        versionCode 1 // Odd are phone, even are wearable
-        versionName "dev"
+        versionCode 19 // Odd are phone, even are wearable
+        versionName "1.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
