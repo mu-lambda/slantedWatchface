@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,5 +15,6 @@
  *
  */
 
+package de.mulambda.slantedwatchface.installer
 @Suppress("unused")
 inline fun <reified T> T.TAG(): String = T::class.qualifiedName ?: T::class.java.name

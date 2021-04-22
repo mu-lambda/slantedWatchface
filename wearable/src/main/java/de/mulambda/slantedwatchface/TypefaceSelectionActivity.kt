@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioButton
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.wear.widget.WearableLinearLayoutManager
 import androidx.wear.widget.WearableRecyclerView
@@ -58,7 +57,7 @@ class TypefaceSelectionActivity : Activity() {
    inner class FontHolder(parent: ViewGroup, typefaceIndex: Int) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.typeface_button, parent, false)
     ), View.OnClickListener {
-        val config = Typefaces.ALL[typefaceIndex]
+        private val config = Typefaces.ALL[typefaceIndex]
 
         init {
             (itemView as RadioButton).apply {

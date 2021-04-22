@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ class ColorSelectionActivity : Activity() {
         const val ORIGINAL_COLOR = "original-color"
         const val NAME = "name"
         const val RESULT = "picked-color"
-
-        fun getResult(intent: Intent): Int = intent.getIntExtra(RESULT, Color.GREEN)
     }
 
     private var pickedColor: Int = Color.GREEN

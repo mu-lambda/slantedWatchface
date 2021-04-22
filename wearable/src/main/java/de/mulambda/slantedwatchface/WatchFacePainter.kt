@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import android.graphics.*
 import android.text.TextPaint
 import android.util.SparseArray
 import java.util.*
+import kotlin.math.cos
+import kotlin.math.sin
 
 class WatchFacePainter(
     calendar: Calendar,
@@ -219,8 +221,8 @@ class WatchFacePainter(
         val dx = x - centerX - bounds.left
         val dy = y - centerY - bounds.top
         val a = -veneer.angle / 180f * Math.PI
-        val dx1 = dx * Math.cos(a) - dy * Math.sin(a)
-        val dy1 = dx * Math.sin(a) + dy * Math.cos(a)
+        val dx1 = dx * cos(a) - dy * sin(a)
+        val dy1 = dx * sin(a) + dy * cos(a)
         val x1 = bounds.left + centerX + dx1
         val y1 = bounds.top + centerY + dy1
         return Pair(x1.toFloat(), y1.toFloat())

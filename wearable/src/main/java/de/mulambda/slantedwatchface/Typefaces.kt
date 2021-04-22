@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -89,6 +89,6 @@ class Typefaces(assets: AssetManager, val config: Config) {
         val DEFAULT = LIMELIGHT
         val ALL = arrayOf(LIMELIGHT, SWEET_HIPSTER, GRAFIK_TEXT, FENWICK_WOODTYPE, ORDINARY, BEBAS_KAI)
         fun configByString(displayName: String) =
-            ALL.find { c -> displayName.equals(c.displayName) } ?: DEFAULT
+            ALL.find { c -> displayName == c.displayName } ?: DEFAULT
     }
 }

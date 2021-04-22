@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -60,10 +60,7 @@ class Geometry(
         for (value in range) {
             val text = getText(value)
             textPaint.getTextBounds(text, 0, text.length, valueBounds)
-            m.put(
-                value,
-                Item(text = text, width = valueBounds.width(), height = valueBounds.height())
-            )
+            m[value] = Item(text = text, width = valueBounds.width(), height = valueBounds.height())
         }
         return m
     }

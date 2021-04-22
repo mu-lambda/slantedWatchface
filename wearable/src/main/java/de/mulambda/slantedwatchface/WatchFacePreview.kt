@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import java.util.*
+import kotlin.math.min
 
 /**
  * TODO: document your custom view class.
@@ -42,13 +43,13 @@ class WatchFacePreview(
     private val calendar = Calendar.getInstance()
     private val complications = ComplicationsPreview()
     private lateinit var watchFaceClipPath: Path
-    val iconMore = ContextCompat.getDrawable(context, R.drawable.ic_more)!!
+    private val iconMore = ContextCompat.getDrawable(context, R.drawable.ic_more)!!
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
     var onColorSettingClick: (Settings.Binding<Int>) -> Unit = { _ -> }
-    val sharedPreferences = context.getSharedPreferences(
+    private val sharedPreferences = context.getSharedPreferences(
         context.getString(R.string.preference_file_key),
         Context.MODE_PRIVATE
-    ).apply {
+    )!!.apply {
         registerOnSharedPreferenceChangeListener(this@WatchFacePreview)
     }
     private val borderPaint = Paint().apply {
@@ -57,7 +58,7 @@ class WatchFacePreview(
         strokeWidth = 4f
         isAntiAlias = true
     }
-    private val tochableBorderPaint = Paint().apply {
+    private val touchableBorderPaint = Paint().apply {
         color = Color.WHITE
         style = Paint.Style.STROKE
         strokeWidth = 2f
@@ -125,10 +126,9 @@ class WatchFacePreview(
 
     private fun touchedComplicationId(event: MotionEvent): Int? {
         val rotatedPoint = painter.rotate(event.x.toInt(), event.y.toInt())
-        val id = complications.complicationIdByPoint(
+        return complications.complicationIdByPoint(
             rotatedPoint.first.toInt(), rotatedPoint.second.toInt()
         )
-        return id
     }
 
     private data class ColorSetting(
@@ -196,7 +196,7 @@ class WatchFacePreview(
 
 
     private fun watchfaceSize() =
-        Math.min(width - paddingLeft - paddingRight, height - paddingTop - paddingBottom)
+        min(width - paddingLeft - paddingRight, height - paddingTop - paddingBottom)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
@@ -247,7 +247,7 @@ class WatchFacePreview(
             for (id in ids) {
                 complicationIcons.get(id, null)?.draw(canvas)
             }
-            canvas.drawPath(borderPath, tochableBorderPaint)
+            canvas.drawPath(borderPath, touchableBorderPaint)
         }
 
         private fun setIconBounds(id: Int) {
@@ -298,11 +298,9 @@ class WatchFacePreview(
         }
     }
 
-    private val unhighlightRunnable: Runnable = object : Runnable {
-        override fun run() {
-            painter.unhighlight()
-            invalidate()
-        }
+    private val unhighlightRunnable = Runnable {
+        painter.unhighlight()
+        invalidate()
     }
 
     private fun highlightRect(rect: Rect) {

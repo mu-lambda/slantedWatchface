@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ data class Veneer(
             Settings.COMPLICATION_TEXT_COLOR.put(editor, complicationTextColor)
         }
 
-    fun whiteOf(baseColor: Int) =
+    private fun whiteOf(baseColor: Int) =
         Color.HSVToColor(Color.alpha(baseColor), floatArrayOf(0f, 0f, 0f).also {
             Color.colorToHSV(baseColor, it)
             it[0] = 0f // hue

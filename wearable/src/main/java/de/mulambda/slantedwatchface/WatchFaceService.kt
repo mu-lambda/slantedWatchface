@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -107,11 +107,11 @@ class WatchFaceService : CanvasWatchFaceService() {
                     .build()
             )
 
-            initialize(loadSavedPreverences())
+            initialize(loadSavedPreferences())
             setActiveComplications(*complications.ids.toList().toIntArray())
         }
 
-        private fun loadSavedPreverences(): SharedPreferences {
+        private fun loadSavedPreferences(): SharedPreferences {
             return applicationContext.getSharedPreferences(
                 getString(R.string.preference_file_key),
                 MODE_PRIVATE
@@ -205,13 +205,10 @@ class WatchFaceService : CanvasWatchFaceService() {
         }
 
         private val handler = Handler(Looper.getMainLooper())
-        private val unhighlightRunnable: Runnable = object : Runnable {
-            override fun run() {
-                painter.get(true).unhighlight()
-                painter.get(false).unhighlight()
-                invalidate()
-            }
-
+        private val unhighlightRunnable = Runnable {
+            painter.get(true).unhighlight()
+            painter.get(false).unhighlight()
+            invalidate()
         }
 
         /**
@@ -261,10 +258,10 @@ class WatchFaceService : CanvasWatchFaceService() {
             super.onVisibilityChanged(visible)
 
             if (visible) {
-                initialize(loadSavedPreverences())
+                initialize(loadSavedPreferences())
                 initializePainter()
                 registerReceiver()
-                /* Update time zone in case it changed while we weren"t visible. */
+                /* Update time zone in case it changed while we weren't visible. */
                 calendar.timeZone = TimeZone.getDefault()
                 if (painter.get(isInAmbientMode).shouldUpdate(calendar)) {
                     initializePainter()

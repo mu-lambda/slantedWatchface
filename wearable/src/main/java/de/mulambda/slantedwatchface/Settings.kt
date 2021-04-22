@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@ object Complications {
 object Settings {
     private val getInt = SharedPreferences::getInt
     private val putInt = SharedPreferences.Editor::putInt
-    private val getFloat = SharedPreferences::getFloat
-    private val putFloat = SharedPreferences.Editor::putFloat
     private val getBoolean = SharedPreferences::getBoolean
     private val putBoolean = SharedPreferences.Editor::putBoolean
     private val getString =
@@ -58,7 +56,7 @@ object Settings {
     val TYPEFACE =
         Binding("typeface", Typefaces.DEFAULT.displayName, 0, getString, putString)
 
-    val BINDINGS =
+    private val BINDINGS =
         arrayOf(
             LEFT_HANDED,
             HOURS_COLOR,

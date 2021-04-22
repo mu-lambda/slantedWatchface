@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class ConfigActivity : Activity() {
         val REQUESTS_COMPLICATIONS = Complications.RANGE
         private fun requestCodeOf(complicationId: Int) =
             if (complicationId in Complications.RANGE) complicationId
-            else throw UnsupportedOperationException("complicationId = ${complicationId}")
+            else throw UnsupportedOperationException("complicationId = $complicationId")
 
         const val REQUEST_PICK_COLOR_THEME = Complications.BOTTOM + 1
 
@@ -219,7 +219,7 @@ class ConfigActivity : Activity() {
         }
 
         fun updateColorTheme(color: Int?) {
-            Log.i(TAG(), "updateColorTheme: color = ${color}")
+            Log.i(TAG(), "updateColorTheme: color = $color")
             if (color == null) return
             val newVeneer = Veneer
                 .fromSharedPreferences(sharedPreferences, assets, false)
@@ -278,7 +278,6 @@ class ConfigActivity : Activity() {
     inner class SetTypefaceViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
         LayoutInflater.from(parent.context).inflate(R.layout.set_typeface, parent, false)
     ), View.OnClickListener {
-        private val button: Button = itemView.findViewById(R.id.set_font_button)
 
         init {
             itemView.setOnClickListener(this)

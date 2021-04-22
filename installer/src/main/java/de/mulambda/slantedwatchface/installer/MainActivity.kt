@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watchface Authors
+ *    Copyright (c) 2021 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 
 package de.mulambda.slantedwatchface.installer
 
-import TAG
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -43,21 +42,25 @@ class MainActivity : AppCompatActivity(), CapabilityClient.OnCapabilityChangedLi
             override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
                 Log.d(TAG(), "onRecieveResult: $resultCode")
 
-                if (resultCode == RemoteIntent.RESULT_OK) {
-                    Toast.makeText(
-                        applicationContext,
-                        "Play Store Request to Wear device successful.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else if (resultCode == RemoteIntent.RESULT_FAILED) {
-                    Toast.makeText(
-                        applicationContext,
-                        "Play Store Request Failed. Wear device(s) may not support Play Store, "
-                                + " that is, the Wear device may be version 1.0.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    throw IllegalStateException("Unexpected result $resultCode")
+                when (resultCode) {
+                    RemoteIntent.RESULT_OK -> {
+                        Toast.makeText(
+                            applicationContext,
+                            "Play Store Request to Wear device successful.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    RemoteIntent.RESULT_FAILED -> {
+                        Toast.makeText(
+                            applicationContext,
+                            "Play Store Request Failed. Wear device(s) may not support Play Store, "
+                                    + " that is, the Wear device may be version 1.0.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    else -> {
+                        throw IllegalStateException("Unexpected result $resultCode")
+                    }
                 }
             }
         }
@@ -70,8 +73,8 @@ class MainActivity : AppCompatActivity(), CapabilityClient.OnCapabilityChangedLi
 
 
     companion object {
-        private val CAPABILITY_WEAR_APP = "de.mulambda.slantedWatchface.wearable.verify"
-        private val PLAY_STORE_URI =
+        private const val CAPABILITY_WEAR_APP = "de.mulambda.slantedWatchface.wearable.verify"
+        private const val PLAY_STORE_URI =
             "market://details?id=de.mulambda.slantedWatchface"
     }
 
@@ -119,12 +122,16 @@ class MainActivity : AppCompatActivity(), CapabilityClient.OnCapabilityChangedLi
             statusTextView.setText(R.string.text_no_devices)
             installButton.isEnabled = false
         } else {
-            if (wearNodesWithApp.isEmpty()) {
-                statusTextView.setText(R.string.text_on_no_devices)
-            } else if (wearNodesWithApp.size < allConnectedNodes.size) {
-                statusTextView.setText(R.string.text_on_some_devices)
-            } else if (wearNodesWithApp.size == allConnectedNodes.size) {
-                statusTextView.setText(R.string.text_on_all_devices)
+            when {
+                wearNodesWithApp.isEmpty() -> {
+                    statusTextView.setText(R.string.text_on_no_devices)
+                }
+                wearNodesWithApp.size < allConnectedNodes.size -> {
+                    statusTextView.setText(R.string.text_on_some_devices)
+                }
+                wearNodesWithApp.size == allConnectedNodes.size -> {
+                    statusTextView.setText(R.string.text_on_all_devices)
+                }
             }
 
             installButton.isEnabled = true
@@ -160,7 +167,7 @@ class MainActivity : AppCompatActivity(), CapabilityClient.OnCapabilityChangedLi
 
         val nodesWithoutApps = allConnectedNodes.filter { !wearNodesWithApp.contains(it) }
 
-        if (!nodesWithoutApps.isEmpty()) {
+        if (nodesWithoutApps.isNotEmpty()) {
             Log.d(TAG(), "Installing on ${nodesWithoutApps.size} nodes")
             val intent = Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE).setData(
                 Uri.parse(PLAY_STORE_URI)
