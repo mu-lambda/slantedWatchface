@@ -343,8 +343,7 @@ class WatchFaceService : CanvasWatchFaceService() {
             private fun isEmptyComplicationData(it: ComplicationData?): Boolean =
                 it == null ||
                         it.type == ComplicationData.TYPE_EMPTY ||
-                        it.type == ComplicationData.TYPE_NOT_CONFIGURED ||
-                        it.type == ComplicationData.TYPE_NO_DATA
+                        it.type == ComplicationData.TYPE_NOT_CONFIGURED
 
             override fun draw(canvas: Canvas, currentTimeMillis: Long) {
                 for (id in ids) {

@@ -23,7 +23,7 @@ import android.graphics.Color
 
 // Typeface and color settings for a watchface
 data class Veneer(
-    val angle: Float,
+    val leftHanded: Boolean,
     val typefaces: Typefaces,
     val hoursColor: Int,
     val minutesColor: Int,
@@ -34,7 +34,8 @@ data class Veneer(
     val isAmbient: Boolean
 ) {
     companion object {
-        val AMBIENT_COLOR = Color.WHITE
+        const val AMBIENT_COLOR = Color.WHITE
+        const val ANGLE = 20f
 
         fun fromSharedPreferences(
             p: SharedPreferences,
@@ -42,7 +43,7 @@ data class Veneer(
             isAmbient: Boolean
         ) =
             Veneer(
-                angle = Settings.ANGLE.get(p),
+                leftHanded = Settings.LEFT_HANDED.get(p),
                 typefaces = Typefaces(assets, Typefaces.configByString(Settings.TYPEFACE.get(p))),
                 hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR,
                 minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
@@ -55,10 +56,12 @@ data class Veneer(
 
     }
 
+    val angle = if (leftHanded) ANGLE else -ANGLE
+
     fun put(editor: SharedPreferences.Editor): SharedPreferences.Editor =
         if (isAmbient) editor // not preferences yet for ambient mode
         else {
-            Settings.ANGLE.put(editor, angle)
+            Settings.LEFT_HANDED.put(editor, angle > 0)
             Settings.HOURS_COLOR.put(editor, hoursColor)
             Settings.MINUTES_COLOR.put(editor, minutesColor)
             Settings.SECONDS_COLOR.put(editor, secondsColor)

@@ -345,13 +345,13 @@ class ConfigActivity : Activity() {
         }
 
         private fun isOnRightHand(sharedPreferences: SharedPreferences): Boolean =
-            Settings.ANGLE.get(sharedPreferences) < 0
+            !Settings.LEFT_HANDED.get(sharedPreferences)
 
         override fun onClick(v: View?) {
             Log.i(TAG(), "onClick")
-            val angle = Settings.ANGLE.get(sharedPreferences)
+            val leftHanded = Settings.LEFT_HANDED.get(sharedPreferences)
             with(sharedPreferences.edit()) {
-                Settings.ANGLE.put(this, -angle)
+                Settings.LEFT_HANDED.put(this, !leftHanded)
                 apply()
             }
         }

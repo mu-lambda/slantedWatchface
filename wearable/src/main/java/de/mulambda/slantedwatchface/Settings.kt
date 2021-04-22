@@ -33,14 +33,16 @@ object Settings {
     private val putInt = SharedPreferences.Editor::putInt
     private val getFloat = SharedPreferences::getFloat
     private val putFloat = SharedPreferences.Editor::putFloat
+    private val getBoolean = SharedPreferences::getBoolean
+    private val putBoolean = SharedPreferences.Editor::putBoolean
     private val getString =
         { sp: SharedPreferences, key: String, defaultValue: String ->
             sp.getString(key, defaultValue)!!
         }
     private val putString = SharedPreferences.Editor::putString
 
-    val ANGLE =
-        Binding("angle", 30f, 0, getFloat, putFloat)
+    val LEFT_HANDED =
+        Binding("left-handed", true, 0, getBoolean, putBoolean)
     val HOURS_COLOR =
         Binding("hours-color", Color.GREEN, R.string.hours_color, getInt, putInt)
     val MINUTES_COLOR =
@@ -58,7 +60,7 @@ object Settings {
 
     val BINDINGS =
         arrayOf(
-            ANGLE,
+            LEFT_HANDED,
             HOURS_COLOR,
             MINUTES_COLOR,
             SECONDS_COLOR,
