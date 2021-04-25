@@ -25,9 +25,13 @@ class Typefaces(assets: AssetManager, val config: Config) {
     val dateTypeface: Typeface = Typeface.DEFAULT
 
     data class Config(
-        val displayName: String, val assetName: String,
+        val displayName: String,
+        val assetName: String,
         val ySizeRatio: Float,
-        val hourScaleX: Float, val minutesScaleX: Float, val secondsScaleX: Float
+        val hourScaleX: Float,
+        val hourScaleXSingleDigit: Float,
+        val minutesScaleX: Float,
+        val secondsScaleX: Float
     )
 
     companion object {
@@ -37,6 +41,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "limelight.ttf",
                 ySizeRatio = 1f,
                 hourScaleX = 0.4f,
+                hourScaleXSingleDigit = 0.7f,
                 minutesScaleX = 0.33f,
                 secondsScaleX = 0.4f
             )
@@ -46,6 +51,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "sweethipster.ttf",
                 ySizeRatio = 1.3f,
                 hourScaleX = 0.9f,
+                hourScaleXSingleDigit = 1.0f,
                 minutesScaleX = 0.7f,
                 secondsScaleX = 0.6f
             )
@@ -55,6 +61,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "GrafikText.ttf",
                 ySizeRatio = 1f,
                 hourScaleX = 0.5f,
+                hourScaleXSingleDigit = 0.9f,
                 minutesScaleX = 0.5f,
                 secondsScaleX = 0.5f
             )
@@ -64,6 +71,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "FenwickWoodtype.ttf",
                 ySizeRatio = 1.0f,
                 hourScaleX = 0.7f,
+                hourScaleXSingleDigit = 1f,
                 minutesScaleX = 0.6f,
                 secondsScaleX = 0.5f
             )
@@ -73,6 +81,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "Ordinary.ttf",
                 ySizeRatio = 1.2f,
                 hourScaleX = 0.6f,
+                hourScaleXSingleDigit = 1.0f,
                 minutesScaleX = 0.5f,
                 secondsScaleX = 0.5f
             )
@@ -82,6 +91,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "BebasKai.ttf",
                 ySizeRatio = 1.0f,
                 hourScaleX = 0.6f,
+                hourScaleXSingleDigit = 1.0f,
                 minutesScaleX = 0.5f,
                 secondsScaleX = 0.5f
             )

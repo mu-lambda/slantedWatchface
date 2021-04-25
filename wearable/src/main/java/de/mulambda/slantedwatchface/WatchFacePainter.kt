@@ -50,6 +50,14 @@ class WatchFacePainter(
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
+    private val hoursPaintSingleDigit = TextPaint().apply {
+        typeface = veneer.typefaces.timeTypeface
+        textSize = hoursSize
+        textScaleX = veneer.typefaces.config.hourScaleXSingleDigit
+        color = veneer.hoursColor
+        isAntiAlias = !veneer.isAmbient
+    }
+
     private val minutesRatio =
         if (nonEmptyComplications <= 2) WatchFaceService.Constants.RATIO else 2f
     private val textScaleFactor =
@@ -86,17 +94,22 @@ class WatchFacePainter(
 
     private val geometry = Geometry(
         sampleCalendar,
-        hoursPaint,
+        chooseHoursPaint(),
         minutesPaint,
         secondsPaint,
         datePaint
     )
 
+    private fun chooseHoursPaint() =
+        if (sampleCalendar.get(Calendar.HOUR_OF_DAY) < 10) hoursPaintSingleDigit else hoursPaint
+
+
     fun shouldUpdate(newCalendar: Calendar): Boolean {
         val newNonEmptyComplications =
             complications.ids.count { id -> !complications.isComplicationEmpty(id) }
         if (newNonEmptyComplications != nonEmptyComplications) return true
-        return sampleCalendar.get(Calendar.DAY_OF_WEEK) != newCalendar.get(Calendar.DAY_OF_WEEK) ||
+        return sampleCalendar.get(Calendar.HOUR_OF_DAY) != newCalendar.get(Calendar.HOUR_OF_DAY) ||
+                sampleCalendar.get(Calendar.DAY_OF_WEEK) != newCalendar.get(Calendar.DAY_OF_WEEK) ||
                 sampleCalendar.get(Calendar.DAY_OF_MONTH) != newCalendar.get(Calendar.DAY_OF_MONTH)
     }
 
@@ -263,7 +276,7 @@ class WatchFacePainter(
         calculatePaintData(calendar, paintData)
         with(paintData) {
             canvas.drawText(
-                hours, bounds.left + hoursX, bounds.top + hoursY, hoursPaint
+                hours, bounds.left + hoursX, bounds.top + hoursY, chooseHoursPaint()
             )
             canvas.drawText(
                 minutes, bounds.left + minutesX, bounds.top + minutesY, minutesPaint
