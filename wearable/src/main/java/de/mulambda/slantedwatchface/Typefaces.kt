@@ -41,7 +41,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "limelight.ttf",
                 ySizeRatio = 1f,
                 hourScaleX = 0.4f,
-                hourScaleXSingleDigit = 0.7f,
+                hourScaleXSingleDigit = 0.6f,
                 minutesScaleX = 0.33f,
                 secondsScaleX = 0.4f
             )
@@ -91,7 +91,7 @@ class Typefaces(assets: AssetManager, val config: Config) {
                 assetName = "BebasKai.ttf",
                 ySizeRatio = 1.0f,
                 hourScaleX = 0.6f,
-                hourScaleXSingleDigit = 1.0f,
+                hourScaleXSingleDigit = 0.8f,
                 minutesScaleX = 0.5f,
                 secondsScaleX = 0.5f
             )
