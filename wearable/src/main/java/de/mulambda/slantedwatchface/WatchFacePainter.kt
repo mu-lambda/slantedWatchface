@@ -50,7 +50,7 @@ class WatchFacePainter(
         color = veneer.hoursColor
         isAntiAlias = !veneer.isAmbient
     }
-    private val hoursPaintSingleDigit = TextPaint().apply {
+    private val singleDigitHoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
         textSize = hoursSize
         textScaleX = veneer.typefaces.config.hourScaleXSingleDigit
@@ -93,16 +93,13 @@ class WatchFacePainter(
     }
 
     private val geometry = Geometry(
-        sampleCalendar,
-        chooseHoursPaint(),
+        veneer.is24h,
+        hoursPaint,
+        singleDigitHoursPaint,
         minutesPaint,
         secondsPaint,
-        datePaint
+        datePaint,
     )
-
-    private fun chooseHoursPaint() =
-        if (sampleCalendar.get(Calendar.HOUR_OF_DAY) < 10) hoursPaintSingleDigit else hoursPaint
-
 
     fun shouldUpdate(newCalendar: Calendar): Boolean {
         val newNonEmptyComplications =
@@ -276,7 +273,8 @@ class WatchFacePainter(
         calculatePaintData(calendar, paintData)
         with(paintData) {
             canvas.drawText(
-                hours, bounds.left + hoursX, bounds.top + hoursY, chooseHoursPaint()
+                hours, bounds.left + hoursX, bounds.top + hoursY,
+                if (hours.length > 1) hoursPaint else singleDigitHoursPaint
             )
             canvas.drawText(
                 minutes, bounds.left + minutesX, bounds.top + minutesY, minutesPaint

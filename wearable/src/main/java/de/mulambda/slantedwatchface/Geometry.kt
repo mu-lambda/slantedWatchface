@@ -23,10 +23,11 @@ import java.util.*
 import kotlin.collections.HashMap
 
 class Geometry(
-    private val calendar: Calendar,
-    mHoursPaint: TextPaint,
-    mMinutesPaint: TextPaint,
-    mSecondsPaint: TextPaint,
+    private val is24h: Boolean,
+    hoursPaint: TextPaint,
+    singleDigitHoursPaint: TextPaint,
+    minutesPaint: TextPaint,
+    secondsPaint: TextPaint,
     private val mDatePaint: TextPaint
 ) {
     // TODO(#5): Handle AM/PM
@@ -37,35 +38,42 @@ class Geometry(
     data class Item(val text: String, val height: Int, val width: Int)
 
 
-    private val mHoursDimensions =
-        getDimensions(mHoursPaint, range(hoursField)) { i -> "$i" }
-    private val mMinutesDimensions =
-        getDimensions(mMinutesPaint, range(minutesField), ::padZero)
-    private val mSecondsDimensions =
-        getDimensions(mSecondsPaint, range(secondsField), ::padZero)
-    private val mDateDimensions: HashMap<Int, HashMap<Int, Item>> =
-        HashMap()
-
-    private fun range(calendarField: Int): IntRange {
-        return calendar.getMinimum(calendarField)..calendar.getMaximum(calendarField)
-    }
+    private val mHoursDimensions = getHoursDimensions(singleDigitHoursPaint, hoursPaint)
+    private val mMinutesDimensions = getDimensions(minutesPaint)
+    private val mSecondsDimensions = getDimensions(secondsPaint)
+    private val mDateDimensions: HashMap<Int, HashMap<Int, Item>> = HashMap()
 
     private fun getDimensions(
         textPaint: TextPaint,
-        range: IntRange,
-        getText: (Int) -> String
     ): HashMap<Int, Item> {
         val m = HashMap<Int, Item>()
         val valueBounds = Rect()
-        for (value in range) {
-            val text = getText(value)
+        for (value in 0..59) {
+            val text = padZero(value)
             textPaint.getTextBounds(text, 0, text.length, valueBounds)
             m[value] = Item(text = text, width = valueBounds.width(), height = valueBounds.height())
         }
         return m
     }
 
+    private fun getHoursDimensions(oneDigitPaint: TextPaint, twoDigitsPaint: TextPaint): HashMap<Int, Item> {
+        val m = HashMap<Int, Item>()
+        val bounds = Rect()
+        for (value in 0..23) {
+            val text = "${getHoursValue(value)}"
+            (if (value < 10) oneDigitPaint else twoDigitsPaint).getTextBounds(text, 0, text.length, bounds)
+            m[value] = Item(text = text, width = bounds.width(), height = bounds.height())
+        }
+        return m
+    }
+
     private fun padZero(i: Int) = if (i < 10) "0$i" else "$i"
+    private fun getHoursValue(hoursOfDay: Int) =
+        if (is24h) hoursOfDay else when(hoursOfDay) {
+            0 -> 12
+            in 1..12 -> hoursOfDay
+            else -> hoursOfDay - 12
+        }
 
     companion object {
         fun formatDate(c: Calendar) =
@@ -80,7 +88,7 @@ class Geometry(
 
 
     fun getHours(c: Calendar): Item =
-        mHoursDimensions[c.get(hoursField)]!!
+        mHoursDimensions[getHoursValue(c.get(hoursField))]!!
 
     fun getMinutes(c: Calendar): Item =
         mMinutesDimensions[c.get(minutesField)]!!

@@ -31,6 +31,7 @@ data class Veneer(
     val dateColor: Int,
     val complicationIconColor: Int,
     val complicationTextColor: Int,
+    val is24h : Boolean,
     val isAmbient: Boolean
 ) {
     companion object {
@@ -51,6 +52,7 @@ data class Veneer(
                 dateColor = if (!isAmbient) Settings.DATE_COLOR.get(p) else AMBIENT_COLOR,
                 complicationIconColor = if (!isAmbient) Settings.COMPLICATION_ICON_COLOR.get(p) else AMBIENT_COLOR,
                 complicationTextColor = if (!isAmbient) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
+                is24h = Settings.IS24H.get(p),
                 isAmbient = isAmbient,
             )
 

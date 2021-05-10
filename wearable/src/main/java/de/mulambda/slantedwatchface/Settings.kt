@@ -55,6 +55,7 @@ object Settings {
         Binding("date-color", Color.YELLOW, R.string.date_color, getInt, putInt)
     val TYPEFACE =
         Binding("typeface", Typefaces.DEFAULT.displayName, 0, getString, putString)
+    val IS24H = Binding("is24h", true, 0, getBoolean, putBoolean)
 
     private val BINDINGS =
         arrayOf(
@@ -66,6 +67,7 @@ object Settings {
             COMPLICATION_ICON_COLOR,
             COMPLICATION_TEXT_COLOR,
             TYPEFACE,
+            IS24H,
         )
 
 
