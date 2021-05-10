@@ -34,4 +34,5 @@
     <string name="reset_settings">Reset settings</string>
     <string name="set_font">Font</string>
     <string name="typeface_representative_text">12:34:56.7890</string>
+    <string name="is_24_hours_clock">24-hours clock</string>
 </resources>

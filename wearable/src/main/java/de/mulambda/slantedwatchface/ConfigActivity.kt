@@ -55,9 +55,10 @@ class ConfigActivity : Activity() {
         object MenuItems {
             const val PREVIEW = 0
             const val COLOR_THEME = 1
-            const val HANDEDNESS = 2
-            const val TYPEFACE = 3
-            const val RESET_SETTINGS = 4
+            const val IS_24H = 2
+            const val HANDEDNESS = 3
+            const val TYPEFACE = 4
+            const val RESET_SETTINGS = 5
         }
 
     }
@@ -161,6 +162,9 @@ class ConfigActivity : Activity() {
                 MenuItems.HANDEDNESS ->
                     return HandednessViewHolder(parent)
 
+                MenuItems.IS_24H ->
+                    return Is24HViewHolder(parent)
+
                 MenuItems.COLOR_THEME ->
                     return ColorThemeViewHolder(parent)
 
@@ -181,7 +185,7 @@ class ConfigActivity : Activity() {
                     return
                 }
                 MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
-                MenuItems.HANDEDNESS, MenuItems.TYPEFACE -> return
+                MenuItems.HANDEDNESS, MenuItems.IS_24H, MenuItems.TYPEFACE -> return
             }
             throw UnsupportedOperationException()
         }
@@ -209,7 +213,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 5
+            return 6
         }
 
         override fun getItemViewType(position: Int): Int = position
@@ -351,6 +355,39 @@ class ConfigActivity : Activity() {
             val leftHanded = Settings.LEFT_HANDED.get(sharedPreferences)
             with(sharedPreferences.edit()) {
                 Settings.LEFT_HANDED.put(this, !leftHanded)
+                apply()
+            }
+        }
+
+        override fun onSharedPreferenceChanged(
+            sharedPreferences: SharedPreferences?,
+            key: String?
+        ) = updateCurrentState()
+    }
+
+    inner class Is24HViewHolder(
+        parent: ViewGroup,
+    ) : RecyclerView.ViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.is24h, parent, false)
+    ), View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
+        @SuppressLint("UseSwitchCompatOrMaterialCode") // TOD0(#14)
+        private val switch: Switch = itemView.findViewById(R.id.is24h)
+
+        init {
+            itemView.setOnClickListener(this)
+            sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+            updateCurrentState()
+        }
+
+        private fun updateCurrentState() {
+            switch.isChecked = Settings.IS24H.get(sharedPreferences)
+        }
+
+        override fun onClick(v: View?) {
+            Log.i(TAG(), "onClick")
+            val is24h = Settings.IS24H.get(sharedPreferences)
+            with(sharedPreferences.edit()) {
+                Settings.IS24H.put(this, !is24h)
                 apply()
             }
         }
