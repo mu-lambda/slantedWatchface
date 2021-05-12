@@ -30,7 +30,6 @@ class Geometry(
     secondsPaint: TextPaint,
     private val mDatePaint: TextPaint
 ) {
-    // TODO(#5): Handle AM/PM
     private val hoursField = Calendar.HOUR_OF_DAY
     private val minutesField = Calendar.MINUTE
     private val secondsField = Calendar.SECOND

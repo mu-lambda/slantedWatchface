@@ -28,6 +28,7 @@ data class Veneer(
     val hoursColor: Int,
     val minutesColor: Int,
     val secondsColor: Int,
+    val amPmColor: Int,
     val dateColor: Int,
     val complicationIconColor: Int,
     val complicationTextColor: Int,
@@ -49,6 +50,7 @@ data class Veneer(
                 hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR,
                 minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
                 secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR,
+                amPmColor = if (!isAmbient) Settings.AM_PM_COLOR.get(p) else AMBIENT_COLOR,
                 dateColor = if (!isAmbient) Settings.DATE_COLOR.get(p) else AMBIENT_COLOR,
                 complicationIconColor = if (!isAmbient) Settings.COMPLICATION_ICON_COLOR.get(p) else AMBIENT_COLOR,
                 complicationTextColor = if (!isAmbient) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
@@ -67,6 +69,7 @@ data class Veneer(
             Settings.HOURS_COLOR.put(editor, hoursColor)
             Settings.MINUTES_COLOR.put(editor, minutesColor)
             Settings.SECONDS_COLOR.put(editor, secondsColor)
+            Settings.AM_PM_COLOR.put(editor, amPmColor)
             Settings.DATE_COLOR.put(editor, dateColor)
             Settings.COMPLICATION_ICON_COLOR.put(editor, complicationIconColor)
             Settings.COMPLICATION_TEXT_COLOR.put(editor, complicationTextColor)
@@ -84,6 +87,7 @@ data class Veneer(
             hoursColor = baseColor,
             minutesColor = whiteOf(baseColor),
             secondsColor = baseColor,
+            amPmColor = baseColor,
             complicationIconColor = whiteOf(baseColor),
             complicationTextColor = baseColor,
             dateColor = applyColorValue(dateColor, baseColor)

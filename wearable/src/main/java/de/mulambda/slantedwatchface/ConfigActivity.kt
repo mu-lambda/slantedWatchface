@@ -117,8 +117,10 @@ class ConfigActivity : Activity() {
             with(sharedPreferences.edit()) {
                 binding.put(this, color)
                 when (binding) {
-                    Settings.HOURS_COLOR ->
+                    Settings.HOURS_COLOR -> {
                         Settings.COMPLICATION_TEXT_COLOR.put(this, color)
+                        Settings.AM_PM_COLOR.put(this, color)
+                    }
                     Settings.MINUTES_COLOR ->
                         Settings.COMPLICATION_ICON_COLOR.put(this, color)
                 }

@@ -91,6 +91,20 @@ class WatchFacePainter(
             if (scale < 1f) scale else 1f
         }
     }
+    private val amPmSize = dateSize
+    private val amPmPaint = TextPaint().apply {
+        typeface = veneer.typefaces.dateTypeface
+        textSize = amPmSize
+        color = veneer.amPmColor
+        isAntiAlias = !veneer.isAmbient
+        textScaleX = this.let { // poor man's scaling estimate
+            val secondsSize = secondsPaint.measureText("00")
+            val amSize = it.measureText("AM")
+            val scale = secondsSize * 0.7f / amSize
+            if (scale < 1f) scale else 1f
+        }
+    }
+
 
     private val geometry = Geometry(
         veneer.is24h,
@@ -179,6 +193,9 @@ class WatchFacePainter(
         var seconds: String = "",
         var secondsX: Float = 0f,
         var secondsY: Float = 0f,
+        var amPm: String = "",
+        var amPmX: Float = 0f,
+        var amPmY: Float = 0f,
         var date: String = "",
         var dateX: Float = 0f,
         var dateY: Float = 0f
@@ -220,8 +237,7 @@ class WatchFacePainter(
         return getDataRect(p.dateX, p.dateY, geometry.getDate(calendar))
     }
 
-
-    private fun getDataRect(x: Float, y: Float, dataBounds: Geometry.Item): RectF {
+   private fun getDataRect(x: Float, y: Float, dataBounds: Geometry.Item): RectF {
         val secondsRect = RectF(x, y - dataBounds.height, x + dataBounds.width, y)
         secondsRect.offset(bounds.left, bounds.top)
         return secondsRect
@@ -262,6 +278,10 @@ class WatchFacePainter(
             seconds = s.text
             secondsX = dateX
             secondsY = dateY - d.height - 4 * smallInset
+
+            amPm = if (calendar.get(Calendar.HOUR_OF_DAY) >= 12) "PM" else "AM"
+            amPmX = dateX
+            amPmY = secondsY - s.height - 4 * smallInset
         }
     }
 
@@ -286,6 +306,9 @@ class WatchFacePainter(
                 canvas.drawText(
                     seconds, bounds.left + secondsX, bounds.top + secondsY, secondsPaint
                 )
+            }
+            if (!veneer.is24h) {
+                canvas.drawText(amPm, amPmX, amPmY, amPmPaint)
             }
         }
         complications.draw(canvas, calendar.timeInMillis)

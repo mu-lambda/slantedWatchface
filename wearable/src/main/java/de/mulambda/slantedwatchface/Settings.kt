@@ -47,6 +47,8 @@ object Settings {
         Binding("minutes-color", Color.WHITE, R.string.minutes_color, getInt, putInt)
     val SECONDS_COLOR =
         Binding("seconds-color", Color.GREEN, R.string.seconds_color, getInt, putInt)
+    val AM_PM_COLOR =
+        Binding("am-pm-color", Color.GREEN, R.string.am_pm_color, getInt, putInt)
     val COMPLICATION_ICON_COLOR =
         Binding("complication-icon-color", Color.WHITE, 0, getInt, putInt)
     val COMPLICATION_TEXT_COLOR =
@@ -63,6 +65,7 @@ object Settings {
             HOURS_COLOR,
             MINUTES_COLOR,
             SECONDS_COLOR,
+            AM_PM_COLOR,
             DATE_COLOR,
             COMPLICATION_ICON_COLOR,
             COMPLICATION_TEXT_COLOR,
