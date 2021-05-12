@@ -248,7 +248,7 @@ class WatchFacePainter(
         val smallInset = 2f
         with(outPaintData) {
             hours = h.text
-            hoursX = centerX - h.width
+            hoursX = centerX - h.width - (if (hours.length <= 1) largeInset else 0f)
             hoursY = centerY + h.height / 2
 
             minutes = m.text
