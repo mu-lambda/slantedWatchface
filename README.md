@@ -1,18 +1,15 @@
-# slantedWatchface
-Slanted watch face for Wear OS.<form action="https://www.paypal.com/donate" method="post" target="_top">
-<input type="hidden" name="hosted_button_id" value="UVSWYWAWK7D88" />
-<input type="image" src="https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
-<img alt="" border="0" src="https://www.paypal.com/en_DE/i/scr/pixel.gif" width="1" height="1" />
-</form>
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate?hosted_button_id=SVH3NYCAR3UAN)
 
+# Slanted Watchface
+Slanted watch face for Wear OS.
 Simple digital watch face that is a bit different from others.
 
-![](playstore/artwork/round-green.png)
+<img src="playstore/artwork/round-green.png" width="200" />
 
 Colors and fonts are customizable:
 
-![](playstore/artwork/gothik.png) ![](playstore/artwork/blue-round.png)
+<img src="playstore/artwork/gothik.png" width="200" /> <img src="playstore/artwork/blue-round.png" width="200" />
 
 Customizations:
 
-![](playstore/artwork/settings-screen.png) ![](playstore/artwork/fonts.png)
+<img src="playstore/artwork/settings-screen.png" width="200" /><img src="playstore/artwork/fonts.png" width="200" />
