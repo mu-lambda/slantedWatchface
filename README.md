@@ -10,7 +10,9 @@ Simple digital watch face that is a bit different from others.
 ![](playstore/artwork/round-green.png)
 
 Colors and fonts are customizable:
-![](playstore/artwork/gothik.png)![](playstore/artwork/blue-round.png)
+
+![](playstore/artwork/gothik.png) ![](playstore/artwork/blue-round.png)
 
 Customizations:
-![](playstore/artwork/settings-screen.png)![](playstore/artwork/fonts.png)
+
+![](playstore/artwork/settings-screen.png) ![](playstore/artwork/fonts.png)
