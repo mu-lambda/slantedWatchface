@@ -20,5 +20,7 @@ Colors and fonts are customizable:
 
 Customizations:
 
-<img src="playstore/artwork/settings-screen.png" width="200" /><img src="playstore/artwork/fonts.png" width="200" />
+<img src="playstore/artwork/settings-screen.png" width="200" 
+     /> <img src="playstore/artwork/settings-2.png" width="200"
+             /> <img src="playstore/artwork/fonts.png" width="200" />
 
