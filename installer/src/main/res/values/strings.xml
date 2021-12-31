@@ -24,4 +24,5 @@
     <string name="text_on_no_devices">Slanted Watch Face is not installed on any devices.</string>
     <string name="text_on_some_devices">Slanted Watch Face is installed on some devices.</string>
     <string name="text_on_all_devices">Slanted Watch Face is installed on all devices.</string>
+    <string name="text_warning">THIS APP REQUIRES PHYSICAL WEAR OS WATCH</string>
 </resources>
