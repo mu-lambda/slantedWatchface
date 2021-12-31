@@ -37,6 +37,7 @@ data class Veneer(
 ) {
     companion object {
         const val AMBIENT_COLOR = Color.WHITE
+        const val AMBIENT_COLOR_SOFT = Color.LTGRAY
         const val ANGLE = 20f
 
         fun fromSharedPreferences(
@@ -47,10 +48,10 @@ data class Veneer(
             Veneer(
                 leftHanded = Settings.LEFT_HANDED.get(p),
                 typefaces = Typefaces(assets, Typefaces.configByString(Settings.TYPEFACE.get(p))),
-                hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR,
+                hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR_SOFT,
                 minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
-                secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR,
-                amPmColor = if (!isAmbient) Settings.AM_PM_COLOR.get(p) else AMBIENT_COLOR,
+                secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR_SOFT,
+                amPmColor = if (!isAmbient) Settings.AM_PM_COLOR.get(p) else AMBIENT_COLOR_SOFT,
                 dateColor = if (!isAmbient) Settings.DATE_COLOR.get(p) else AMBIENT_COLOR,
                 complicationIconColor = if (!isAmbient) Settings.COMPLICATION_ICON_COLOR.get(p) else AMBIENT_COLOR,
                 complicationTextColor = if (!isAmbient) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
@@ -65,7 +66,7 @@ data class Veneer(
     fun put(editor: SharedPreferences.Editor): SharedPreferences.Editor =
         if (isAmbient) editor // not preferences yet for ambient mode
         else {
-            Settings.LEFT_HANDED.put(editor, angle > 0)
+            Settings.LEFT_HANDED.put(editor, leftHanded)
             Settings.HOURS_COLOR.put(editor, hoursColor)
             Settings.MINUTES_COLOR.put(editor, minutesColor)
             Settings.SECONDS_COLOR.put(editor, secondsColor)
