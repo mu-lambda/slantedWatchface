@@ -33,7 +33,8 @@ data class Veneer(
     val complicationIconColor: Int,
     val complicationTextColor: Int,
     val is24h : Boolean,
-    val isAmbient: Boolean
+    val isAmbient: Boolean,
+    val dateStyle: DateStyle,
 ) {
     companion object {
         const val AMBIENT_COLOR = Color.WHITE
@@ -57,8 +58,14 @@ data class Veneer(
                 complicationTextColor = if (!isAmbient) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
                 is24h = Settings.IS24H.get(p),
                 isAmbient = isAmbient,
+                dateStyle = Settings.DATE_STYLE.get(p)
             )
+    }
 
+    enum class DateStyle(val stringResource: Int) {
+        NONE(R.string.date_none),
+        SMALL(R.string.date_small),
+        LARGE(R.string.date_large),
     }
 
     val angle = if (leftHanded) ANGLE else -ANGLE

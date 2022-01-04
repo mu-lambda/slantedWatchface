@@ -36,4 +36,8 @@
     <string name="typeface_representative_text">12:34:56.7890</string>
     <string name="is_24_hours_clock">24-hours clock</string>
     <string name="am_pm_color">AM/PM</string>
+    <string name="date_none">None</string>
+    <string name="date_small">Small</string>
+    <string name="date_large">Large</string>
+    <string name="date_style">Date Style</string>
 </resources>
