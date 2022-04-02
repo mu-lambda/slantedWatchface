@@ -39,21 +39,6 @@ object Settings {
 
     private val putString = SharedPreferences.Editor::putString
 
-    private fun getDateStyle(
-        sp: SharedPreferences,
-        key: String,
-        defaultValue: Veneer.DateStyle
-    ): Veneer.DateStyle =
-        sp.getString(key, defaultValue.name)!!.let {
-            try {
-                Veneer.DateStyle.valueOf(it)
-            } catch (_ : IllegalArgumentException) {
-                defaultValue
-            }
-        }
-    private fun putDateStyle(e: SharedPreferences.Editor, key: String, value: Veneer.DateStyle) =
-        e.putString(key, value.name)
-
     val LEFT_HANDED =
         Binding("left-handed", true, 0, getBoolean, putBoolean)
     val HOURS_COLOR =
@@ -73,13 +58,6 @@ object Settings {
     val TYPEFACE =
         Binding("typeface", Typefaces.DEFAULT.displayName, 0, ::getString, putString)
     val IS24H = Binding("is24h", true, 0, getBoolean, putBoolean)
-    val DATE_STYLE = Binding(
-        "dateStyle",
-        Veneer.DateStyle.SMALL,
-        R.string.date_style,
-        ::getDateStyle,
-        ::putDateStyle
-    )
 
     private val BINDINGS =
         arrayOf(
@@ -93,7 +71,6 @@ object Settings {
             COMPLICATION_TEXT_COLOR,
             TYPEFACE,
             IS24H,
-            DATE_STYLE,
         )
 
 
