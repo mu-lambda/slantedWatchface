@@ -32,7 +32,7 @@ data class Veneer(
     val dateColor: Int,
     val complicationIconColor: Int,
     val complicationTextColor: Int,
-    val is24h : Boolean,
+    val is24h: Boolean,
     val isAmbient: Boolean,
 ) {
     companion object {
@@ -44,20 +44,22 @@ data class Veneer(
             p: SharedPreferences,
             assets: AssetManager,
             isAmbient: Boolean
-        ) =
-            Veneer(
+        ): Veneer {
+            val isColorful = !isAmbient || Settings.COLORFUL_AMBIENT.get(p)
+            return Veneer(
                 leftHanded = Settings.LEFT_HANDED.get(p),
                 typefaces = Typefaces(assets, Typefaces.configByString(Settings.TYPEFACE.get(p))),
-                hoursColor = if (!isAmbient) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR_SOFT,
-                minutesColor = if (!isAmbient) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
-                secondsColor = if (!isAmbient) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR_SOFT,
-                amPmColor = if (!isAmbient) Settings.AM_PM_COLOR.get(p) else AMBIENT_COLOR_SOFT,
-                dateColor = if (!isAmbient) Settings.DATE_COLOR.get(p) else AMBIENT_COLOR,
-                complicationIconColor = if (!isAmbient) Settings.COMPLICATION_ICON_COLOR.get(p) else AMBIENT_COLOR,
-                complicationTextColor = if (!isAmbient) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
+                hoursColor = if (isColorful) Settings.HOURS_COLOR.get(p) else AMBIENT_COLOR_SOFT,
+                minutesColor = if (isColorful) Settings.MINUTES_COLOR.get(p) else AMBIENT_COLOR,
+                secondsColor = if (isColorful) Settings.SECONDS_COLOR.get(p) else AMBIENT_COLOR_SOFT,
+                amPmColor = if (isColorful) Settings.AM_PM_COLOR.get(p) else AMBIENT_COLOR_SOFT,
+                dateColor = if (isColorful) Settings.DATE_COLOR.get(p) else AMBIENT_COLOR,
+                complicationIconColor = if (isColorful) Settings.COMPLICATION_ICON_COLOR.get(p) else AMBIENT_COLOR,
+                complicationTextColor = if (isColorful) Settings.COMPLICATION_TEXT_COLOR.get(p) else AMBIENT_COLOR,
                 is24h = Settings.IS24H.get(p),
                 isAmbient = isAmbient
             )
+        }
     }
 
     val angle = if (leftHanded) ANGLE else -ANGLE
