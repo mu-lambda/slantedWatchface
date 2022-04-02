@@ -24,7 +24,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.wearable.complications.*
+import android.support.wearable.complications.ComplicationData
+import android.support.wearable.complications.ComplicationHelperActivity
+import android.support.wearable.complications.ComplicationProviderInfo
+import android.support.wearable.complications.ProviderInfoRetriever
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -55,10 +58,11 @@ class ConfigActivity : Activity() {
         object MenuItems {
             const val PREVIEW = 0
             const val COLOR_THEME = 1
-            const val IS_24H = 2
-            const val HANDEDNESS = 3
-            const val TYPEFACE = 4
-            const val RESET_SETTINGS = 5
+            const val HANDEDNESS = 2
+            const val IS_24H = 3
+            const val COLORFUL_AMBIENT = 4
+            const val TYPEFACE = 5
+            const val RESET_SETTINGS = 6
         }
 
     }
@@ -165,7 +169,16 @@ class ConfigActivity : Activity() {
                     return HandednessViewHolder(parent)
 
                 MenuItems.IS_24H ->
-                    return Is24HViewHolder(parent)
+                    return BooleanBindingViewHolder(
+                        parent, Settings.IS24H,
+                        R.id.is24h, R.layout.is24h
+                    )
+
+                MenuItems.COLORFUL_AMBIENT ->
+                    return BooleanBindingViewHolder(
+                        parent, Settings.COLORFUL_AMBIENT,
+                        R.id.colorful_ambient, R.layout.colorful_ambient
+                    )
 
                 MenuItems.COLOR_THEME ->
                     return ColorThemeViewHolder(parent)
@@ -187,7 +200,8 @@ class ConfigActivity : Activity() {
                     return
                 }
                 MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
-                MenuItems.HANDEDNESS, MenuItems.IS_24H, MenuItems.TYPEFACE -> return
+                MenuItems.HANDEDNESS, MenuItems.IS_24H, MenuItems.COLORFUL_AMBIENT,
+                MenuItems.TYPEFACE -> return
             }
             throw UnsupportedOperationException()
         }
@@ -215,7 +229,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 6
+            return 7
         }
 
         override fun getItemViewType(position: Int): Int = position
@@ -367,13 +381,16 @@ class ConfigActivity : Activity() {
         ) = updateCurrentState()
     }
 
-    inner class Is24HViewHolder(
+    inner class BooleanBindingViewHolder(
         parent: ViewGroup,
+        private val binding: Settings.Binding<Boolean>,
+        viewId: Int,
+        val layoutId: Int,
     ) : RecyclerView.ViewHolder(
-        LayoutInflater.from(parent.context).inflate(R.layout.is24h, parent, false)
+        LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
     ), View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener {
         @SuppressLint("UseSwitchCompatOrMaterialCode") // TOD0(#14)
-        private val switch: Switch = itemView.findViewById(R.id.is24h)
+        private val switch: Switch = itemView.findViewById(viewId)
 
         init {
             itemView.setOnClickListener(this)
@@ -382,14 +399,14 @@ class ConfigActivity : Activity() {
         }
 
         private fun updateCurrentState() {
-            switch.isChecked = Settings.IS24H.get(sharedPreferences)
+            switch.isChecked = binding.get(sharedPreferences)
         }
 
         override fun onClick(v: View?) {
             Log.i(TAG(), "onClick")
-            val is24h = Settings.IS24H.get(sharedPreferences)
+            val value = binding.get(sharedPreferences)
             with(sharedPreferences.edit()) {
-                Settings.IS24H.put(this, !is24h)
+                binding.put(this, !value)
                 apply()
             }
         }
