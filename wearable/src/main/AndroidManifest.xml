@@ -40,7 +40,8 @@
         <service
             android:name=".WatchFaceService"
             android:label="@string/service_name"
-            android:permission="android.permission.BIND_WALLPAPER">
+            android:permission="android.permission.BIND_WALLPAPER"
+            android:exported="true">
             <meta-data
                 android:name="android.service.wallpaper"
                 android:resource="@xml/watch_face" />
@@ -64,7 +65,8 @@
         <activity android:name="android.support.wearable.complications.ComplicationHelperActivity" />
         <activity
             android:name=".ConfigActivity"
-            android:label="@string/config_name">
+            android:label="@string/config_name"
+            android:exported="true">
             <intent-filter>
                 <action android:name="de.mulambda.slantedwatchface.CONFIG" />
 
