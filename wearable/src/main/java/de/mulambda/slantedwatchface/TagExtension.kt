@@ -17,5 +17,5 @@
 
 package de.mulambda.slantedwatchface
 
-@Suppress("unused")
+@Suppress("unused", "FunctionName")
 inline fun <reified T> T.TAG(): String = T::class.qualifiedName ?: T::class.java.name
