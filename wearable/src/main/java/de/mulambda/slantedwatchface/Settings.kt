@@ -42,7 +42,7 @@ object Settings {
     val LEFT_HANDED =
         Binding("left-handed", true, 0, getBoolean, putBoolean)
     val COLORFUL_AMBIENT =
-        Binding("colorful-ambient", false, 0, getBoolean, putBoolean)
+        Binding("colorful-ambient", true, 0, getBoolean, putBoolean)
     val HOURS_COLOR =
         Binding("hours-color", Color.GREEN, R.string.hours_color, getInt, putInt)
     val MINUTES_COLOR =
