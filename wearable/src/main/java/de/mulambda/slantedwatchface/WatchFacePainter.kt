@@ -28,12 +28,11 @@ class WatchFacePainter(
     calendar: Calendar,
     val veneer: Veneer,
     val bounds: RectF,
-    private val complications: Complications
+    private val complicationsPainter: ComplicationsPainter
 ) {
     private val sampleCalendar: Calendar = calendar.clone() as Calendar
 
-    interface Complications {
-        val ids: IntRange
+    interface ComplicationsPainter {
         fun isComplicationEmpty(id: Int): Boolean
         fun draw(canvas: Canvas, currentTimeMillis: Long)
     }
@@ -41,7 +40,7 @@ class WatchFacePainter(
     val centerX = bounds.width() / 2f
     val centerY = bounds.height() / 2f
     private val nonEmptyComplications =
-        complications.ids.count { id -> !complications.isComplicationEmpty(id) }
+        veneer.visibleComplicationIds.count { id -> !complicationsPainter.isComplicationEmpty(id) }
     private val hoursSize = centerY * 2 * veneer.typefaces.config.ySizeRatio
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
@@ -117,7 +116,9 @@ class WatchFacePainter(
 
     fun shouldUpdate(newCalendar: Calendar): Boolean {
         val newNonEmptyComplications =
-            complications.ids.count { id -> !complications.isComplicationEmpty(id) }
+            veneer.visibleComplicationIds.count {
+                    id -> !complicationsPainter.isComplicationEmpty(id)
+            }
         if (newNonEmptyComplications != nonEmptyComplications) return true
         return sampleCalendar.get(Calendar.HOUR_OF_DAY) != newCalendar.get(Calendar.HOUR_OF_DAY) ||
                 sampleCalendar.get(Calendar.DAY_OF_WEEK) != newCalendar.get(Calendar.DAY_OF_WEEK) ||
@@ -158,13 +159,13 @@ class WatchFacePainter(
 
         val emptyRect = Rect()
         if (nonEmptyComplications == 0) {
-            complications.ids.forEach { complicationBounds.put(it, emptyRect) }
+            veneer.visibleComplicationIds.forEach { complicationBounds.put(it, emptyRect) }
         } else {
             val inset = if (nonEmptyComplications > 1) 3 else 0
             val delta = (complicationAreaBottom - complicationAreaTop) / nonEmptyComplications
             var indexOfNonEmpty = 0
-            complications.ids.forEach {
-                if (complications.isComplicationEmpty(it)) {
+            veneer.visibleComplicationIds.forEach {
+                if (complicationsPainter.isComplicationEmpty(it)) {
                     complicationBounds.put(it, emptyRect)
                     return@forEach
                 }
@@ -311,7 +312,7 @@ class WatchFacePainter(
                 canvas.drawText(amPm, amPmX, amPmY, amPmPaint)
             }
         }
-        complications.draw(canvas, calendar.timeInMillis)
+        complicationsPainter.draw(canvas, calendar.timeInMillis)
         canvas.restore()
     }
 }

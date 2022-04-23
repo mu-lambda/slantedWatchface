@@ -108,7 +108,7 @@ class WatchFaceService : CanvasWatchFaceService() {
             )
 
             initialize(loadSavedPreferences())
-            setActiveComplications(*complications.ids.toList().toIntArray())
+            setActiveComplications(*Complications.RANGE.toList().toIntArray())
         }
 
         private fun loadSavedPreferences(): SharedPreferences {
@@ -322,7 +322,7 @@ class WatchFaceService : CanvasWatchFaceService() {
             }
         }
 
-        private inner class ComplicationsHolder : WatchFacePainter.Complications {
+        private inner class ComplicationsHolder : WatchFacePainter.ComplicationsPainter {
             private val complicationData =
                 SparseArray<ComplicationData>(Complications.NUMBER_OF_SLOTS)
             private val complicationBounds = SparseArray<Rect>(Complications.NUMBER_OF_SLOTS)
@@ -331,8 +331,6 @@ class WatchFaceService : CanvasWatchFaceService() {
                     for (id in Complications.RANGE)
                         put(id, ComplicationDrawable(applicationContext))
                 }
-
-            override val ids: IntRange = Complications.RANGE
 
             override fun isComplicationEmpty(id: Int): Boolean =
                 isEmptyComplicationData(complicationData.get(id))
@@ -343,7 +341,7 @@ class WatchFaceService : CanvasWatchFaceService() {
                         it.type == ComplicationData.TYPE_NOT_CONFIGURED
 
             override fun draw(canvas: Canvas, currentTimeMillis: Long) {
-                for (id in ids) {
+                for (id in veneer.active.visibleComplicationIds) {
                     complicationDrawables[id].draw(canvas, currentTimeMillis)
                 }
             }

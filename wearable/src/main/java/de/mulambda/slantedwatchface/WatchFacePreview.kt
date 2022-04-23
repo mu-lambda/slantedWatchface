@@ -41,7 +41,7 @@ class WatchFacePreview(
 ) : View(context, attrs), SharedPreferences.OnSharedPreferenceChangeListener {
     private lateinit var painter: WatchFacePainter
     private val calendar = Calendar.getInstance()
-    private val complications = ComplicationsPreview()
+    private lateinit var complications : ComplicationsPreview
     private lateinit var watchFaceClipPath: Path
     private val iconMore = ContextCompat.getDrawable(context, R.drawable.ic_more)!!
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
@@ -164,9 +164,11 @@ class WatchFacePreview(
 
     private fun initializePainter() {
         val dim = watchfaceSize().toFloat()
+        val veneer = Veneer.fromSharedPreferences(sharedPreferences, context.assets, false)
+        complications = ComplicationsPreview(veneer)
         painter = WatchFacePainter(
             Calendar.getInstance(),
-            Veneer.fromSharedPreferences(sharedPreferences, context.assets, false),
+            veneer,
             RectF(
                 paddingLeft.toFloat(),
                 paddingTop.toFloat(),
@@ -230,7 +232,7 @@ class WatchFacePreview(
         complications.setComplication(complicationId, info)
     }
 
-    inner class ComplicationsPreview : WatchFacePainter.Complications {
+    inner class ComplicationsPreview(val veneer: Veneer) : WatchFacePainter.ComplicationsPainter {
         private val complicationBounds = SparseArray<Rect>(Complications.NUMBER_OF_SLOTS)
         private val complicationInfos =
             SparseArray<ComplicationProviderInfo?>(Complications.NUMBER_OF_SLOTS)
@@ -238,13 +240,10 @@ class WatchFacePreview(
             SparseArray<Drawable?>(Complications.NUMBER_OF_SLOTS)
         private lateinit var borderPath: Path
 
-        override val ids: IntRange
-            get() = Complications.RANGE
-
         override fun isComplicationEmpty(id: Int): Boolean = false
 
         override fun draw(canvas: Canvas, currentTimeMillis: Long) {
-            for (id in ids) {
+            for (id in veneer.visibleComplicationIds) {
                 complicationIcons.get(id, null)?.draw(canvas)
             }
             canvas.drawPath(borderPath, touchableBorderPaint)
@@ -267,12 +266,18 @@ class WatchFacePreview(
 
         fun updateComplicationLocations() {
             painter.updateComplicationBounds(complicationBounds)
-            borderPath = Path().apply { ids.forEach { id -> rect(complicationBounds[id]) } }
-            ids.forEach(::setIconBounds)
+            borderPath = Path().apply {
+                veneer.visibleComplicationIds.forEach { id ->
+                    rect(
+                        complicationBounds[id]
+                    )
+                }
+            }
+            veneer.visibleComplicationIds.forEach(::setIconBounds)
         }
 
         fun complicationIdByPoint(x: Int, y: Int): Int? =
-            ids.find { id -> complicationBounds[id].contains(x, y) }
+            veneer.visibleComplicationIds.find { id -> complicationBounds[id].contains(x, y) }
 
         fun setComplication(complicationId: Int, info: ComplicationProviderInfo?) {
             complicationInfos.put(complicationId, info)
