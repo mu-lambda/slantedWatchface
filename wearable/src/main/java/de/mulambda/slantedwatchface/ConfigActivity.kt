@@ -61,8 +61,9 @@ class ConfigActivity : Activity() {
             const val HANDEDNESS = 2
             const val IS_24H = 3
             const val COLORFUL_AMBIENT = 4
-            const val TYPEFACE = 5
-            const val RESET_SETTINGS = 6
+            const val LARGER_DATE = 5
+            const val TYPEFACE = 6
+            const val RESET_SETTINGS = 7
         }
 
     }
@@ -180,6 +181,12 @@ class ConfigActivity : Activity() {
                         R.id.colorful_ambient, R.layout.colorful_ambient
                     )
 
+                MenuItems.LARGER_DATE ->
+                    return BooleanBindingViewHolder(
+                        parent, Settings.LARGER_DATE,
+                        R.id.larger_date, R.layout.larger_date
+                    )
+
                 MenuItems.COLOR_THEME ->
                     return ColorThemeViewHolder(parent)
 
@@ -201,7 +208,7 @@ class ConfigActivity : Activity() {
                 }
                 MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
                 MenuItems.HANDEDNESS, MenuItems.IS_24H, MenuItems.COLORFUL_AMBIENT,
-                MenuItems.TYPEFACE -> return
+                MenuItems.LARGER_DATE, MenuItems.TYPEFACE -> return
             }
             throw UnsupportedOperationException()
         }
@@ -229,7 +236,7 @@ class ConfigActivity : Activity() {
         }
 
         override fun getItemCount(): Int {
-            return 7
+            return 8
         }
 
         override fun getItemViewType(position: Int): Int = position

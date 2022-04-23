@@ -41,4 +41,5 @@
     <string name="date_large">Large</string>
     <string name="date_style">Date Style</string>
     <string name="colorful_ambient">Colorful ambient mode</string>
+    <string name="larger_date">Larger date</string>
 </resources>

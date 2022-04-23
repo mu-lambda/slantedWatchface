@@ -57,6 +57,8 @@ object Settings {
         Binding("complication-text-color", Color.GREEN, 0, getInt, putInt)
     val DATE_COLOR =
         Binding("date-color", Color.YELLOW, R.string.date_color, getInt, putInt)
+    val LARGER_DATE =
+        Binding("larger-date", false, 0, getBoolean, putBoolean)
     val TYPEFACE =
         Binding("typeface", Typefaces.DEFAULT.displayName, 0, ::getString, putString)
     val IS24H = Binding("is24h", true, 0, getBoolean, putBoolean)
@@ -70,6 +72,7 @@ object Settings {
             SECONDS_COLOR,
             AM_PM_COLOR,
             DATE_COLOR,
+            LARGER_DATE,
             COMPLICATION_ICON_COLOR,
             COMPLICATION_TEXT_COLOR,
             TYPEFACE,
