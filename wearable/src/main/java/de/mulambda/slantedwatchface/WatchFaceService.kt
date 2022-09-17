@@ -18,7 +18,10 @@
 package de.mulambda.slantedwatchface
 
 import android.content.*
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Rect
+import android.graphics.RectF
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -324,10 +327,10 @@ class WatchFaceService : CanvasWatchFaceService() {
 
         private inner class ComplicationsHolder : WatchFacePainter.ComplicationsPainter {
             private val complicationData =
-                SparseArray<ComplicationData>(Complications.NUMBER_OF_SLOTS)
-            private val complicationBounds = SparseArray<Rect>(Complications.NUMBER_OF_SLOTS)
+                SparseArray<ComplicationData>(Complications.MAX_NUMBER_OF_SLOTS)
+            private val complicationBounds = SparseArray<Rect>(Complications.MAX_NUMBER_OF_SLOTS)
             private val complicationDrawables =
-                SparseArray<ComplicationDrawable>(Complications.NUMBER_OF_SLOTS).apply {
+                SparseArray<ComplicationDrawable>(Complications.MAX_NUMBER_OF_SLOTS).apply {
                     for (id in Complications.RANGE)
                         put(id, ComplicationDrawable(applicationContext))
                 }

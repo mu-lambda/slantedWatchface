@@ -41,6 +41,7 @@ class WatchFacePainter(
     val centerY = bounds.height() / 2f
     private val nonEmptyComplications =
         veneer.visibleComplicationIds.count { id -> !complicationsPainter.isComplicationEmpty(id) }
+    val largerDate = veneer.largerDate
     private val hoursSize = centerY * 2 * veneer.typefaces.config.ySizeRatio
     private val hoursPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
@@ -58,9 +59,9 @@ class WatchFacePainter(
     }
 
     private val minutesRatio =
-        if (nonEmptyComplications <= 2) WatchFaceService.Constants.RATIO else 2f
+        if (nonEmptyComplications <= 2 && !largerDate) WatchFaceService.Constants.RATIO else 2f
     private val textScaleFactor =
-        if (nonEmptyComplications <= 2) 1f else 2f / WatchFaceService.Constants.RATIO
+        if (nonEmptyComplications <= 2 && !largerDate) 1f else 2f / WatchFaceService.Constants.RATIO
     private val minutesSize = hoursSize / minutesRatio
     private val minutesPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
@@ -77,20 +78,30 @@ class WatchFacePainter(
         color = veneer.secondsColor
         isAntiAlias = !veneer.isAmbient
     }
-    private val dateSize = secondsSize / 4
+
+    private val dateHeightFactor = 0.7f
+    private val dateSize =
+        if (veneer.largerDate)
+            ((hoursSize / 2f) / Complications.MAX_NUMBER_OF_SLOTS) * dateHeightFactor
+        else secondsSize / 4
     private val datePaint = TextPaint().apply {
         typeface = veneer.typefaces.dateTypeface
         textSize = dateSize
         color = veneer.dateColor
         isAntiAlias = !veneer.isAmbient
-        textScaleX = this.let { // poor man's scaling estimate
-            val secondsSize = secondsPaint.measureText("00")
-            val dateSize = it.measureText(Geometry.formatDate(sampleCalendar))
-            val scale = secondsSize * 0.95f / dateSize
-            if (scale < 1f) scale else 1f
-        }
+        textScaleX =
+            this.let { // poor man's scaling estimate
+                val width =
+                    if (veneer.largerDate)
+                        bounds.width() / 2f
+                    else
+                        secondsPaint.measureText("00")
+                val dateSize = it.measureText(Geometry.formatDate(sampleCalendar))
+                val scale = width * 0.95f / dateSize
+                if (scale < 1f) scale else 1f
+            }
     }
-    private val amPmSize = dateSize
+    private val amPmSize = if (veneer.largerDate) minutesSize / 4 else dateSize
     private val amPmPaint = TextPaint().apply {
         typeface = veneer.typefaces.dateTypeface
         textSize = amPmSize
@@ -116,8 +127,8 @@ class WatchFacePainter(
 
     fun shouldUpdate(newCalendar: Calendar): Boolean {
         val newNonEmptyComplications =
-            veneer.visibleComplicationIds.count {
-                    id -> !complicationsPainter.isComplicationEmpty(id)
+            veneer.visibleComplicationIds.count { id ->
+                !complicationsPainter.isComplicationEmpty(id)
             }
         if (newNonEmptyComplications != nonEmptyComplications) return true
         return sampleCalendar.get(Calendar.HOUR_OF_DAY) != newCalendar.get(Calendar.HOUR_OF_DAY) ||
@@ -146,6 +157,7 @@ class WatchFacePainter(
 
     fun updateComplicationBounds(complicationBounds: SparseArray<Rect>) {
         val largeInset = 10f
+        val smallInset = 3
         val maxHoursHeight = geometry.calculateMaxHoursHeight()
         val maxMinutesHeight = geometry.calculateMaxMinutesHeight()
         val hoursY = centerY + maxHoursHeight / 2
@@ -153,15 +165,24 @@ class WatchFacePainter(
         val minutesY = hoursY - maxHoursHeight + maxMinutesHeight
 
         val complicationAreaLeft = minutesX
-        val complicationAreaTop = minutesY + largeInset
         val complicationAreaRight = centerX * 2
         val complicationAreaBottom = (hoursY + centerY * 2) / 2
 
+        val complicationAreaTop =
+            if (!veneer.largerDate)
+                minutesY + largeInset
+            else {
+                val top = minutesY + largeInset
+                val offset =
+                    (complicationAreaBottom - top) / Complications.MAX_NUMBER_OF_SLOTS * dateHeightFactor
+                top + offset + smallInset
+            }
+
         val emptyRect = Rect()
         if (nonEmptyComplications == 0) {
-            veneer.visibleComplicationIds.forEach { complicationBounds.put(it, emptyRect) }
+            Complications.RANGE.forEach { complicationBounds.put(it, emptyRect) }
         } else {
-            val inset = if (nonEmptyComplications > 1) 3 else 0
+            val inset = if (nonEmptyComplications > 1) smallInset else 0
             val delta = (complicationAreaBottom - complicationAreaTop) / nonEmptyComplications
             var indexOfNonEmpty = 0
             veneer.visibleComplicationIds.forEach {
@@ -179,6 +200,9 @@ class WatchFacePainter(
                     )
                 )
                 indexOfNonEmpty++
+            }
+            veneer.invisibleComplicationsIds.forEach {
+                complicationBounds.put(it, emptyRect)
             }
         }
     }
@@ -238,7 +262,7 @@ class WatchFacePainter(
         return getDataRect(p.dateX, p.dateY, geometry.getDate(calendar))
     }
 
-   private fun getDataRect(x: Float, y: Float, dataBounds: Geometry.Item): RectF {
+    private fun getDataRect(x: Float, y: Float, dataBounds: Geometry.Item): RectF {
         val secondsRect = RectF(x, y - dataBounds.height, x + dataBounds.width, y)
         secondsRect.offset(bounds.left, bounds.top)
         return secondsRect
@@ -272,16 +296,25 @@ class WatchFacePainter(
             minutesX = centerX + largeInset
             minutesY = hoursY - h.height + m.height
 
-            date = d.text
-            dateX = minutesX + m.width + largeInset
-            dateY = minutesY
-
             seconds = s.text
-            secondsX = dateX
-            secondsY = dateY - d.height - 4 * smallInset
+            secondsX = minutesX + m.width + largeInset
+
+
+            date = d.text
+            if (veneer.largerDate) {
+                dateX = minutesX
+                dateY = minutesY + d.height + largeInset
+            } else {
+                dateX = secondsX
+                dateY = minutesY
+            }
+            if (veneer.largerDate)
+                secondsY = minutesY
+            else
+                secondsY = dateY - d.height - 4 * smallInset
 
             amPm = if (calendar.get(Calendar.HOUR_OF_DAY) >= 12) "PM" else "AM"
-            amPmX = dateX
+            amPmX = secondsX
             amPmY = secondsY - s.height - 4 * smallInset
         }
     }
@@ -290,8 +323,8 @@ class WatchFacePainter(
     fun draw(calendar: Calendar, canvas: Canvas) {
         canvas.save()
         canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
-        highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
         calculatePaintData(calendar, paintData)
+        highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
         with(paintData) {
             canvas.drawText(
                 hours, bounds.left + hoursX, bounds.top + hoursY,

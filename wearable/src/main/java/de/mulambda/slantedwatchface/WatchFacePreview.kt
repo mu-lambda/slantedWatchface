@@ -233,11 +233,11 @@ class WatchFacePreview(
     }
 
     inner class ComplicationsPreview(val veneer: Veneer) : WatchFacePainter.ComplicationsPainter {
-        private val complicationBounds = SparseArray<Rect>(Complications.NUMBER_OF_SLOTS)
+        private val complicationBounds = SparseArray<Rect>(Complications.MAX_NUMBER_OF_SLOTS)
         private val complicationInfos =
-            SparseArray<ComplicationProviderInfo?>(Complications.NUMBER_OF_SLOTS)
+            SparseArray<ComplicationProviderInfo?>(Complications.MAX_NUMBER_OF_SLOTS)
         private val complicationIcons =
-            SparseArray<Drawable?>(Complications.NUMBER_OF_SLOTS)
+            SparseArray<Drawable?>(Complications.MAX_NUMBER_OF_SLOTS)
         private lateinit var borderPath: Path
 
         override fun isComplicationEmpty(id: Int): Boolean = false

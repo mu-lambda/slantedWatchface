@@ -65,13 +65,24 @@ data class Veneer(
     }
 
     val angle = if (leftHanded) ANGLE else -ANGLE
-    public val complicationSlots = Complications.NUMBER_OF_SLOTS
+    private val complicationSlots =
+        if (!largerDate) Complications.MAX_NUMBER_OF_SLOTS
+        else Complications.MAX_NUMBER_OF_SLOTS - 1
 
     val visibleComplicationIds =
         IntRange(
             Complications.TOP,
             Integer.min(Complications.BOTTOM, Complications.TOP + complicationSlots - 1)
         )
+
+    val invisibleComplicationsIds =
+        if (visibleComplicationIds.endInclusive == Complications.BOTTOM)
+            IntRange.EMPTY
+        else
+            IntRange(
+                visibleComplicationIds.endInclusive + 1,
+                Complications.BOTTOM
+            )
 
     fun put(editor: SharedPreferences.Editor): SharedPreferences.Editor =
         if (isAmbient) editor // not preferences yet for ambient mode

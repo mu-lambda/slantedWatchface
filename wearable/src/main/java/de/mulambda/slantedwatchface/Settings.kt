@@ -21,9 +21,9 @@ import android.content.SharedPreferences
 import android.graphics.Color
 
 object Complications {
-    const val NUMBER_OF_SLOTS = 3
+    const val MAX_NUMBER_OF_SLOTS = 3
     const val TOP = 2021
-    const val BOTTOM = TOP + NUMBER_OF_SLOTS - 1
+    const val BOTTOM = TOP + MAX_NUMBER_OF_SLOTS - 1
 
     val RANGE = TOP..BOTTOM
 }
