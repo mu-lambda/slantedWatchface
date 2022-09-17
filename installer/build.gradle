@@ -28,8 +28,8 @@ android {
         applicationId "de.mulambda.slantedWatchface"
         minSdkVersion 28
         targetSdkVersion 32
-        versionName "dev" // Release: 1.x, e.g. 1.1
-        versionCode 3 // Phone versions are odd (2x + 1).
+        versionName "1.15" // Release: 1.x, e.g. 1.1
+        versionCode 31 // Phone versions are odd (2x + 1).
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
