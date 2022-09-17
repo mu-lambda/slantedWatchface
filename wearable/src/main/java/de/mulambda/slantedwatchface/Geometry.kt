@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2021 - present The Slanted Watch Face Authors
+ *    Copyright (c) 2022 - present The Slanted Watch Face Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ package de.mulambda.slantedwatchface
 import android.graphics.Rect
 import android.text.TextPaint
 import java.util.*
-import kotlin.collections.HashMap
 
 class Geometry(
     private val is24h: Boolean,
