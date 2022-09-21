@@ -21,13 +21,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         applicationId "de.mulambda.slantedWatchface"
         minSdkVersion 28
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionName "dev" // Release: 1.x, e.g. 1.1
         versionCode 3 // Phone versions are odd (2x + 1).
 

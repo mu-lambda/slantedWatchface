@@ -79,7 +79,7 @@ class WatchFacePainter(
         isAntiAlias = !veneer.isAmbient
     }
 
-    private val dateHeightFactor = 0.7f
+    private val dateHeightFactor = 0.6f
     private val dateSize =
         if (veneer.largerDate)
             ((hoursSize / 2f) / Complications.MAX_NUMBER_OF_SLOTS) * dateHeightFactor
