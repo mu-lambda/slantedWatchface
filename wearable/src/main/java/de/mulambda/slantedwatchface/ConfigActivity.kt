@@ -17,17 +17,14 @@
 
 package de.mulambda.slantedwatchface
 
+//import android.support.wearable.complications.ComplicationHelperActivity
+//import android.support.wearable.complications.ProviderInfoRetriever
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.wearable.complications.ComplicationData
-import android.support.wearable.complications.ComplicationHelperActivity
-import android.support.wearable.complications.ComplicationProviderInfo
-import android.support.wearable.complications.ProviderInfoRetriever
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -37,7 +34,6 @@ import android.widget.Switch
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.wear.widget.WearableRecyclerView
-import java.util.concurrent.Executors
 
 class ConfigActivity : Activity() {
     companion object {
@@ -149,11 +145,14 @@ class ConfigActivity : Activity() {
     }
 
     inner class Adapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+        /*
         private val mProviderInfoRetriever: ProviderInfoRetriever =
             ProviderInfoRetriever(
                 this@ConfigActivity,
                 Executors.newCachedThreadPool()
             ).apply { init() }
+
+         */
         private lateinit var preview: WatchFacePreview
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -215,6 +214,7 @@ class ConfigActivity : Activity() {
 
 
         fun updateComplications() {
+            /*
             mProviderInfoRetriever.retrieveProviderInfo(
                 object : ProviderInfoRetriever.OnProviderInfoReceivedCallback() {
                     override fun onProviderInfoReceived(
@@ -227,11 +227,12 @@ class ConfigActivity : Activity() {
                 ComponentName(this@ConfigActivity, WatchFaceService::class.java),
                 *Complications.RANGE.toList().toIntArray()
             )
+            */
         }
 
 
         override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-            mProviderInfoRetriever.release()
+            //mProviderInfoRetriever.release()
             super.onDetachedFromRecyclerView(recyclerView)
         }
 
@@ -242,7 +243,7 @@ class ConfigActivity : Activity() {
         override fun getItemViewType(position: Int): Int = position
 
         fun destroy() {
-            mProviderInfoRetriever.release()
+            //mProviderInfoRetriever.release()
         }
 
         fun updateColorTheme(color: Int?) {
@@ -425,6 +426,7 @@ class ConfigActivity : Activity() {
     }
 
     private fun selectComplication(complicationId: Int) {
+        /*
         this@ConfigActivity.startActivityForResult(
             ComplicationHelperActivity.createProviderChooserHelperIntent(
                 this,
@@ -434,5 +436,6 @@ class ConfigActivity : Activity() {
             ),
             requestCodeOf(complicationId)
         )
+         */
     }
 }

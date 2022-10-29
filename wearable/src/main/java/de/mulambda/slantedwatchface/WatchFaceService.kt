@@ -16,7 +16,8 @@
  */
 
 package de.mulambda.slantedwatchface
-
+/*
+import android.annotation.SuppressLint
 import android.content.*
 import android.graphics.Canvas
 import android.graphics.Color
@@ -30,7 +31,6 @@ import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationHelperActivity
 import android.support.wearable.complications.rendering.ComplicationDrawable
 import android.support.wearable.watchface.CanvasWatchFaceService
-import android.support.wearable.watchface.WatchFaceService
 import android.support.wearable.watchface.WatchFaceStyle
 import android.util.Log
 import android.util.SparseArray
@@ -38,6 +38,7 @@ import android.view.SurfaceHolder
 import java.lang.ref.WeakReference
 import java.util.*
 
+@SuppressLint("RestrictedApi")
 class WatchFaceService : CanvasWatchFaceService() {
     override fun onCreateEngine(): Engine {
         return Engine()
@@ -67,11 +68,6 @@ class WatchFaceService : CanvasWatchFaceService() {
          * Handler message id for updating the time periodically in interactive mode.
          */
         private const val MSG_UPDATE_TIME = 0
-    }
-
-    object Constants {
-        const val GOLDEN = 1.61803398875f
-        const val RATIO = GOLDEN
     }
 
 
@@ -436,3 +432,5 @@ class WatchFaceService : CanvasWatchFaceService() {
 
     }
 }
+
+*/

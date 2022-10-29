@@ -20,21 +20,21 @@ package de.mulambda.slantedwatchface
 import android.graphics.*
 import android.text.TextPaint
 import android.util.SparseArray
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.cos
 import kotlin.math.sin
 
 class WatchFacePainter(
-    calendar: Calendar,
+    private val zdt: ZonedDateTime,
     val veneer: Veneer,
     val bounds: RectF,
     private val complicationsPainter: ComplicationsPainter
 ) {
-    private val sampleCalendar: Calendar = calendar.clone() as Calendar
 
     interface ComplicationsPainter {
         fun isComplicationEmpty(id: Int): Boolean
-        fun draw(canvas: Canvas, currentTimeMillis: Long)
+        fun draw(canvas: Canvas, zdt: ZonedDateTime)
     }
 
     val centerX = bounds.width() / 2f
@@ -59,9 +59,9 @@ class WatchFacePainter(
     }
 
     private val minutesRatio =
-        if (nonEmptyComplications <= 2 && !largerDate) WatchFaceService.Constants.RATIO else 2f
+        if (nonEmptyComplications <= 2 && !largerDate) Constants.RATIO else 2f
     private val textScaleFactor =
-        if (nonEmptyComplications <= 2 && !largerDate) 1f else 2f / WatchFaceService.Constants.RATIO
+        if (nonEmptyComplications <= 2 && !largerDate) 1f else 2f / Constants.RATIO
     private val minutesSize = hoursSize / minutesRatio
     private val minutesPaint = TextPaint().apply {
         typeface = veneer.typefaces.timeTypeface
@@ -96,7 +96,7 @@ class WatchFacePainter(
                         bounds.width() / 2f
                     else
                         secondsPaint.measureText("00")
-                val dateSize = it.measureText(Geometry.formatDate(sampleCalendar))
+                val dateSize = it.measureText(Geometry.formatDate(GregorianCalendar.from(zdt)))
                 val scale = width * 0.95f / dateSize
                 if (scale < 1f) scale else 1f
             }
@@ -125,15 +125,15 @@ class WatchFacePainter(
         datePaint,
     )
 
-    fun shouldUpdate(newCalendar: Calendar): Boolean {
+    fun shouldUpdate(newCalendar: ZonedDateTime): Boolean {
         val newNonEmptyComplications =
             veneer.visibleComplicationIds.count { id ->
                 !complicationsPainter.isComplicationEmpty(id)
             }
         if (newNonEmptyComplications != nonEmptyComplications) return true
-        return sampleCalendar.get(Calendar.HOUR_OF_DAY) != newCalendar.get(Calendar.HOUR_OF_DAY) ||
-                sampleCalendar.get(Calendar.DAY_OF_WEEK) != newCalendar.get(Calendar.DAY_OF_WEEK) ||
-                sampleCalendar.get(Calendar.DAY_OF_MONTH) != newCalendar.get(Calendar.DAY_OF_MONTH)
+        return zdt.hour != newCalendar.hour ||
+                zdt.dayOfWeek != newCalendar.dayOfWeek ||
+                zdt.dayOfMonth != newCalendar.dayOfMonth
     }
 
 
@@ -226,37 +226,42 @@ class WatchFacePainter(
         var dateY: Float = 0f
     )
 
-    fun isHoursTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::hoursRect)
-    fun isMinutesTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::minutesRect)
-    fun isSecondsTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::secondsRect)
-    fun isDateTap(calendar: Calendar, x: Int, y: Int) = isTap(calendar, x, y, ::dateRect)
+    fun isHoursTap(calendar: ZonedDateTime, x: Int, y: Int) = isTap(calendar, x, y, ::hoursRect)
+    fun isMinutesTap(calendar: ZonedDateTime, x: Int, y: Int) = isTap(calendar, x, y, ::minutesRect)
+    fun isSecondsTap(calendar: ZonedDateTime, x: Int, y: Int) = isTap(calendar, x, y, ::secondsRect)
+    fun isDateTap(calendar: ZonedDateTime, x: Int, y: Int) = isTap(calendar, x, y, ::dateRect)
 
-    private fun isTap(calendar: Calendar, x: Int, y: Int, f: (Calendar) -> RectF): Boolean {
+    private fun isTap(
+        calendar: ZonedDateTime,
+        x: Int,
+        y: Int,
+        f: (ZonedDateTime) -> RectF
+    ): Boolean {
         val (x1, y1) = rotate(x, y)
         return f(calendar).contains(x1, y1)
     }
 
 
-    fun hoursRect(calendar: Calendar): RectF {
+    fun hoursRect(calendar: ZonedDateTime): RectF {
         val p = PaintData()
         calculatePaintData(calendar, p)
         return getDataRect(p.hoursX, p.hoursY, geometry.getHours(calendar))
     }
 
-    fun minutesRect(calendar: Calendar): RectF {
+    fun minutesRect(calendar: ZonedDateTime): RectF {
         val p = PaintData()
         calculatePaintData(calendar, p)
         return getDataRect(p.minutesX, p.minutesY, geometry.getMinutes(calendar))
     }
 
 
-    fun secondsRect(calendar: Calendar): RectF {
+    fun secondsRect(calendar: ZonedDateTime): RectF {
         val p = PaintData()
         calculatePaintData(calendar, p)
         return getDataRect(p.secondsX, p.secondsY, geometry.getSeconds(calendar))
     }
 
-    fun dateRect(calendar: Calendar): RectF {
+    fun dateRect(calendar: ZonedDateTime): RectF {
         val p = PaintData()
         calculatePaintData(calendar, p)
         return getDataRect(p.dateX, p.dateY, geometry.getDate(calendar))
@@ -279,11 +284,11 @@ class WatchFacePainter(
         return Pair(x1.toFloat(), y1.toFloat())
     }
 
-    private fun calculatePaintData(calendar: Calendar, outPaintData: PaintData) {
-        val h = geometry.getHours(calendar)
-        val m = geometry.getMinutes(calendar)
-        val s = geometry.getSeconds(calendar)
-        val d = geometry.getDate(calendar)
+    private fun calculatePaintData(zdt: ZonedDateTime, outPaintData: PaintData) {
+        val h = geometry.getHours(zdt)
+        val m = geometry.getMinutes(zdt)
+        val s = geometry.getSeconds(zdt)
+        val d = geometry.getDate(zdt)
 
         val largeInset = 10f
         val smallInset = 2f
@@ -313,14 +318,14 @@ class WatchFacePainter(
             else
                 secondsY = dateY - d.height - 4 * smallInset
 
-            amPm = if (calendar.get(Calendar.HOUR_OF_DAY) >= 12) "PM" else "AM"
+            amPm = if (zdt.hour >= 12) "PM" else "AM"
             amPmX = secondsX
             amPmY = secondsY - s.height - 4 * smallInset
         }
     }
 
     private var paintData = PaintData()
-    fun draw(calendar: Calendar, canvas: Canvas) {
+    fun draw(calendar: ZonedDateTime, canvas: Canvas) {
         canvas.save()
         canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
         calculatePaintData(calendar, paintData)
@@ -345,7 +350,7 @@ class WatchFacePainter(
                 canvas.drawText(amPm, amPmX, amPmY, amPmPaint)
             }
         }
-        complicationsPainter.draw(canvas, calendar.timeInMillis)
+        complicationsPainter.draw(canvas, calendar)
         canvas.restore()
     }
 }

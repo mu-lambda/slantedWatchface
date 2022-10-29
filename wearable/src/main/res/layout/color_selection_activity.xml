@@ -28,15 +28,13 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_box="all">
+        android:layout_height="match_parent">
 
         <TextView
             android:id="@+id/color_description"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginBottom="8dp"
-            android:background="@color/dark_grey"
             android:gravity="center_horizontal|center_vertical"
             android:textAlignment="center"
             android:textSize="16sp"
@@ -62,7 +60,6 @@
                 android:id="@+id/picked_color_view"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:background="@color/green"
                 android:gravity="start|center_vertical" />
 
             <Button

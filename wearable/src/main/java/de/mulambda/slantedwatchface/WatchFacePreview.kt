@@ -29,6 +29,7 @@ import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
+import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.min
 
@@ -40,8 +41,8 @@ class WatchFacePreview(
     attrs: AttributeSet?,
 ) : View(context, attrs), SharedPreferences.OnSharedPreferenceChangeListener {
     private lateinit var painter: WatchFacePainter
-    private val calendar = Calendar.getInstance()
-    private lateinit var complications : ComplicationsPreview
+    private val zdt = ZonedDateTime.now()
+    private lateinit var complications: ComplicationsPreview
     private lateinit var watchFaceClipPath: Path
     private val iconMore = ContextCompat.getDrawable(context, R.drawable.ic_more)!!
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
@@ -101,7 +102,7 @@ class WatchFacePreview(
                 val id = touchedComplicationId(event)
                 if (id != null) return true
                 for (s in touchableAreas) {
-                    if (s.checker(painter, calendar, event.x.toInt(), event.y.toInt())) return true
+                    if (s.checker(painter, zdt, event.x.toInt(), event.y.toInt())) return true
                 }
             }
             MotionEvent.ACTION_UP -> {
@@ -112,8 +113,8 @@ class WatchFacePreview(
                     return true
                 }
                 for (s in touchableAreas) {
-                    if (s.checker(painter, calendar, event.x.toInt(), event.y.toInt())) {
-                        highlightRect(s.recter(painter, calendar).toIntRect())
+                    if (s.checker(painter, zdt, event.x.toInt(), event.y.toInt())) {
+                        highlightRect(s.recter(painter, zdt).toIntRect())
                         onColorSettingClick(s.binding)
                         return true
                     }
@@ -133,8 +134,8 @@ class WatchFacePreview(
 
     private data class ColorSetting(
         val binding: Settings.Binding<Int>,
-        val checker: (WatchFacePainter, Calendar, Int, Int) -> Boolean,
-        val recter: (WatchFacePainter, Calendar) -> RectF
+        val checker: (WatchFacePainter, ZonedDateTime, Int, Int) -> Boolean,
+        val recter: (WatchFacePainter, ZonedDateTime) -> RectF
     )
 
     private val touchableAreas = arrayOf(
@@ -167,7 +168,7 @@ class WatchFacePreview(
         val veneer = Veneer.fromSharedPreferences(sharedPreferences, context.assets, false)
         complications = ComplicationsPreview(veneer)
         painter = WatchFacePainter(
-            Calendar.getInstance(),
+            ZonedDateTime.now(),
             veneer,
             RectF(
                 paddingLeft.toFloat(),
@@ -184,7 +185,7 @@ class WatchFacePreview(
         }
         touchableBorderPath = Path().apply {
             for (touchableArea in touchableAreas) {
-                rect(touchableArea.recter(painter, calendar).toIntRect())
+                rect(touchableArea.recter(painter, zdt).toIntRect())
             }
         }
         iconMore.setBounds(
@@ -219,7 +220,7 @@ class WatchFacePreview(
         canvas.drawPath(touchableBorderPath, tochableColorBorderPaint)
         canvas.restore()
 
-        painter.draw(calendar, canvas)
+        painter.draw(zdt, canvas)
         canvas.restore()
         val dim = watchfaceSize().toFloat()
         canvas.drawCircle(
@@ -242,7 +243,7 @@ class WatchFacePreview(
 
         override fun isComplicationEmpty(id: Int): Boolean = false
 
-        override fun draw(canvas: Canvas, currentTimeMillis: Long) {
+        override fun draw(canvas: Canvas, zonedDateTime: ZonedDateTime) {
             for (id in veneer.visibleComplicationIds) {
                 complicationIcons.get(id, null)?.draw(canvas)
             }
@@ -279,10 +280,12 @@ class WatchFacePreview(
         fun complicationIdByPoint(x: Int, y: Int): Int? =
             veneer.visibleComplicationIds.find { id -> complicationBounds[id].contains(x, y) }
 
+        @SuppressLint("RestrictedApi")
         fun setComplication(complicationId: Int, info: ComplicationProviderInfo?) {
             complicationInfos.put(complicationId, info)
-            if (info?.providerIcon != null) {
-                info.providerIcon.loadDrawableAsync(
+            val providerIcon = info?.providerIcon
+            if (providerIcon != null) {
+                providerIcon.loadDrawableAsync(
                     context,
                     { drawable ->
                         complicationIcons.put(complicationId, drawable)

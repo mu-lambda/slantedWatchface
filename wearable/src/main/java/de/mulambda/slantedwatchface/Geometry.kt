@@ -19,6 +19,8 @@ package de.mulambda.slantedwatchface
 
 import android.graphics.Rect
 import android.text.TextPaint
+import java.time.DayOfWeek
+import java.time.ZonedDateTime
 import java.util.*
 
 class Geometry(
@@ -29,17 +31,13 @@ class Geometry(
     secondsPaint: TextPaint,
     private val mDatePaint: TextPaint
 ) {
-    private val hoursField = Calendar.HOUR_OF_DAY
-    private val minutesField = Calendar.MINUTE
-    private val secondsField = Calendar.SECOND
-
     data class Item(val text: String, val height: Int, val width: Int)
 
 
     private val mHoursDimensions = getHoursDimensions(singleDigitHoursPaint, hoursPaint)
     private val mMinutesDimensions = getDimensions(minutesPaint)
     private val mSecondsDimensions = getDimensions(secondsPaint)
-    private val mDateDimensions: HashMap<Int, HashMap<Int, Item>> = HashMap()
+    private val mDateDimensions: HashMap<Int, HashMap<DayOfWeek, Item>> = HashMap()
 
     private fun getDimensions(
         textPaint: TextPaint,
@@ -85,28 +83,29 @@ class Geometry(
     }
 
 
-    fun getHours(c: Calendar): Item =
-        mHoursDimensions[getHoursValue(c.get(hoursField))]!!
+    fun getHours(c: ZonedDateTime): Item =
+        mHoursDimensions[getHoursValue(c.hour)]!!
 
-    fun getMinutes(c: Calendar): Item =
-        mMinutesDimensions[c.get(minutesField)]!!
+    fun getMinutes(c: ZonedDateTime): Item =
+        mMinutesDimensions[c.minute]!!
 
-    fun getSeconds(c: Calendar): Item =
-        mSecondsDimensions[c.get(secondsField)]!!
+    fun getSeconds(c: ZonedDateTime): Item =
+        mSecondsDimensions[c.second]!!
 
-    private fun calculateDateItem(c: Calendar): Item {
-        val text = formatDate(c)
+    private fun calculateDateItem(c: ZonedDateTime): Item {
+        val text = formatDate(GregorianCalendar.from(c))
         val bounds = Rect()
         mDatePaint.getTextBounds(text, 0, text.length, bounds)
         return Item(text = text, width = bounds.width(), height = bounds.height())
     }
 
-    fun getDate(c: Calendar): Item {
-        val dayOfMonthCache = mDateDimensions[c.get(Calendar.DAY_OF_MONTH)] ?: HashMap<Int, Item> ().also {
-            mDateDimensions[c.get(Calendar.DAY_OF_MONTH)] = it
-        }
-        return dayOfMonthCache[c.get(Calendar.DAY_OF_WEEK)] ?: calculateDateItem(c).also {
-            dayOfMonthCache[c.get(Calendar.DAY_OF_WEEK)] = it
+    fun getDate(c: ZonedDateTime): Item {
+        val dayOfMonthCache: HashMap<DayOfWeek, Item> =
+            mDateDimensions[c.dayOfMonth] ?: HashMap<DayOfWeek, Item>().also {
+                mDateDimensions[c.dayOfMonth] = it
+            }
+        return dayOfMonthCache[c.dayOfWeek] ?: calculateDateItem(c).also {
+            dayOfMonthCache[c.dayOfWeek] = it
         }
     }
 
