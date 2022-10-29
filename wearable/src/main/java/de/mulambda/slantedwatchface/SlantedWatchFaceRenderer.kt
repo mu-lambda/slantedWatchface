@@ -24,7 +24,6 @@ import android.content.SharedPreferences
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Rect
-import android.graphics.RectF
 import android.os.Handler
 import android.os.Looper
 import android.view.SurfaceHolder
@@ -57,13 +56,6 @@ class SlantedWatchFaceRenderer(
         }
     }
 
-    private val activeVeneer: Veneer = Veneer.fromSharedPreferences(
-        loadSavedPreferences(), context.assets, isAmbient = false
-    )
-    private val ambientVeneer: Veneer = Veneer.fromSharedPreferences(
-        loadSavedPreferences(), context.assets, isAmbient = true
-    )
-
     val complicationsPainter = object : WatchFacePainter.ComplicationsPainter {
         override fun isComplicationEmpty(id: Int): Boolean = true
 
@@ -74,14 +66,9 @@ class SlantedWatchFaceRenderer(
     }
 
     private var lastZDT = ZonedDateTime.now()
-    private var painter: ActiveAmbient<WatchFacePainter> = ActiveAmbient(
-        WatchFacePainter(
-            zdt = lastZDT,
-            veneer = activeVeneer,
-            bounds = RectF(),
-            complicationsPainter = complicationsPainter
-        ), WatchFacePainter(lastZDT, ambientVeneer, RectF(), complicationsPainter)
-    )
+    private lateinit var activeVeneer: Veneer
+    private lateinit var ambientVeneer: Veneer
+    private lateinit var painter: ActiveAmbient<WatchFacePainter>
     private var lastKnownBounds = Rect()
 
     override suspend fun createSharedAssets(): SharedAssets = SharedAssets()
@@ -92,7 +79,48 @@ class SlantedWatchFaceRenderer(
         )!!
     }
 
-    private fun isAmbient() = renderParameters.drawMode == DrawMode.AMBIENT
+    private val sharedPreferencesChangeListener =
+        object : SharedPreferences.OnSharedPreferenceChangeListener {
+            override fun onSharedPreferenceChanged(sp: SharedPreferences?, p1: String?) {
+                if (sp != null) initializeFromSharedPreferences(sp)
+            }
+        }
+
+    init {
+        val sp = loadSavedPreferences()
+        initializeFromSharedPreferences(sp)
+        sp.registerOnSharedPreferenceChangeListener(sharedPreferencesChangeListener)
+    }
+
+    override fun onDestroy() {
+        loadSavedPreferences().unregisterOnSharedPreferenceChangeListener(
+            sharedPreferencesChangeListener
+        )
+    }
+
+    private fun initializeFromSharedPreferences(sp: SharedPreferences) {
+        activeVeneer = Veneer.fromSharedPreferences(sp, context.assets, false)
+        ambientVeneer = Veneer.fromSharedPreferences(sp, context.assets, true)
+        updatePainter()
+    }
+
+    private fun updatePainter() {
+        painter = ActiveAmbient(
+            WatchFacePainter(
+                lastZDT,
+                activeVeneer,
+                lastKnownBounds.toRectF(),
+                complicationsPainter
+            ),
+            WatchFacePainter(
+                lastZDT,
+                ambientVeneer,
+                lastKnownBounds.toRectF(),
+                complicationsPainter
+            )
+        )
+    }
+
 
     override fun render(
         canvas: Canvas,
@@ -101,25 +129,14 @@ class SlantedWatchFaceRenderer(
         sharedAssets: SharedAssets
     ) {
         lastZDT = zonedDateTime
-        if (lastKnownBounds != bounds || painter.get(isAmbient()).shouldUpdate(zonedDateTime)) {
+        if (lastKnownBounds != bounds || painter.get(renderParameters.drawMode)
+                .shouldUpdate(zonedDateTime)
+        ) {
             lastKnownBounds = bounds
-            painter = ActiveAmbient(
-                WatchFacePainter(
-                    zdt = zonedDateTime,
-                    veneer = activeVeneer,
-                    bounds = lastKnownBounds.toRectF(),
-                    complicationsPainter = complicationsPainter
-                ),
-                WatchFacePainter(
-                    zonedDateTime,
-                    ambientVeneer,
-                    lastKnownBounds.toRectF(),
-                    complicationsPainter
-                )
-            )
+            updatePainter()
         }
         canvas.drawColor(Color.BLACK)
-        painter.get(isAmbient()).draw(zonedDateTime, canvas)
+        painter.get(renderParameters.drawMode).draw(zonedDateTime, canvas)
     }
 
     override fun renderHighlightLayer(
@@ -133,8 +150,8 @@ class SlantedWatchFaceRenderer(
 
     private val handler = Handler(Looper.getMainLooper())
     private val unhighlightRunnable = Runnable {
-        painter.get(true).unhighlight()
-        painter.get(false).unhighlight()
+        painter.get(DrawMode.AMBIENT).unhighlight()
+        painter.get(DrawMode.INTERACTIVE).unhighlight()
         invalidate()
     }
 
@@ -148,7 +165,7 @@ class SlantedWatchFaceRenderer(
                 InteractiveWatchFaceClient.TAP_TYPE_DOWN -> {}
                 InteractiveWatchFaceClient.TAP_TYPE_CANCEL -> {}
                 InteractiveWatchFaceClient.TAP_TYPE_UP -> {
-                    val currentPainter = painter.get(isAmbient())
+                    val currentPainter = painter.get(renderParameters.drawMode)
                     if (currentPainter.isDateTap(
                             lastZDT,
                             tapEvent.xPos,

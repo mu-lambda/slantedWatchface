@@ -17,6 +17,12 @@
 
 package de.mulambda.slantedwatchface
 
+import androidx.wear.watchface.DrawMode
+
 data class ActiveAmbient<T>(val active: T, val ambient: T) {
-    fun get(isAmbient: Boolean) = if (isAmbient) ambient else active
+    fun get(drawMode: DrawMode) =
+        when (drawMode) {
+            DrawMode.AMBIENT -> ambient
+            else -> active
+        }
 }
