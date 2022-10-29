@@ -56,7 +56,7 @@ class SlantedWatchFaceRenderer(
         }
     }
 
-    val complicationsPainter = object : WatchFacePainter.ComplicationsPainter {
+    private val complicationsPainter = object : WatchFacePainter.ComplicationsPainter {
         override fun isComplicationEmpty(id: Int): Boolean = true
 
 
@@ -96,6 +96,7 @@ class SlantedWatchFaceRenderer(
         loadSavedPreferences().unregisterOnSharedPreferenceChangeListener(
             sharedPreferencesChangeListener
         )
+        super.onDestroy()
     }
 
     private fun initializeFromSharedPreferences(sp: SharedPreferences) {
@@ -107,16 +108,10 @@ class SlantedWatchFaceRenderer(
     private fun updatePainter() {
         painter = ActiveAmbient(
             WatchFacePainter(
-                lastZDT,
-                activeVeneer,
-                lastKnownBounds.toRectF(),
-                complicationsPainter
+                lastZDT, activeVeneer, lastKnownBounds.toRectF(), complicationsPainter
             ),
             WatchFacePainter(
-                lastZDT,
-                ambientVeneer,
-                lastKnownBounds.toRectF(),
-                complicationsPainter
+                lastZDT, ambientVeneer, lastKnownBounds.toRectF(), complicationsPainter
             )
         )
     }
@@ -129,8 +124,8 @@ class SlantedWatchFaceRenderer(
         sharedAssets: SharedAssets
     ) {
         lastZDT = zonedDateTime
-        if (lastKnownBounds != bounds || painter.get(renderParameters.drawMode)
-                .shouldUpdate(zonedDateTime)
+        if (lastKnownBounds != bounds
+            || painter.get(renderParameters.drawMode).shouldUpdate(zonedDateTime)
         ) {
             lastKnownBounds = bounds
             updatePainter()
