@@ -20,7 +20,6 @@ package de.mulambda.slantedwatchface
 //import android.support.wearable.complications.ComplicationHelperActivity
 //import android.support.wearable.complications.ProviderInfoRetriever
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -31,17 +30,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Switch
+import androidx.activity.ComponentActivity
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.wear.watchface.complications.ComplicationDataSourceInfo
+import androidx.wear.watchface.editor.EditorSession
 import androidx.wear.widget.WearableRecyclerView
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
-class ConfigActivity : Activity() {
+class ConfigActivity : ComponentActivity() {
     companion object {
-        val REQUESTS_COMPLICATIONS = Complications.RANGE
-        private fun requestCodeOf(complicationId: Int) =
-            if (complicationId in Complications.RANGE) complicationId
-            else throw UnsupportedOperationException("complicationId = $complicationId")
-
         const val REQUEST_PICK_COLOR_THEME = Complications.BOTTOM + 1
 
         const val REQUEST_PICK_HOURS_COLOR = Complications.BOTTOM + 2
@@ -65,6 +66,34 @@ class ConfigActivity : Activity() {
     }
 
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var complicationEditingHolder: ComplicationEditingHolder
+
+    class ComplicationEditingHolder(
+        private val scope: CoroutineScope,
+        private val activity: ComponentActivity
+    ) {
+        fun setComplication(complicationId: Int) {
+            scope.launch(Dispatchers.Main.immediate) {
+                editorSession.openComplicationDataSourceChooser(complicationId)
+            }
+        }
+
+        sealed class State {
+            data class Success(val complications: Map<Int, ComplicationDataSourceInfo?>) : State()
+            data class Loading(val message: String) : State()
+        }
+
+        private lateinit var editorSession: EditorSession
+        val uiState = flow<State> {
+            editorSession = EditorSession.createOnWatchEditorSession(activity = activity)
+
+            emitAll(editorSession.complicationsDataSourceInfo.map { state ->
+                Log.i(TAG(), "updated value = ${state}")
+                yield()
+                State.Success(state)
+            })
+        }.stateIn(scope, SharingStarted.Eagerly, State.Loading("Initializing"))
+    }
 
     private lateinit var configMenu: WearableRecyclerView
     private lateinit var adapter: Adapter
@@ -85,15 +114,18 @@ class ConfigActivity : Activity() {
             setHasFixedSize(true)
             adapter = this@ConfigActivity.adapter
         }
+        complicationEditingHolder = ComplicationEditingHolder(lifecycleScope, this)
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         adapter.destroy()
+        super.onDestroy()
     }
 
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
         Log.i(TAG(), "onActivityResult: requestCode=${requestCode} resultCode =${resultCode}")
         if (resultCode != RESULT_OK) return
 
@@ -103,7 +135,6 @@ class ConfigActivity : Activity() {
                     adapter.updateColorTheme(data.getIntExtra(ColorSelectionActivity.RESULT, 0))
                 }
             }
-            in REQUESTS_COMPLICATIONS -> adapter.updateComplications()
             REQUEST_PICK_HOURS_COLOR -> updateIndividualColor(Settings.HOURS_COLOR, data)
             REQUEST_PICK_MINUTES_COLOR -> updateIndividualColor(Settings.MINUTES_COLOR, data)
             REQUEST_PICK_SECONDS_COLOR -> updateIndividualColor(Settings.SECONDS_COLOR, data)
@@ -202,7 +233,16 @@ class ConfigActivity : Activity() {
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             when (holder.itemViewType) {
                 MenuItems.PREVIEW -> {
-                    updateComplications()
+                    lifecycleScope.launchWhenCreated {
+                        complicationEditingHolder.uiState.collect { state ->
+                            when (state) {
+                                is ComplicationEditingHolder.State.Success -> {
+                                    preview.setComplications(state.complications)
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
                     return
                 }
                 MenuItems.COLOR_THEME, MenuItems.RESET_SETTINGS,
@@ -210,24 +250,6 @@ class ConfigActivity : Activity() {
                 MenuItems.LARGER_DATE, MenuItems.TYPEFACE -> return
             }
             throw UnsupportedOperationException()
-        }
-
-
-        fun updateComplications() {
-            /*
-            mProviderInfoRetriever.retrieveProviderInfo(
-                object : ProviderInfoRetriever.OnProviderInfoReceivedCallback() {
-                    override fun onProviderInfoReceived(
-                        complicationId: Int,
-                        info: ComplicationProviderInfo?
-                    ) {
-                        preview.setComplication(complicationId, info)
-                    }
-                },
-                ComponentName(this@ConfigActivity, WatchFaceService::class.java),
-                *Complications.RANGE.toList().toIntArray()
-            )
-            */
         }
 
 
@@ -267,14 +289,16 @@ class ConfigActivity : Activity() {
             Settings.DATE_COLOR -> REQUEST_PICK_DATE_COLOR
             else -> throw UnsupportedOperationException("$binding")
         }
-        startActivityForResult(
+        ActivityCompat.startActivityForResult(
+            this@ConfigActivity,
             Intent(this@ConfigActivity, ColorSelectionActivity::class.java)
                 .putExtra(ColorSelectionActivity.NAME, getString(binding.stringId))
                 .putExtra(
                     ColorSelectionActivity.ORIGINAL_COLOR,
                     binding.get(sharedPreferences)
                 ),
-            requestCode
+            requestCode,
+            null
         )
 
     }
@@ -290,14 +314,16 @@ class ConfigActivity : Activity() {
         }
 
         override fun onClick(v: View?) {
-            startActivityForResult(
+            ActivityCompat.startActivityForResult(
+                this@ConfigActivity,
                 Intent(this@ConfigActivity, ColorSelectionActivity::class.java)
                     .putExtra(ColorSelectionActivity.NAME, button.text)
                     .putExtra(
                         ColorSelectionActivity.ORIGINAL_COLOR,
                         Settings.HOURS_COLOR.get(sharedPreferences)
                     ),
-                REQUEST_PICK_COLOR_THEME
+                REQUEST_PICK_COLOR_THEME,
+                null
             )
         }
 
@@ -312,13 +338,15 @@ class ConfigActivity : Activity() {
         }
 
         override fun onClick(v: View?) {
-            startActivityForResult(
+            ActivityCompat.startActivityForResult(
+                this@ConfigActivity,
                 Intent(this@ConfigActivity, TypefaceSelectionActivity::class.java)
                     .putExtra(
                         TypefaceSelectionActivity.TYPEFACE,
                         Settings.TYPEFACE.get(sharedPreferences)
                     ),
-                REQUEST_PICK_TYPEFACE
+                REQUEST_PICK_TYPEFACE,
+                null
             )
         }
 
@@ -426,6 +454,7 @@ class ConfigActivity : Activity() {
     }
 
     private fun selectComplication(complicationId: Int) {
+        complicationEditingHolder.setComplication(complicationId)
         /*
         this@ConfigActivity.startActivityForResult(
             ComplicationHelperActivity.createProviderChooserHelperIntent(

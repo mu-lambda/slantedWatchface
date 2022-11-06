@@ -22,13 +22,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.support.wearable.complications.ComplicationProviderInfo
+import android.os.Handler
 import android.util.AttributeSet
 import android.util.Log
 import android.util.SparseArray
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.wear.watchface.complications.ComplicationDataSourceInfo
 import java.time.ZonedDateTime
 import java.util.*
 import kotlin.math.min
@@ -47,6 +48,7 @@ class WatchFacePreview(
     private val iconMore = ContextCompat.getDrawable(context, R.drawable.ic_more)!!
     var onComplicationIdClick: (Int) -> Unit = { _ -> }
     var onColorSettingClick: (Settings.Binding<Int>) -> Unit = { _ -> }
+    private val myHandler = Handler(context.mainLooper)
     private val sharedPreferences = context.getSharedPreferences(
         context.getString(R.string.preference_file_key),
         Context.MODE_PRIVATE
@@ -85,8 +87,28 @@ class WatchFacePreview(
                 CornerPathEffect(10f)
             )
     }
+    private val touchableAreas = arrayOf(
+        ColorSetting(
+            Settings.HOURS_COLOR,
+            WatchFacePainter::isHoursTap,
+            WatchFacePainter::hoursRect
+        ),
+        ColorSetting(
+            Settings.MINUTES_COLOR,
+            WatchFacePainter::isMinutesTap,
+            WatchFacePainter::minutesRect
+        ),
+        ColorSetting(
+            Settings.SECONDS_COLOR,
+            WatchFacePainter::isSecondsTap,
+            WatchFacePainter::secondsRect
+        ),
+        ColorSetting(Settings.DATE_COLOR, WatchFacePainter::isDateTap, WatchFacePainter::dateRect),
+    )
 
     private lateinit var touchableBorderPath: Path
+    private val complicationIcons =
+        SparseArray<Drawable?>(Complications.MAX_NUMBER_OF_SLOTS)
 
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -138,24 +160,6 @@ class WatchFacePreview(
         val recter: (WatchFacePainter, ZonedDateTime) -> RectF
     )
 
-    private val touchableAreas = arrayOf(
-        ColorSetting(
-            Settings.HOURS_COLOR,
-            WatchFacePainter::isHoursTap,
-            WatchFacePainter::hoursRect
-        ),
-        ColorSetting(
-            Settings.MINUTES_COLOR,
-            WatchFacePainter::isMinutesTap,
-            WatchFacePainter::minutesRect
-        ),
-        ColorSetting(
-            Settings.SECONDS_COLOR,
-            WatchFacePainter::isSecondsTap,
-            WatchFacePainter::secondsRect
-        ),
-        ColorSetting(Settings.DATE_COLOR, WatchFacePainter::isDateTap, WatchFacePainter::dateRect),
-    )
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -229,21 +233,42 @@ class WatchFacePreview(
         iconMore.draw(canvas)
     }
 
-    fun setComplication(complicationId: Int, info: ComplicationProviderInfo?) {
-        complications.setComplication(complicationId, info)
+
+    fun setComplications(infos: Map<Int, ComplicationDataSourceInfo?>) {
+        for ((id, info) in infos) {
+            setComplication(id, info)
+        }
     }
 
-    inner class ComplicationsPreview(val veneer: Veneer) : WatchFacePainter.ComplicationsPainter {
+    private fun setComplication(complicationId: Int, info: ComplicationDataSourceInfo?) {
+        val icon = info?.icon
+        Log.i(TAG(), "setComplication($complicationId), icon=$icon")
+        if (icon != null) {
+            icon.loadDrawableAsync(
+                context,
+                { drawable ->
+                    complicationIcons.put(complicationId, drawable)
+                    complications.updateComplicationLocations()
+                    invalidate()
+                },
+                myHandler
+            )
+        } else {
+            complicationIcons.put(complicationId, null)
+            invalidate()
+        }
+    }
+
+
+    inner class ComplicationsPreview(private val veneer: Veneer) :
+        WatchFacePainter.ComplicationsPainter {
         private val complicationBounds = SparseArray<Rect>(Complications.MAX_NUMBER_OF_SLOTS)
-        private val complicationInfos =
-            SparseArray<ComplicationProviderInfo?>(Complications.MAX_NUMBER_OF_SLOTS)
-        private val complicationIcons =
-            SparseArray<Drawable?>(Complications.MAX_NUMBER_OF_SLOTS)
         private lateinit var borderPath: Path
+
 
         override fun isComplicationEmpty(id: Int): Boolean = false
 
-        override fun draw(canvas: Canvas, zonedDateTime: ZonedDateTime) {
+        override fun draw(canvas: Canvas, zdt: ZonedDateTime) {
             for (id in veneer.visibleComplicationIds) {
                 complicationIcons.get(id, null)?.draw(canvas)
             }
@@ -265,13 +290,12 @@ class WatchFacePreview(
             }
         }
 
+
         fun updateComplicationLocations() {
             painter.updateComplicationBounds(complicationBounds)
             borderPath = Path().apply {
                 veneer.visibleComplicationIds.forEach { id ->
-                    rect(
-                        complicationBounds[id]
-                    )
+                    rect(complicationBounds[id])
                 }
             }
             veneer.visibleComplicationIds.forEach(::setIconBounds)
@@ -280,25 +304,6 @@ class WatchFacePreview(
         fun complicationIdByPoint(x: Int, y: Int): Int? =
             veneer.visibleComplicationIds.find { id -> complicationBounds[id].contains(x, y) }
 
-        @SuppressLint("RestrictedApi")
-        fun setComplication(complicationId: Int, info: ComplicationProviderInfo?) {
-            complicationInfos.put(complicationId, info)
-            val providerIcon = info?.providerIcon
-            if (providerIcon != null) {
-                providerIcon.loadDrawableAsync(
-                    context,
-                    { drawable ->
-                        complicationIcons.put(complicationId, drawable)
-                        setIconBounds(complicationId)
-                        invalidate()
-                    },
-                    handler
-                )
-            } else {
-                complicationIcons.put(complicationId, null)
-                invalidate()
-            }
-        }
 
         fun onComplicationIdClick(id: Int) {
             val rect = complicationBounds[id]
@@ -314,8 +319,8 @@ class WatchFacePreview(
     private fun highlightRect(rect: Rect) {
         painter.highlightRect(rect)
         invalidate()
-        handler.removeCallbacks(unhighlightRunnable)
-        handler.postDelayed(unhighlightRunnable, 100L)
+        myHandler.removeCallbacks(unhighlightRunnable)
+        myHandler.postDelayed(unhighlightRunnable, 100L)
     }
 
 }
