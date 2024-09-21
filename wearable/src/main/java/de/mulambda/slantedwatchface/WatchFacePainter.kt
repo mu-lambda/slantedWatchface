@@ -327,7 +327,7 @@ class WatchFacePainter(
     private var paintData = PaintData()
     fun draw(calendar: ZonedDateTime, canvas: Canvas) {
         canvas.save()
-        canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
+        rotateCanvas(canvas)
         calculatePaintData(calendar, paintData)
         highlightedPath?.let { canvas.drawPath(it, highlightPaint) }
         with(paintData) {
@@ -350,7 +350,17 @@ class WatchFacePainter(
                 canvas.drawText(amPm, amPmX, amPmY, amPmPaint)
             }
         }
-        complicationsPainter.draw(canvas, calendar)
         canvas.restore()
+    }
+
+    fun rotateCanvas(canvas: Canvas) {
+        canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
+    }
+
+    fun drawComplications(calendar: ZonedDateTime, canvas: Canvas) {
+       canvas.save()
+       rotateCanvas(canvas)
+       complicationsPainter.draw(canvas, calendar)
+       canvas.restore()
     }
 }

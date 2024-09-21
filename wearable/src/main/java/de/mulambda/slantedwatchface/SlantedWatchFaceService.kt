@@ -17,6 +17,7 @@
 
 package de.mulambda.slantedwatchface
 
+import android.graphics.Color
 import android.graphics.RectF
 import android.view.SurfaceHolder
 import androidx.wear.watchface.*
@@ -37,14 +38,18 @@ class SlantedWatchFaceService : WatchFaceService() {
     override fun createComplicationSlotsManager(currentUserStyleRepository: CurrentUserStyleRepository): ComplicationSlotsManager {
         val defaultCanvasComplicationFactory =
             CanvasComplicationFactory { watchState, listener ->
+                val drawable = ComplicationDrawable(applicationContext)
+                drawable.activeStyle.textColor = Color.WHITE
+                drawable.activeStyle.backgroundColor = Color.BLACK
                 CanvasComplicationDrawable(
-                    ComplicationDrawable(applicationContext),
+                    drawable,
                     watchState,
                     listener
                 )
             }
 
         return ComplicationSlotsManager(buildList {
+            var i = 0
             for (id in Complications.RANGE) {
                 add(
                     ComplicationSlot.createRoundRectComplicationSlotBuilder(
@@ -55,12 +60,17 @@ class SlantedWatchFaceService : WatchFaceService() {
                             ComplicationType.SMALL_IMAGE
                         ),
                         defaultDataSourcePolicy = DefaultComplicationDataSourcePolicy(
-                            SystemDataSources.DATA_SOURCE_SUNRISE_SUNSET,
+                            SystemDataSources.NO_DATA_SOURCE,
                             ComplicationType.SHORT_TEXT
                         ),
-                        bounds = ComplicationSlotBounds(RectF(0.1f, 0.1f, 0.2f, 0.2f))
+                        bounds = ComplicationSlotBounds(
+                            RectF(0.5f,
+                                0.5f + 0.5f * i / Complications.RANGE.count(),
+                                0.9f,
+                                0.5f + 0.5f * (i+1) / Complications.RANGE.count()))
                     ).build()
                 )
+                i++
             }
         }, currentUserStyleRepository)
     }

@@ -15,7 +15,7 @@
   ~
   -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Slanted!</string>
     <string name="service_name">Slanted!</string>
     <string name="config_name">Slanted! Configuration</string>
@@ -42,4 +42,5 @@
     <string name="date_style">Date Style</string>
     <string name="colorful_ambient">Colorful ambient mode</string>
     <string name="larger_date">Larger date</string>
+    <string name="wcs" tools:ignore="ExtraTranslation">wcs</string>
 </resources>

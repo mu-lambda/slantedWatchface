@@ -218,13 +218,12 @@ class WatchFacePreview(
         canvas.drawColor(Color.BLACK)
 
         canvas.save()
-        with(painter) {
-            canvas.rotate(veneer.angle, bounds.left + centerX, bounds.top + centerY)
-        }
+        painter.rotateCanvas(canvas)
         canvas.drawPath(touchableBorderPath, tochableColorBorderPaint)
         canvas.restore()
 
         painter.draw(zdt, canvas)
+        painter.drawComplications(zdt, canvas)
         canvas.restore()
         val dim = watchfaceSize().toFloat()
         canvas.drawCircle(

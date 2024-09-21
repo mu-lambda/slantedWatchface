@@ -26,11 +26,21 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.util.SparseArray
 import android.view.SurfaceHolder
 import androidx.core.graphics.toRectF
 import androidx.wear.watchface.*
 import androidx.wear.watchface.client.InteractiveWatchFaceClient
+import androidx.wear.watchface.complications.ComplicationSlotBounds
+import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.style.CurrentUserStyleRepository
+import androidx.wear.watchface.style.UserStyle
+import androidx.wear.watchface.style.UserStyleSetting
+import androidx.wear.watchface.style.WatchFaceLayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.time.ZonedDateTime
 
 // Default for how long each frame is displayed at expected frame rate.
@@ -41,7 +51,7 @@ class SlantedWatchFaceRenderer(
     surfaceHolder: SurfaceHolder,
     watchState: WatchState,
     private val complicationSlotsManager: ComplicationSlotsManager,
-    currentUserStyleRepository: CurrentUserStyleRepository,
+    private val currentUserStyleRepository: CurrentUserStyleRepository,
     canvasType: Int
 ) : Renderer.CanvasRenderer2<SlantedWatchFaceRenderer.SharedAssets>(
     surfaceHolder,
@@ -57,10 +67,22 @@ class SlantedWatchFaceRenderer(
     }
 
     private val complicationsPainter = object : WatchFacePainter.ComplicationsPainter {
-        override fun isComplicationEmpty(id: Int): Boolean = true
+        override fun isComplicationEmpty(id: Int): Boolean {
+            val complicationSlot = complicationSlotsManager.complicationSlots[id]
+            if (complicationSlot != null) {
+                return complicationSlot.complicationData.value.type == ComplicationType.EMPTY
+            } else {
+                return true
+            }
+        }
 
 
         override fun draw(canvas: Canvas, zdt: ZonedDateTime) {
+            for ((_, complication) in complicationSlotsManager.complicationSlots) {
+                if (complication.enabled) {
+                    complication.render(canvas, zdt, RenderParameters.DEFAULT_INTERACTIVE)
+                }
+            }
         }
 
     }
@@ -80,16 +102,17 @@ class SlantedWatchFaceRenderer(
     }
 
     private val sharedPreferencesChangeListener =
-        object : SharedPreferences.OnSharedPreferenceChangeListener {
-            override fun onSharedPreferenceChanged(sp: SharedPreferences?, p1: String?) {
-                if (sp != null) initializeFromSharedPreferences(sp)
-            }
+        SharedPreferences.OnSharedPreferenceChangeListener { sp, _ ->
+            if (sp != null) initializeFromSharedPreferences(sp)
         }
+    private val scope: CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     init {
         val sp = loadSavedPreferences()
         initializeFromSharedPreferences(sp)
         sp.registerOnSharedPreferenceChangeListener(sharedPreferencesChangeListener)
+        complicationSlotsManager.listenForStyleChanges(scope)
     }
 
     override fun onDestroy() {
@@ -97,6 +120,42 @@ class SlantedWatchFaceRenderer(
             sharedPreferencesChangeListener
         )
         super.onDestroy()
+    }
+
+    private fun updateComplicationBounds() {
+        val bounds = SparseArray<Rect>()
+        val currentPainter = painter.get(renderParameters.drawMode)
+        currentPainter.updateComplicationBounds(bounds)
+/*
+        val l = buildList<UserStyleSetting.ComplicationSlotsUserStyleSetting.ComplicationSlotsOption> {
+            for (id in Complications.RANGE) {
+                val b = bounds[id]
+                if (b != null) {
+                    var newBounds = divide(b, currentPainter.bounds)
+
+                    val complicationSlotOverlay: UserStyleSetting.ComplicationSlotsUserStyleSetting.ComplicationSlotOverlay =
+                        UserStyleSetting.ComplicationSlotsUserStyleSetting.ComplicationSlotOverlay.Builder(
+                            id
+                        ).setEnabled(true)
+                            .setComplicationSlotBounds(ComplicationSlotBounds(newBounds)).build()
+                    add(complicationSlotOverlay)
+
+                }
+            }
+        }
+        UserStyleSetting.ComplicationSlotsUserStyleSetting(
+            UserStyleSetting.Id("complication_style_setting"),
+            context.resources,
+            0,
+            0,
+            icon = null,
+            complicationConfig = l,
+            listOf(WatchFaceLayer.COMPLICATIONS)
+            )
+
+        // currentUserStyleRepository.updateUserStyle(UserStyleSetting.ComplicationSlotsUserStyleSetting.)
+
+ */
     }
 
     private fun initializeFromSharedPreferences(sp: SharedPreferences) {
@@ -123,15 +182,21 @@ class SlantedWatchFaceRenderer(
         zonedDateTime: ZonedDateTime,
         sharedAssets: SharedAssets
     ) {
+        validatePainter(zonedDateTime, bounds)
+        canvas.drawColor(Color.BLACK)
+        //painter.get(renderParameters.drawMode).draw(zonedDateTime, canvas)
+        painter.get(renderParameters.drawMode).drawComplications(zonedDateTime, canvas)
+    }
+
+    private fun validatePainter(zonedDateTime: ZonedDateTime, bounds: Rect) {
         lastZDT = zonedDateTime
         if (lastKnownBounds != bounds
             || painter.get(renderParameters.drawMode).shouldUpdate(zonedDateTime)
         ) {
+            Log.i(TAG(), "painter updated")
             lastKnownBounds = bounds
             updatePainter()
         }
-        canvas.drawColor(Color.BLACK)
-        painter.get(renderParameters.drawMode).draw(zonedDateTime, canvas)
     }
 
     override fun renderHighlightLayer(
@@ -140,8 +205,9 @@ class SlantedWatchFaceRenderer(
         zonedDateTime: ZonedDateTime,
         sharedAssets: SharedAssets
     ) {
-        //TODO("Not yet implemented")
-    }
+        validatePainter(zonedDateTime, bounds)
+        painter.get(renderParameters.drawMode).drawComplications(zonedDateTime, canvas)
+   }
 
     private val handler = Handler(Looper.getMainLooper())
     private val unhighlightRunnable = Runnable {

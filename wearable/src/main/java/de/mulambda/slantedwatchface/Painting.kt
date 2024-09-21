@@ -35,3 +35,11 @@ fun Path.rect(rect: Rect): Path {
 }
 
 fun RectF.toIntRect(): Rect = Rect().also { this.round(it) }
+
+fun divide(innerRect : Rect, bounds : RectF) : RectF =
+    RectF(
+        (innerRect.left - bounds.left) / bounds.width(),
+        (innerRect.top - bounds.top) / bounds.height(),
+        (innerRect.right - bounds.left) / bounds.width(),
+        (innerRect.bottom - bounds.top) / bounds.height()
+    )
