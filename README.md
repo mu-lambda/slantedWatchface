@@ -24,3 +24,8 @@ Customizations:
      /> <img src="playstore/artwork/settings-2.png" width="200"
              /> <img src="playstore/artwork/fonts.png" width="200" />
 
+
+## Watch Face Format version
+
+A rewrite in the [Watch Face Format](https://developer.android.com/training/wearables/wff),
+which Google Play requires for watch faces since January 2026, is in [`new-wearOS/`](new-wearOS/).

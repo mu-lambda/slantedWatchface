@@ -1,0 +1,10 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+exports_files(["requirements_lock.txt"])
+
+py_binary(
+    name = "generate",
+    srcs = ["generate.py"],
+    visibility = ["//watchface:__pkg__"],
+    deps = ["@slanted_pypi//fonttools"],
+)

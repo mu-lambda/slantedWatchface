@@ -1,0 +1,2 @@
+# Overrides for the watch face's setting defaults (see //watchface:generate_watchface).
+common --define=WFF_DEFAULTS=
