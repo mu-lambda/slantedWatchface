@@ -80,6 +80,8 @@ codes start at 1000, above every original release.
 - Text that is too long for the bottom complication slot ends in "…", because that row runs
   into the round edge of the screen.
 - With plain white ambient mode, the complications keep their colors.
+- In the editor, the complication slots are outlined with upright rectangles around the
+  tilted content: WFF's editor can't show tilted slots.
 - Sweet Hipster's date comes very close to the top complication; the original's layout is
   just as tight for that font.
 
