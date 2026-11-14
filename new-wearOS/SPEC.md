@@ -153,15 +153,23 @@ WatchFace 450×450
 └── Scene
     ├── Group "slanted" (angle 20°, pivot at the center)
     │   └── ListConfiguration font → Group <font>
-    │       └── BooleanConfiguration is24h → Group h24 | h12
+    │       └── Condition [CONFIGURATION.is24h] == "TRUE" → Group h24 | h12
     │           ├── hours: Condition [HOUR_…] > 9 → two-digit | one-digit PartText
     │           ├── minutes, seconds (hidden in ambient), date, AM/PM (12h only)
-    │           └── BooleanConfiguration colorfulAmbient, option FALSE only:
+    │           └── Condition [CONFIGURATION.colorfulAmbient] == "FALSE":
     │               Group "time_ambient_plain" (alpha 0, AMBIENT variant alpha 255)
     │               ├── PartDraw black rectangle covering the canvas
     │               └── the same texts in white and light gray, without seconds
-    └── ComplicationSlot × 2
+    └── ComplicationSlot × 2 (not rotated)
+        └── Complication SHORT_TEXT → Group "tilted" (angle 20°) → icon, text
 ```
+
+**Settings in the Scene.** Only the font uses a configuration element in the `Scene`
+(`ListConfiguration`). The 24-hour clock and the ambient mode are tested with `Condition`
+expressions on `[CONFIGURATION.…]` (`open_condition()`), because configuration elements
+can't be nested: the renderer accepts nested ones, but after the first change in the editor
+it stops applying changes. The color theme needs no element; colors refer to
+`[CONFIGURATION.theme.N]` directly.
 
 **Text.** `emit_text()` writes one `PartText` per `Text`. The box is exactly one line high
 (ascent + descent) and starts at the pen position, so its top is `baseline − ascent`. It is
@@ -181,8 +189,11 @@ static. So the slots can't be inside the tilted group or depend on the font. For
 the date to halfway between the hours' baseline and the bottom edge, and from the minutes
 to the right edge. The generator then keeps only the part that every font has in common.
 That part is split into `COMPLICATION_SLOTS` rows. The center of each row is rotated about
-the canvas center by `ANGLE`, and the slot is placed there with `angle=ANGLE` about its own
-center. Each slot accepts `SHORT_TEXT` and starts with a system provider
+the canvas center by `ANGLE`, and the slot is centered there. The slot itself is not
+rotated: the editor draws a rotated slot's outline in the wrong place and doesn't offer
+the bottom slot at all. Instead, a `Group` inside the `Complication` rotates the content by
+`ANGLE` about the slot's center. So the editor's outlines are upright rectangles around
+tilted content. Each slot accepts `SHORT_TEXT` and starts with a system provider
 (`COMPLICATION_DEFAULTS`). It shows the monochrome icon, tinted in the minutes' color, then
 `TEXT TITLE` in the hours' color. The text box stops where the round screen edge crosses
 the row and ends in an ellipsis when the text is too long.
@@ -199,6 +210,11 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   the generator rounds font sizes to whole numbers.
 - `[AMPM_STRING_ENG]` and `[AMPM_STRING_SHORT]` render empty; `[AMPM_STRING]` works.
 - `pivotX` and `pivotY` are fractions of the element's size (0..1), not pixels.
+- Configuration elements nested inside another configuration's option render correctly at
+  first, but the renderer stops applying changes from the editor after the first one. The
+  documentation says they can't be nested; the schema doesn't enforce it.
+- The editor ignores a `ComplicationSlot`'s `angle` (and pivot) when it draws the slot
+  outlines and hit areas, so rotated slots appear in the wrong place.
 
 ## Verification
 

@@ -74,6 +74,28 @@ wants to watch.
 To try fonts or other changes without touching the working tree, copy `new-wearOS/`
 (without the `bazel-*` symlinks) to a scratch directory and build there.
 
+### Driving the system editor
+
+To test settings the way users change them:
+
+- Open it: long-press the face (`adb shell input swipe 227 227 227 227 1500`), then tap
+  the element with content description "Edit watch face". Find elements with
+  `adb shell uiautomator dump` and tap the center of their bounds.
+- Pages: color theme, font, complications, other options (the switches). The editor
+  reopens on the page last used. Swipe left with `adb shell input swipe 400 227 60 227 300`.
+  A right swipe that starts near the left edge is the system back gesture and closes the
+  editor; use `input motionevent DOWN/MOVE/UP` starting at x=120 instead.
+- Lists (theme, font) change with the crown:
+  `adb shell input rotaryencoder scroll --axis SCROLL,-2` is one step. Switches change by
+  tapping them.
+- The editor closes by itself after a few idle seconds. Leave it with `KEYCODE_BACK`.
+- The stored settings are in
+  `adb shell dumpsys activity service com.google.wear.watchface.runtime` (`userStyle=`).
+  If the face doesn't match them, the face isn't following the editor.
+- `adb shell am force-stop com.google.wear.watchface.runtime` falls back to the default
+  face; reselect ours with the `DEBUG_SURFACE set-watchface` broadcast that `wff_install`
+  uses.
+
 ### Comparing with the original
 
 `watchface/tools/` (see its README) drives both emulators into the same settings, takes
@@ -90,7 +112,13 @@ existing font (Limelight is the reference the maintainer prefers) and check them
 - `[AMPM_STRING_ENG]` and `[AMPM_STRING_SHORT]` render empty; use `[AMPM_STRING]`.
 - `pivotX` and `pivotY` are fractions (0..1) of the element's size.
 - `ComplicationSlot` must be a direct child of `Scene`, with static geometry. It can't be
-  inside the tilted group or a configuration.
+  inside the tilted group or a configuration. Don't give it an `angle`: the editor then
+  draws its outline in the wrong place. Rotate a `Group` inside the `Complication` instead.
+- Don't nest configuration elements (`ListConfiguration`, `BooleanConfiguration`) in the
+  `Scene`. The schema test and the first render pass, but the face stops following the
+  editor after the first change. Use a `Condition` on `[CONFIGURATION.<id>]` instead.
+- A fresh install always looks right. Bugs in how the face reacts to the editor only show
+  when you change settings several times in a row in the editor, so test that (see below).
 - A font whose digits are short for its size, or whose line metrics are unusual (such as
   seven-segment fonts), can overlap the date and the complications. Check the layout on
   the emulator with every new font.

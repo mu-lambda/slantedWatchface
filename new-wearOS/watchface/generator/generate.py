@@ -528,6 +528,20 @@ def emit_text(xml, text, colors):
     xml.close("PartText")
 
 
+def open_condition(xml, name, expression):
+    """Opens a Condition and its Compare; the caller adds content and closes both.
+
+    Settings other than the font are tested this way, not with a BooleanConfiguration:
+    configurations can't be nested in the Scene. The renderer accepts a nested one but
+    stops applying changes from the editor after the first.
+    """
+    xml.open("Condition")
+    xml.open("Expressions")
+    xml.line('<Expression name="%s">%s</Expression>' % (name, escape(expression)))
+    xml.close("Expressions")
+    xml.open("Compare", expression=name)
+
+
 def emit_hours(xml, lay, colors=None):
     xml.open("Condition")
     xml.open("Expressions")
@@ -565,8 +579,7 @@ def emit_time(xml, lay, is24h):
     """
     emit_hours(xml, lay)
     emit_rest(xml, lay, is24h)
-    xml.open("BooleanConfiguration", id="colorfulAmbient")
-    xml.open("BooleanOption", id="FALSE")
+    open_condition(xml, "plainAmbient", '[CONFIGURATION.colorfulAmbient] == "FALSE"')
     full_group(xml, "time_ambient_plain", alpha=0)
     xml.empty("Variant", mode="AMBIENT", target="alpha", value="255")
     xml.open("PartDraw", x=0, y=0, width=CANVAS, height=CANVAS)
@@ -577,8 +590,8 @@ def emit_time(xml, lay, is24h):
     emit_hours(xml, lay, AMBIENT_COLORS)
     emit_rest(xml, lay, is24h, AMBIENT_COLORS, ambient=True)
     xml.close("Group")
-    xml.close("BooleanOption")
-    xml.close("BooleanConfiguration")
+    xml.close("Compare")
+    xml.close("Condition")
 
 
 COMPLICATION_SLOTS = 2
@@ -609,9 +622,10 @@ def emit_complications(xml, metrics):
     """SHORT_TEXT slots stacked in the complication area, tilted like the face.
 
     ComplicationSlot must be a direct child of Scene, and its position is static, so the
-    slots can neither be inside the tilted Group nor depend on the font: each slot is
-    rotated around its own center instead, with that center placed where the tilted Group
-    would put it, in the part of the area that all fonts have in common.
+    slots can neither be inside the tilted Group nor depend on the font. Each slot is
+    centered where the tilted Group would put it, in the part of the area that all fonts
+    have in common, and a Group inside it tilts its content. The slot itself isn't rotated:
+    the editor ignores a slot's angle and would outline it in the wrong place.
     """
     areas = [complication_area(font, metrics[font.resource]) for font in FONTS]
     area_top = max(top for top, _ in areas)
@@ -628,7 +642,7 @@ def emit_complications(xml, metrics):
         xml.open(
             "ComplicationSlot", slotId=i, name="complication_" + name,
             displayName="complication_" + name, x=round(x), y=round(y),
-            width=round(width), height=height, pivotX="0.5", pivotY="0.5", angle=ANGLE,
+            width=round(width), height=height,
             supportedTypes="SHORT_TEXT EMPTY", isCustomizable="TRUE",
         )
         xml.empty(
@@ -637,6 +651,8 @@ def emit_complications(xml, metrics):
         )
         xml.empty("BoundingBox", x=0, y=0, width=round(width), height=height)
         xml.open("Complication", type="SHORT_TEXT")
+        xml.open("Group", name="tilted", x=0, y=0, width=round(width), height=height,
+                 pivotX="0.5", pivotY="0.5", angle=ANGLE)
         # Like the original face: icon in the minutes' color, text in the hours'.
         icon = round(height * 0.45)
         xml.open(
@@ -659,6 +675,7 @@ def emit_complications(xml, metrics):
         xml.close("Font")
         xml.close("Text")
         xml.close("PartText")
+        xml.close("Group")
         xml.close("Complication")
         xml.close("ComplicationSlot")
 
@@ -760,14 +777,16 @@ def watchface_xml(metrics, defaults):
     for font in FONTS:
         xml.open("ListOption", id=font.resource)
         full_group(xml, font.resource)
-        xml.open("BooleanConfiguration", id="is24h")
+        open_condition(xml, "is24h", '[CONFIGURATION.is24h] == "TRUE"')
         for is24h in (True, False):
-            xml.open("BooleanOption", id="TRUE" if is24h else "FALSE")
+            if not is24h:
+                xml.close("Compare")
+                xml.open("Default")
             full_group(xml, "h24" if is24h else "h12")
             emit_time(xml, layout(font, metrics[font.resource], is24h), is24h)
             xml.close("Group")
-            xml.close("BooleanOption")
-        xml.close("BooleanConfiguration")
+        xml.close("Default")
+        xml.close("Condition")
         xml.close("Group")
         xml.close("ListOption")
     xml.close("ListConfiguration")
