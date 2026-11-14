@@ -1,10 +1,9 @@
 load("@rules_python//python:defs.bzl", "py_test")
 load("//tools/android:wff.bzl", "res_files", "wff_apk", "wff_install", "wff_release")
 load("//watchface/generator:defs.bzl", "watchface_resources")
+load(":version.bzl", "VERSION_CODE", "VERSION_NAME")
 
 PACKAGE = "de.mulambda.slantedWatchface"
-
-VERSION_NAME = "2.0"
 
 watchface_resources(
     name = "watchface",
@@ -23,8 +22,7 @@ wff_apk(
     manifest = "AndroidManifest.xml",
     resource_sets = [":watchface"],
     resources = res_files(glob(["res/**"])),
-    # Must stay above the version codes of the original (pre-WFF) releases on Play.
-    version_code = 1000,
+    version_code = VERSION_CODE,
     version_name = VERSION_NAME,
 )
 
@@ -42,6 +40,7 @@ wff_release(
     name = "release",
     bundle = ":slanted_bundle",
     package = PACKAGE,
+    version_code = VERSION_CODE,
     version_name = VERSION_NAME,
 )
 

@@ -10,12 +10,14 @@ new-wearOS/
 ├── README.md, SPEC.md, AGENTS.md     Design choices, architecture, notes for coding agents
 ├── MODULE.bazel, MODULE.bazel.lock   Bazel module: dependencies and external repositories
 ├── .bazelversion                    Pinned Bazel version
+├── playstore/                        Play listing: icon, screenshots, text (listing.md)
 ├── tools/android/
 │   ├── sdk.bzl                       Module extension: Android build-tools and local SDK
 │   ├── wff.bzl                       Rules wff_apk, wff_install, wff_release; macro res_files
 │   └── bundle_module.py              Rearranges a proto-format APK into a bundle module
 └── watchface/
     ├── BUILD.bazel                   Generation, packaging, installation, schema test
+    ├── version.bzl                   VERSION_CODE and VERSION_NAME of the next release
     ├── AndroidManifest.xml           Code-free app declaring WFF version 1
     ├── fonts/*.ttf                   The six fonts, named by resource name
     ├── res/                          Hand-written resources (watch face info, preview, app name)
@@ -23,7 +25,7 @@ new-wearOS/
     ├── generator/defs.bzl            Rule watchface_resources, which runs the generator
     ├── validate_schema.py            XSD 1.1 validation (the schema test)
     ├── testdata/                     Reference screenshots of the original face, release 1.16
-    └── tools/                        Comparison and ambient measurement scripts (not part of the build)
+    └── tools/                        Comparison, ambient and screenshot scripts (not part of the build)
 ```
 
 ## Build graph
@@ -44,7 +46,7 @@ res/** + AndroidManifest.xml ─────────────────
                                                                    filegroup :slanted_bundle, unsigned)
                                                                    ├──► wff_install :install_bundle
                                                                    └──► wff_release :release (bazel run)
-                                                                        └──► dist/<package>-<version>.aab
+                                                                        └──► dist/<package>-<name>-<code>.aab
 :watchface_xml (output group of :watchface) + @wff_spec//:v1 ──► py_test :watchface_schema_test
 ```
 
@@ -295,7 +297,8 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   makes it work with `WFF_DEFAULTS` and lists it in `--help`). Then branch on it in `Scene`
   and add its label to `strings_xml()`. Every option of a setting that wraps the time
   multiplies that part of the XML.
-- **Release:** raise `version_code` and `VERSION_NAME` in `watchface/BUILD.bazel`. Check the
+- **Release:** raise `VERSION_CODE` (and `VERSION_NAME` if the face changed) in
+  `watchface/version.bzl`, and note the uploaded code in its docstring. Check the
   bundle with `bazel run //watchface:install_bundle`, then sign it with
   `bazel run //watchface:release -- --keystore <upload keystore> --alias <alias>` and
-  upload `dist/de.mulambda.slantedWatchface-<version>.aab`.
+  upload `dist/de.mulambda.slantedWatchface-<version name>-<version code>.aab`.

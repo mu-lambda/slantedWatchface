@@ -95,7 +95,8 @@ key nor its password ever gets into a BUILD file or Bazel's cache.
 
 **Same package name, higher version code.** The APK keeps the original's package name
 (`de.mulambda.slantedWatchface`) so that it updates the existing Play listing. Its version
-codes start at 1000, above every original release.
+codes start at 1000, above every original release. The version of the next release is
+kept in `watchface/version.bzl`.
 
 ## Known limitations
 
