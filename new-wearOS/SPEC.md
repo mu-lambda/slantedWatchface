@@ -7,8 +7,9 @@ code is organized and how the pieces fit together.
 
 ```
 new-wearOS/
+├── README.md, SPEC.md, AGENTS.md     Design choices, architecture, notes for coding agents
 ├── MODULE.bazel, MODULE.bazel.lock   Bazel module: dependencies and external repositories
-├── .bazelversion, .bazelrc           Pinned Bazel version; default for WFF_DEFAULTS
+├── .bazelversion, .bazelrc           Pinned Bazel version; WFF_DEFAULTS and its values
 ├── tools/android/
 │   ├── sdk.bzl                       Module extension: Android build-tools and local SDK
 │   └── wff.bzl                       Rules wff_apk, wff_install; macro res_files
@@ -18,6 +19,7 @@ new-wearOS/
     ├── fonts/*.ttf                   The six fonts, named by resource name
     ├── res/                          Hand-written resources (watch face info, preview, app name)
     ├── generator/generate.py         Writes watchface.xml, its strings and the font icons
+    ├── generator/defs.bzl            Rule watchface_resources, which runs the generator
     ├── validate_schema.py            XSD 1.1 validation (the schema test)
     ├── testdata/                     Reference screenshots of the original face, release 1.16
     └── tools/                        Comparison scripts against the original (not part of the build)
@@ -26,16 +28,16 @@ new-wearOS/
 ## Build graph
 
 ```
-fonts/*.ttf ──► //watchface/generator:generate ──► watchface.xml
-   │              (genrule generate_watchface)      generated_strings.xml
-   │                                                font_icon_<font>.xml (x6)
-   │                                                        │
-   └──────────────► res/font/<font>.ttf ◄───────────────────┤
-                                                            ▼
-res/** + AndroidManifest.xml ─────────────────────► wff_apk :slanted ──► slanted.apk
-                                                            │
-                                                            ├──► wff_install :install (bazel run)
-watchface.xml + @wff_spec//:v1 ──► py_test :watchface_schema_test
+fonts/*.ttf ──► watchface_resources :watchface ──► raw/watchface.xml
+                (runs //watchface/generator:generate) values/generated_strings.xml
+                                                      drawable/font_icon_<font>.xml (x6)
+                                                      font/<font>.ttf (the input fonts)
+                                                              │ WffResourcesInfo
+                                                              ▼
+res/** + AndroidManifest.xml ───────────────────────► wff_apk :slanted ──► slanted.apk
+                                                              │
+                                                              └──► wff_install :install (bazel run)
+:watchface_xml (output group of :watchface) + @wff_spec//:v1 ──► py_test :watchface_schema_test
 ```
 
 ### External dependencies (MODULE.bazel)
@@ -50,8 +52,10 @@ watchface.xml + @wff_spec//:v1 ──► py_test :watchface_schema_test
 
 ### Packaging rules (tools/android/wff.bzl)
 
-- **`wff_apk`** takes a manifest and a map from file to resource path (such as
-  `raw/watchface.xml`). It symlinks every file into a staged `res/` tree, then runs
+- **`wff_apk`** takes a manifest, a map from file to resource path (such as
+  `raw/watchface.xml`) in `resources`, and targets in `resource_sets` that provide
+  `WffResourcesInfo` (a map from resource path to file). It symlinks every file into a
+  staged `res/` tree, then runs
   `aapt2 compile --dir`, `aapt2 link` (against `android.jar`, with SDK and version
   attributes), `zipalign -p 4` and `apksigner sign`. It signs with the debug keystore by
   default; the `keystore*` and `key_alias` attributes are there for a release key.
@@ -60,8 +64,18 @@ watchface.xml + @wff_spec//:v1 ──► py_test :watchface_schema_test
   `com.google.android.wearable.app.DEBUG_SURFACE set-watchface` to make the face active.
   This works on emulators and debuggable builds. Set `ANDROID_SERIAL` to pick a device.
 
+### Generation rule (watchface/generator/defs.bzl)
+
+**`watchface_resources`** runs the generator on a list of fonts. A font's file name is its
+resource name (`fonts/bebas_kai.ttf` is `bebas_kai`), so the BUILD file just globs
+`fonts/*.ttf`. The rule passes each font and its icon output to the generator, and returns
+everything as `WffResourcesInfo`: `raw/watchface.xml`, `values/generated_strings.xml`, one
+`drawable/font_icon_<font>.xml` per font, and the fonts themselves as `font/<font>.ttf`. The
+output group `watchface_xml` holds just `watchface.xml`, for the schema test.
+
 `--define=WFF_DEFAULTS=id=value,...` is passed to the generator as `--defaults` and changes
-the settings' default values. It is meant for screenshots; `.bazelrc` sets it to empty.
+the settings' default values. It is meant for screenshots. `.bazelrc` sets it to empty and
+lists every setting with its possible values.
 
 ## The generator (watchface/generator/generate.py)
 
@@ -73,13 +87,20 @@ vector drawable per font.
 
 - `FONTS`: a `FontConfig` for each font, holding the resource name, display name, size ratio
   and the horizontal squeeze of the hours (one and two digits), minutes and seconds. These
-  are the original face's values. The keys must match `FONTS` in `watchface/BUILD.bazel`.
+  are the original face's values. Each resource name must have a file
+  `watchface/fonts/<resource>.ttf`, and the reverse; the generator fails otherwise. The
+  fonts are `limelight` (the default), `sweet_hipster`, `grafik_text`, `fenwick_woodtype`,
+  `ordinary` and `bebas_kai`.
+- `THEMES`: the color schemes, as (id, display name, base color). The ids are `green` (the
+  default), `red`, `orange`, `yellow`, `cyan`, `blue`, `magenta`, `white` and `light_gray`.
+  `theme_colors()` expands each base color into the five colors of the scheme, as the
+  original did: hours, seconds and AM/PM in the base color, minutes in a gray with the base
+  color's brightness, and the date in the original's date yellow at that brightness. The
+  five colors are indexed by `HOURS, MINUTES, SECONDS, AM_PM, DATE`; in the XML they are
+  `[CONFIGURATION.theme.N]`. Ambient mode with plain colors uses `AMBIENT_COLORS` instead.
 - `CALIBRATION`: a `Calibration` for each font. These are offsets in canvas pixels for the
   one-digit and two-digit hours (x), the hours (y), the seconds (x) and the minutes (y),
   fitted to screenshots of the original.
-- `THEMES`: the base colors. `theme_colors()` expands each into the five colors of a theme,
-  indexed by `HOURS, MINUTES, SECONDS, AM_PM, DATE`. In the XML they are
-  `[CONFIGURATION.theme.N]`.
 - `DEVICE_*`: metrics assumed for the system font (Roboto), which the date and AM/PM use.
 
 ### Pipeline
@@ -186,14 +207,15 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
 
 ## Common changes
 
-- **Add a font:** put the TTF in `watchface/fonts/<resource>.ttf`, and add the resource name
-  to `FONTS` in `watchface/BUILD.bazel` and a `FontConfig` in the generator. Then fit a
-  `Calibration` entry with the comparison tools. Check that `complication_area()` for the
-  new font doesn't shrink the shared complication area too much.
-- **Add a theme:** append to `THEMES`; the five colors are derived.
+- **Add a font:** put the TTF in `watchface/fonts/<resource>.ttf` and add a `FontConfig` to
+  `FONTS` in the generator. Then fit a `Calibration` entry with the comparison tools, and
+  add the name to the list in `.bazelrc`. Check that `complication_area()` for the new font
+  doesn't shrink the shared complication area too much.
+- **Add a theme:** append to `THEMES`; the five colors are derived. Add the id to the list
+  in `.bazelrc`.
 - **Add a setting:** declare it in `UserConfigurations` and add its default to
-  `config_defaults()` (which also makes it work with `WFF_DEFAULTS`). Then branch on it in
-  `Scene` and add its label to `strings_xml()`. Every option of a setting that wraps the
-  time multiplies that part of the XML.
+  `config_defaults()` (which also makes it work with `WFF_DEFAULTS`; list it in `.bazelrc`).
+  Then branch on it in `Scene` and add its label to `strings_xml()`. Every option of a
+  setting that wraps the time multiplies that part of the XML.
 - **Release:** raise `version_code` and `version_name` in `watchface/BUILD.bazel`, and pass a
   release `keystore` to `wff_apk`.

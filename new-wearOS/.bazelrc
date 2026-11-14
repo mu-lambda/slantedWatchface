@@ -1,2 +1,18 @@
-# Overrides for the watch face's setting defaults (see //watchface:generate_watchface).
+# WFF_DEFAULTS overrides the default values of the watch face's user settings, which the
+# face starts with after a fresh install (see //watchface/generator:defs.bzl). Empty means
+# the defaults in generate.py. Meant for screenshots and testing, never for releases.
+#
+# Format: comma-separated id=value pairs, for example
+#   bazel run //watchface:install --define=WFF_DEFAULTS=font=bebas_kai,is24h=FALSE
+#
+# Settings and their values (the generator rejects anything else and lists the valid values):
+#   theme            green (default), red, orange, yellow, cyan, blue, magenta, white,
+#                    light_gray (THEMES in generate.py)
+#   font             limelight (default), sweet_hipster, grafik_text, fenwick_woodtype,
+#                    ordinary, bebas_kai (FONTS in generate.py)
+#   is24h            TRUE (default), FALSE
+#   colorfulAmbient  TRUE (default), FALSE: colored or plain white ambient mode
+#
+# A face that is already installed keeps its current settings, so uninstall it first:
+#   adb uninstall de.mulambda.slantedWatchface
 common --define=WFF_DEFAULTS=

@@ -1,53 +1,26 @@
 load("@rules_python//python:defs.bzl", "py_test")
 load("//tools/android:wff.bzl", "res_files", "wff_apk", "wff_install")
+load("//watchface/generator:defs.bzl", "watchface_resources")
 
 PACKAGE = "de.mulambda.slantedWatchface"
 
-# Resource name -> font file. Must match FONTS in generator/generate.py.
-FONTS = {
-    res: "fonts/%s.ttf" % res
-    for res in [
-        "bebas_kai",
-        "fenwick_woodtype",
-        "grafik_text",
-        "limelight",
-        "ordinary",
-        "sweet_hipster",
-    ]
-}
+watchface_resources(
+    name = "watchface",
+    # Each font's file name is its resource name. Must match FONTS in generator/generate.py.
+    fonts = glob(["fonts/*.ttf"]),
+)
 
-# Defaults of the user settings can be overridden for screenshots, e.g.
-#   bazel run //watchface:install --define=WFF_DEFAULTS=font=bebas_kai,is24h=FALSE
-genrule(
-    name = "generate_watchface",
-    srcs = FONTS.values(),
-    outs = [
-        "watchface.xml",
-        "generated_strings.xml",
-    ] + ["font_icon_%s.xml" % res for res in FONTS],
-    cmd = " ".join(
-        ["$(location //watchface/generator:generate)"] +
-        ["--font %s=$(location %s)" % (res, src) for res, src in FONTS.items()] +
-        [
-            "--watchface_out $(location watchface.xml)",
-            "--strings_out $(location generated_strings.xml)",
-        ] + ["--icon_out %s=$(location font_icon_%s.xml)" % (res, res) for res in FONTS] + [
-            "--defaults '$(WFF_DEFAULTS)'",
-        ],
-    ),
-    tools = ["//watchface/generator:generate"],
+filegroup(
+    name = "watchface_xml",
+    srcs = [":watchface"],
+    output_group = "watchface_xml",
 )
 
 wff_apk(
     name = "slanted",
     manifest = "AndroidManifest.xml",
-    resources = res_files(glob(["res/**"])) | {
-        ":watchface.xml": "raw/watchface.xml",
-        ":generated_strings.xml": "values/generated_strings.xml",
-    } | {src: "font/%s.ttf" % res for res, src in FONTS.items()} | {
-        ":font_icon_%s.xml" % res: "drawable/font_icon_%s.xml" % res
-        for res in FONTS
-    },
+    resource_sets = [":watchface"],
+    resources = res_files(glob(["res/**"])),
     # Must stay above the version codes of the original (pre-WFF) releases on Play.
     version_code = 1000,
     version_name = "2.0-dev",
@@ -64,10 +37,10 @@ py_test(
     srcs = ["validate_schema.py"],
     args = [
         "$(rootpath @wff_spec//:1/watchface.xsd)",
-        "$(rootpath :watchface.xml)",
+        "$(rootpath :watchface_xml)",
     ],
     data = [
-        ":watchface.xml",
+        ":watchface_xml",
         "@wff_spec//:1/watchface.xsd",
         "@wff_spec//:v1",
     ],

@@ -813,6 +813,9 @@ def main():
     missing = {f.resource for f in FONTS} - paths.keys()
     if missing:
         parser.error("missing --font for: " + ", ".join(sorted(missing)))
+    unknown = paths.keys() - {f.resource for f in FONTS}
+    if unknown:
+        parser.error("no FontConfig in FONTS for: " + ", ".join(sorted(unknown)))
     metrics = {f.resource: Metrics(paths[f.resource]) for f in FONTS}
 
     with open(args.watchface_out, "w") as f:

@@ -8,18 +8,32 @@ drive aapt2, zipalign and apksigner directly.
 _SDK = "@local_android_sdk//:"
 _BUILD_TOOLS = "@android_build_tools//:"
 
+WffResourcesInfo = provider(
+    doc = "Resources produced by a rule, for wff_apk's resource_sets.",
+    fields = {"resources": "dict: path under res/ (e.g. 'raw/watchface.xml') -> File"},
+)
+
 def _wff_apk_impl(ctx):
     name = ctx.label.name
 
-    # Stage every resource at its res/ path so that aapt2 can compile the directory.
-    res_root = name + "_res"
-    staged = []
+    resources = {}
     for target, res_path in ctx.attr.resources.items():
         files = target.files.to_list()
         if len(files) != 1:
             fail("%s must be exactly one file, got %d" % (target.label, len(files)))
+        resources[res_path] = files[0]
+    for target in ctx.attr.resource_sets:
+        for res_path, file in target[WffResourcesInfo].resources.items():
+            if res_path in resources:
+                fail("%s: resource %s is given twice" % (target.label, res_path))
+            resources[res_path] = file
+
+    # Stage every resource at its res/ path so that aapt2 can compile the directory.
+    res_root = name + "_res"
+    staged = []
+    for res_path, file in resources.items():
         out = ctx.actions.declare_file(res_root + "/" + res_path)
-        ctx.actions.symlink(output = out, target_file = files[0])
+        ctx.actions.symlink(output = out, target_file = file)
         staged.append(out)
     res_dir = ctx.bin_dir.path + "/" + ctx.label.package + "/" + res_root
 
@@ -105,6 +119,10 @@ wff_apk = rule(
         "resources": attr.label_keyed_string_dict(
             allow_files = True,
             doc = "Resource files, mapped to their path under res/ (e.g. 'raw/watchface.xml').",
+        ),
+        "resource_sets": attr.label_list(
+            providers = [WffResourcesInfo],
+            doc = "Targets providing further resources with their res/ paths.",
         ),
         "min_sdk": attr.int(default = 33),
         "target_sdk": attr.int(default = 34),
