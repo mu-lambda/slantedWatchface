@@ -154,6 +154,26 @@ def _wff_install_impl(ctx):
         is_executable = True,
         content = """#!/bin/sh
 set -eu
+case "${{1:-}}" in
+-h | --help)
+    cat <<'USAGE'
+Usage: bazel run {label} [-- --help]
+
+Installs {package} on the device in $ANDROID_SERIAL (or the only one
+connected) and makes it the active watch face.
+USAGE
+    if [ -n "{help}" ]; then
+        echo
+        cat "{help}"
+    fi
+    exit 0
+    ;;
+"") ;;
+*)
+    echo "unknown argument: $1 (see --help)" >&2
+    exit 2
+    ;;
+esac
 adb="{adb}"
 "$adb" install -r "{apk}"
 # Make it the active watch face (works on emulators and debuggable builds).
@@ -164,18 +184,22 @@ echo "Installed and selected {package}"
             adb = ctx.file._adb.short_path,
             apk = ctx.file.apk.short_path,
             package = ctx.attr.package,
+            label = "//%s:%s" % (ctx.label.package, ctx.label.name),
+            help = ctx.file.help.short_path if ctx.file.help else "",
         ),
     )
-    runfiles = ctx.runfiles(files = [ctx.file.apk, ctx.file._adb])
+    runfiles = ctx.runfiles(files = [ctx.file.apk, ctx.file._adb] + ctx.files.help)
     return [DefaultInfo(executable = script, runfiles = runfiles)]
 
 wff_install = rule(
     implementation = _wff_install_impl,
-    doc = "`bazel run` target that installs a watch face via adb and selects it.",
+    doc = "`bazel run` target that installs a watch face via adb and selects it. " +
+          "With `-- --help`, it prints its usage followed by the `help` file.",
     executable = True,
     attrs = {
         "apk": attr.label(allow_single_file = [".apk"], mandatory = True),
         "package": attr.string(mandatory = True),
+        "help": attr.label(allow_single_file = True, doc = "Text appended to --help."),
         "_adb": attr.label(allow_single_file = True, default = _SDK + "adb"),
     },
 )

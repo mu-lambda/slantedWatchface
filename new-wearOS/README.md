@@ -97,5 +97,6 @@ bazel run //watchface:install                   # install on a connected watch/e
 To try other settings without the watch's editor, override their defaults at build time,
 for example
 `bazel run //watchface:install --define=WFF_DEFAULTS=font=bebas_kai,is24h=FALSE`.
+`bazel run //watchface:install -- --help` lists all settings and their values.
 
 The scripts in `watchface/tools/` compare the face with the original on two emulators.

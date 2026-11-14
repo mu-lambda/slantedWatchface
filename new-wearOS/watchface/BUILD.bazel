@@ -26,9 +26,23 @@ wff_apk(
     version_name = "2.0-dev",
 )
 
+filegroup(
+    name = "watchface_help",
+    srcs = [":watchface"],
+    output_group = "help",
+)
+
+# Installs the face and makes it the active watch face:
+#   bazel run //watchface:install
+# The values the user settings start with can be changed at build time with WFF_DEFAULTS,
+# a comma-separated list of setting=value, for example
+#   bazel run //watchface:install --define=WFF_DEFAULTS=font=bebas_kai,is24h=FALSE
+# The settings are theme, font, is24h and colorfulAmbient. For all their values, run
+#   bazel run //watchface:install -- --help
 wff_install(
     name = "install",
     apk = ":slanted",
+    help = ":watchface_help",
     package = PACKAGE,
 )
 

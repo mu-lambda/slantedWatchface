@@ -17,7 +17,8 @@ for human readers, this file is for agents.
   own script. Prepare changes (and a commit message if asked), but don't commit or push
   unless asked.
 - When a change affects the design or the architecture, update README.md or SPEC.md too.
-  New settings, fonts or themes also go into the list of values in `.bazelrc`.
+  The `--help` of `//watchface:install` is generated from `settings()` in the generator,
+  so it needs no separate update.
 
 ## Build and check
 
@@ -57,8 +58,8 @@ wants to watch.
 
 1. `adb uninstall de.mulambda.slantedWatchface`. An installed face keeps its settings, so
    new defaults only apply to a fresh install.
-2. `bazel run //watchface:install --define=WFF_DEFAULTS=font=...,theme=...` (values are
-   listed in `.bazelrc`).
+2. `bazel run //watchface:install --define=WFF_DEFAULTS=font=...,theme=...`. For all
+   settings and values, run `bazel run //watchface:install -- --help`.
 3. Set the clock (needs `adb root`):
    `adb shell settings put global auto_time 0`, then
    `adb shell date MMDDhhmmYYYY.ss`, then

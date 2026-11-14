@@ -9,7 +9,7 @@ code is organized and how the pieces fit together.
 new-wearOS/
 ├── README.md, SPEC.md, AGENTS.md     Design choices, architecture, notes for coding agents
 ├── MODULE.bazel, MODULE.bazel.lock   Bazel module: dependencies and external repositories
-├── .bazelversion, .bazelrc           Pinned Bazel version; WFF_DEFAULTS and its values
+├── .bazelversion                    Pinned Bazel version
 ├── tools/android/
 │   ├── sdk.bzl                       Module extension: Android build-tools and local SDK
 │   └── wff.bzl                       Rules wff_apk, wff_install; macro res_files
@@ -32,6 +32,7 @@ fonts/*.ttf ──► watchface_resources :watchface ──► raw/watchface.xml
                 (runs //watchface/generator:generate) values/generated_strings.xml
                                                       drawable/font_icon_<font>.xml (x6)
                                                       font/<font>.ttf (the input fonts)
+                                                      help.txt (output group help)
                                                               │ WffResourcesInfo
                                                               ▼
 res/** + AndroidManifest.xml ───────────────────────► wff_apk :slanted ──► slanted.apk
@@ -63,6 +64,7 @@ res/** + AndroidManifest.xml ─────────────────
 - **`wff_install`** is a `bazel run` script that runs `adb install -r` and then broadcasts
   `com.google.android.wearable.app.DEBUG_SURFACE set-watchface` to make the face active.
   This works on emulators and debuggable builds. Set `ANDROID_SERIAL` to pick a device.
+  With `-- --help` it prints its usage, followed by the text file in its `help` attribute.
 
 ### Generation rule (watchface/generator/defs.bzl)
 
@@ -74,8 +76,11 @@ everything as `WffResourcesInfo`: `raw/watchface.xml`, `values/generated_strings
 output group `watchface_xml` holds just `watchface.xml`, for the schema test.
 
 `--define=WFF_DEFAULTS=id=value,...` is passed to the generator as `--defaults` and changes
-the settings' default values. It is meant for screenshots. `.bazelrc` sets it to empty and
-lists every setting with its possible values.
+the settings' default values. It is meant for screenshots; without it, the generator's
+defaults apply. The generator's `settings()` lists every setting with its values and
+default, and `help_text()` turns that list into `help.txt`. The BUILD file passes it to
+`wff_install`, so `bazel run //watchface:install -- --help` always shows the current
+settings.
 
 ## The generator (watchface/generator/generate.py)
 
@@ -208,14 +213,13 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
 ## Common changes
 
 - **Add a font:** put the TTF in `watchface/fonts/<resource>.ttf` and add a `FontConfig` to
-  `FONTS` in the generator. Then fit a `Calibration` entry with the comparison tools, and
-  add the name to the list in `.bazelrc`. Check that `complication_area()` for the new font
-  doesn't shrink the shared complication area too much.
-- **Add a theme:** append to `THEMES`; the five colors are derived. Add the id to the list
-  in `.bazelrc`.
-- **Add a setting:** declare it in `UserConfigurations` and add its default to
-  `config_defaults()` (which also makes it work with `WFF_DEFAULTS`; list it in `.bazelrc`).
-  Then branch on it in `Scene` and add its label to `strings_xml()`. Every option of a
-  setting that wraps the time multiplies that part of the XML.
+  `FONTS` in the generator. Then fit a `Calibration` entry with the comparison tools.
+  Check that `complication_area()` for the new font doesn't shrink the shared complication
+  area too much.
+- **Add a theme:** append to `THEMES`; the five colors are derived.
+- **Add a setting:** declare it in `UserConfigurations` and add it to `settings()` (which
+  makes it work with `WFF_DEFAULTS` and lists it in `--help`). Then branch on it in `Scene`
+  and add its label to `strings_xml()`. Every option of a setting that wraps the time
+  multiplies that part of the XML.
 - **Release:** raise `version_code` and `version_name` in `watchface/BUILD.bazel`, and pass a
   release `keystore` to `wff_apk`.

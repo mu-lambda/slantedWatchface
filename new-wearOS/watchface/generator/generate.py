@@ -663,20 +663,25 @@ def emit_complications(xml, metrics):
         xml.close("ComplicationSlot")
 
 
+def settings():
+    """The user settings: (id, label, [(value, description)], default value)."""
+    return [
+        ("theme", "Color theme", [(i, name) for i, name, _ in THEMES], DEFAULT_THEME),
+        ("font", "Font", [(f.resource, f.display_name) for f in FONTS], DEFAULT_FONT),
+        ("is24h", "24-hour clock", [("TRUE", "24 hours"), ("FALSE", "12 hours")], "TRUE"),
+        (
+            "colorfulAmbient",
+            "Colorful ambient mode",
+            [("TRUE", "colored"), ("FALSE", "plain white")],
+            "TRUE",
+        ),
+    ]
+
+
 def config_defaults(overrides):
     """Default value of each user setting, with overrides ("id=value,...") applied."""
-    options = {
-        "theme": [t[0] for t in THEMES],
-        "font": [f.resource for f in FONTS],
-        "is24h": ["TRUE", "FALSE"],
-        "colorfulAmbient": ["TRUE", "FALSE"],
-    }
-    defaults = {
-        "theme": DEFAULT_THEME,
-        "font": DEFAULT_FONT,
-        "is24h": "TRUE",
-        "colorfulAmbient": "TRUE",
-    }
+    options = {key: [value for value, _ in values] for key, _, values, _ in settings()}
+    defaults = {key: default for key, _, _, default in settings()}
     for item in filter(None, overrides.split(",")):
         key, _, value = item.partition("=")
         if key not in options or value not in options[key]:
@@ -686,6 +691,28 @@ def config_defaults(overrides):
             )
         defaults[key] = value
     return defaults
+
+
+def help_text():
+    """How to override the settings' defaults, for `bazel run //watchface:install -- --help`."""
+    lines = [
+        "WFF_DEFAULTS sets the values the user settings start with after a fresh install.",
+        'It is a build setting, so it goes before any "--":',
+        "",
+        "  bazel run //watchface:install --define=WFF_DEFAULTS=font=bebas_kai,is24h=FALSE",
+        "",
+        "The value is a comma-separated list of setting=value. It is meant for screenshots",
+        "and testing; releases are built without it. An installed face keeps its settings,",
+        "so uninstall it first (adb uninstall <package>) for new defaults to show.",
+        "",
+        "Settings and their values (* marks the default):",
+    ]
+    for key, label, values, default in settings():
+        lines.append("")
+        lines.append("  %s: %s" % (key, label))
+        for value, description in values:
+            lines.append("    %-18s%s%s" % (value, description, " *" if value == default else ""))
+    return "\n".join(lines) + "\n"
 
 
 def watchface_xml(metrics, defaults):
@@ -799,6 +826,7 @@ def main():
     parser.add_argument("--font", action="append", default=[], help="resource=path.ttf")
     parser.add_argument("--watchface_out", required=True)
     parser.add_argument("--strings_out", required=True)
+    parser.add_argument("--help_out", help="Where to write help_text()")
     parser.add_argument(
         "--icon_out", action="append", default=[], help="resource=path.xml: the font's icon"
     )
@@ -822,6 +850,9 @@ def main():
         f.write(watchface_xml(metrics, config_defaults(args.defaults)))
     with open(args.strings_out, "w") as f:
         f.write(strings_xml())
+    if args.help_out:
+        with open(args.help_out, "w") as f:
+            f.write(help_text())
     by_resource = {f.resource: f for f in FONTS}
     for item in args.icon_out:
         resource, path = item.split("=", 1)

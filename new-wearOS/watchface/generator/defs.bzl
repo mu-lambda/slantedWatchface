@@ -6,6 +6,7 @@ def _watchface_resources_impl(ctx):
     name = ctx.label.name
     watchface = ctx.actions.declare_file(name + "/watchface.xml")
     strings = ctx.actions.declare_file(name + "/generated_strings.xml")
+    help = ctx.actions.declare_file(name + "/help.txt")
     resources = {
         "raw/watchface.xml": watchface,
         "values/generated_strings.xml": strings,
@@ -14,6 +15,7 @@ def _watchface_resources_impl(ctx):
     args = ctx.actions.args()
     args.add("--watchface_out", watchface)
     args.add("--strings_out", strings)
+    args.add("--help_out", help)
     for font in ctx.files.fonts:
         # The file name is the font's resource name, which the generator's FONTS refers to.
         resource = font.basename.removesuffix(".ttf")
@@ -24,7 +26,7 @@ def _watchface_resources_impl(ctx):
         resources["drawable/font_icon_%s.xml" % resource] = icon
     args.add("--defaults", ctx.var.get("WFF_DEFAULTS", ""))
 
-    generated = [f for f in resources.values() if f not in ctx.files.fonts]
+    generated = [f for f in resources.values() if f not in ctx.files.fonts] + [help]
     ctx.actions.run(
         executable = ctx.attr._generator[DefaultInfo].files_to_run,
         arguments = [args],
@@ -35,7 +37,7 @@ def _watchface_resources_impl(ctx):
     )
     return [
         DefaultInfo(files = depset(generated)),
-        OutputGroupInfo(watchface_xml = depset([watchface])),
+        OutputGroupInfo(watchface_xml = depset([watchface]), help = depset([help])),
         WffResourcesInfo(resources = resources),
     ]
 
@@ -44,10 +46,10 @@ watchface_resources = rule(
     doc = """Generates watchface.xml, its strings and the font icons.
 
 Provides them, together with the fonts, as WffResourcesInfo for wff_apk. The output
-group `watchface_xml` holds just watchface.xml.
+group `watchface_xml` holds just watchface.xml, and `help` a text file that explains
+WFF_DEFAULTS and lists every setting with its values (for wff_install's `help`).
 
-`--define=WFF_DEFAULTS=id=value,...` overrides the default values of the user settings
-(see .bazelrc for the possible values).
+`--define=WFF_DEFAULTS=id=value,...` overrides the default values of the user settings.
 """,
     attrs = {
         "fonts": attr.label_list(
