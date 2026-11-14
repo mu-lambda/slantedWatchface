@@ -11,8 +11,8 @@ for human readers, this file is for agents.
   app in the parent directory (its code, build files or assets). Copy what you need.
 - Never edit generated output. `watchface.xml`, `generated_strings.xml` and the font icons
   are written by `watchface/generator/generate.py`.
-- Keep the package name `de.mulambda.slantedWatchface` and keep `version_code` at 1000 or
-  above: the APK updates the original's Play listing.
+- Keep the package name `de.mulambda.slantedWatchface` and keep `VERSION_CODE` (in
+  `watchface/version.bzl`) at 1000 or above: the APK updates the original's Play listing.
 - The maintainer commits changes either directly to main or through a GitHub pull request,
   with their own script. Prepare changes (and a commit message if asked), but don't commit or push
   unless asked.
@@ -47,13 +47,21 @@ bazel run //watchface:install_bundle     # install from the bundle, as Google Pl
 
 ## Emulators
 
-Round Wear OS AVDs, all 454×454:
+Round Wear OS AVDs, 454×454 unless noted:
 
 | AVD | Serial | Runs |
 |---|---|---|
 | `Wear_OS_Large_Round_API_34` (Wear OS 5) | `emulator-5554` | this face (`raw/watchface.xml`) |
 | `Wear_OS_Large_Round_API_36` (Wear OS 6) | `emulator-5558` | this face (`raw-v36/watchface.xml`) |
+| `Wear_OS_Large_Round_API_33` (Wear OS 4) | `emulator-5562` | this face (`raw/watchface.xml`) |
+| `Wear_OS_Small_Round_API_34` (Wear OS 5, 384×384) | `emulator-5560` | this face, at the smallest size Google asks to test |
 | `Wear_OS_Large_Round_API_30` (Wear OS 3) | `emulator-5556` | the original, release 1.16 |
+
+The Wear OS 4 emulator shows the system's default face ("Big Time") in ambient mode for
+any WFF face, even a minimal one, and keeps showing it after waking until the screen is
+tapped. Ambient mode on Wear OS 4 can only be checked on a real watch. Its `input` has no
+`rotaryencoder`. On new emulators, the long-press that opens the picker sometimes needs a
+second try, and the face shows only after a tap once `wff_install` selected it.
 
 The Wear OS 6 emulator (`-port 5558`) needs hardware virtualization, which the command
 sandbox blocks: start it outside the sandbox, or it hangs in software emulation. If it

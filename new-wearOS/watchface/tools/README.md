@@ -17,6 +17,11 @@ Ambient brightness (Google Play's 15% limit, WO-P7), on the WFF face alone:
 - `ambient.py ink`: from those, how much of the screen each element covers at its worst,
   for `FontConfig.ambient_ink`; `ambient.py check`: the brightness of any screenshot.
 
+Play Store assets:
+
+- `store_screenshots.sh`: the listing's screenshots at 10:08, in several settings and both
+  ambient modes (see `playstore/listing.md`).
+
 Example:
 
     CLOCKS=100832,235959 python3 -I watchface/tools/compare.py default sweet_hipster

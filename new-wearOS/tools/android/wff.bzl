@@ -317,7 +317,7 @@ echo "Signed: $out"
 """.format(
             label = "//%s:%s" % (ctx.label.package, ctx.label.name),
             bundle = ctx.file.bundle.short_path,
-            default_out = "%s-%s.aab" % (ctx.attr.package, ctx.attr.version_name),
+            default_out = "%s-%s-%d.aab" % (ctx.attr.package, ctx.attr.version_name, ctx.attr.version_code),
         ),
     )
     return [DefaultInfo(executable = script, runfiles = ctx.runfiles(files = [ctx.file.bundle]))]
@@ -329,6 +329,7 @@ wff_release = rule(
     attrs = {
         "bundle": attr.label(allow_single_file = [".aab"], mandatory = True),
         "package": attr.string(mandatory = True),
+        "version_code": attr.int(mandatory = True, doc = "Only for the default file name."),
         "version_name": attr.string(mandatory = True, doc = "Only for the default file name."),
     },
 )
