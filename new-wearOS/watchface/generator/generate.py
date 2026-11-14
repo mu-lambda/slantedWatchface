@@ -32,8 +32,15 @@ LEGACY_MAX_COMPLICATIONS = 3  # The original face sized the date for three rows 
 DATE_HEIGHT_FACTOR = 0.6  # Height of the date, relative to such a row.
 
 BLACK = "#FF000000"
-AMBIENT_COLOR = "#FFFFFFFF"
-AMBIENT_COLOR_SOFT = "#FFCCCCCC"  # android.graphics.Color.LTGRAY
+# Plain ambient mode: a warm off-white, and a darker one where the original used light gray.
+AMBIENT_COLOR = "#FFA39F96"
+AMBIENT_COLOR_SOFT = "#FF827F78"  # AMBIENT_COLOR at 80%, like LTGRAY to white
+# Google Play's limit for ambient mode (WO-P7): the average pixel value, counting white as
+# 1 and black as 0, must stay at or below 15% at any time of day.
+AMBIENT_LIMIT = 0.15
+# What the complications can cover (text, icon), as in FontConfig.ambient_ink, with a
+# margin over the measured 0.007 and 0.002. They are drawn in theme colors in both modes.
+AMBIENT_COMPLICATION_INK = (0.010, 0.003)
 DEFAULT_DATE_COLOR = 0xFFFF00  # Yellow
 
 
@@ -48,15 +55,19 @@ class FontConfig:
     hour_scale_x_single_digit: float
     minutes_scale_x: float
     seconds_scale_x: float
+    # The fraction of the round screen that the hours (with AM/PM), the minutes and the
+    # date cover at their worst time of day, counting a fully lit pixel as 1. Measured on
+    # the emulator (see AGENTS.md); used to keep ambient mode within AMBIENT_LIMIT.
+    ambient_ink: tuple
 
 
 FONTS = [
-    FontConfig("limelight", "Limelight", 1.0, 0.4, 0.6, 0.33, 0.4),
-    FontConfig("sweet_hipster", "Sweet Hipster", 1.3, 0.9, 1.0, 0.7, 0.6),
-    FontConfig("grafik_text", "Grafik Text", 1.0, 0.5, 0.9, 0.5, 0.5),
-    FontConfig("fenwick_woodtype", "Fenwick Woodtype", 1.0, 0.7, 1.0, 0.6, 0.5),
-    FontConfig("ordinary", "Ordinary", 1.2, 0.6, 1.0, 0.5, 0.5),
-    FontConfig("bebas_kai", "Bebas Kai", 1.0, 0.6, 0.8, 0.5, 0.5),
+    FontConfig("limelight", "Limelight", 1.0, 0.4, 0.6, 0.33, 0.4, (0.191, 0.053, 0.011)),
+    FontConfig("sweet_hipster", "Sweet Hipster", 1.3, 0.9, 1.0, 0.7, 0.6, (0.158, 0.048, 0.017)),
+    FontConfig("grafik_text", "Grafik Text", 1.0, 0.5, 0.9, 0.5, 0.5, (0.175, 0.058, 0.011)),
+    FontConfig("fenwick_woodtype", "Fenwick Woodtype", 1.0, 0.7, 1.0, 0.6, 0.5, (0.166, 0.059, 0.011)),
+    FontConfig("ordinary", "Ordinary", 1.2, 0.6, 1.0, 0.5, 0.5, (0.310, 0.093, 0.015)),
+    FontConfig("bebas_kai", "Bebas Kai", 1.0, 0.6, 0.8, 0.5, 0.5, (0.202, 0.064, 0.011)),
 ]
 DEFAULT_FONT = "limelight"
 
@@ -103,7 +114,10 @@ THEMES = [
 DEFAULT_THEME = "green"
 
 # Indices into the colors of a theme option: [CONFIGURATION.theme.N].
-HOURS, MINUTES, SECONDS, AM_PM, DATE = range(5)
+# WFF v1 allows five colors per option. AM/PM always has the hours' color, so its slot
+# holds the ambient dimmer (see theme_option_colors).
+HOURS, MINUTES, SECONDS, THEME_AMBIENT_DIM, DATE = range(5)
+AM_PM = HOURS
 
 
 # The date and AM/PM use the device font (Typeface.DEFAULT in the original face).
@@ -134,11 +148,19 @@ def theme_colors(base):
     white_of_base = _rgb(0, 0, base_v)
     date_h, date_s, _ = _hsv(DEFAULT_DATE_COLOR)
     colors = [None] * 5
+    colors[THEME_AMBIENT_DIM] = BLACK  # replaced in theme_option_colors
     colors[HOURS] = _rgb(base_h, base_s, base_v)
     colors[MINUTES] = white_of_base
     colors[SECONDS] = _rgb(base_h, base_s, base_v)
-    colors[AM_PM] = _rgb(base_h, base_s, base_v)
     colors[DATE] = _rgb(date_h, date_s, base_v)
+    return colors
+
+
+def theme_option_colors(base):
+    """The colors of a theme option: theme_colors, with the translucent black that dims
+    the colored time in ambient mode at THEME_AMBIENT_DIM."""
+    colors = theme_colors(base)
+    colors[THEME_AMBIENT_DIM] = black(1 - theme_ambient_level(base))
     return colors
 
 
@@ -146,8 +168,55 @@ AMBIENT_COLORS = [None] * 5
 AMBIENT_COLORS[HOURS] = AMBIENT_COLOR_SOFT
 AMBIENT_COLORS[MINUTES] = AMBIENT_COLOR
 AMBIENT_COLORS[SECONDS] = AMBIENT_COLOR_SOFT
-AMBIENT_COLORS[AM_PM] = AMBIENT_COLOR_SOFT
 AMBIENT_COLORS[DATE] = AMBIENT_COLOR
+
+
+# --- Ambient brightness (WO-P7) -------------------------------------------------
+#
+# The worst-case average pixel value is the sum, over the elements, of their ink times
+# their color's value. Ambient mode gets two dimmers, both black overlays: one per font
+# (for fonts whose digits are heavy) over both modes, and one per theme (for bright
+# themes) over the colored mode only.
+
+
+def color_value(color):
+    """A color's pixel value as WO-P7 counts it: the mean of R, G and B, from 0 to 1."""
+    rgb = int(color[-6:], 16)
+    return sum((rgb >> s) & 0xFF for s in (16, 8, 0)) / 3 / 255
+
+
+def time_value(font, colors):
+    hours, minutes, date = font.ambient_ink
+    return (
+        hours * color_value(colors[HOURS])
+        + minutes * color_value(colors[MINUTES])
+        + date * color_value(colors[DATE])
+    )
+
+
+def complication_value(colors):
+    text, icon = AMBIENT_COMPLICATION_INK
+    return text * color_value(colors[HOURS]) + icon * color_value(colors[MINUTES])
+
+
+def font_ambient_level(font):
+    """How much ambient mode dims this font (1 = not at all), so that the plain colors
+    fit within AMBIENT_LIMIT next to complications in the brightest theme."""
+    budget = AMBIENT_LIMIT - complication_value(theme_colors(0xFFFFFF))
+    return min(1.0, budget / time_value(font, AMBIENT_COLORS))
+
+
+def theme_ambient_level(base):
+    """How much ambient mode dims this theme's colored time, on top of the font's level."""
+    colors = theme_colors(base)
+    budget = AMBIENT_LIMIT - complication_value(colors)
+    return min(
+        1.0, min(budget / (font_ambient_level(f) * time_value(f, colors)) for f in FONTS)
+    )
+
+
+def black(opacity):
+    return "#%02X000000" % round(255 * opacity)
 
 
 # --- Font metrics --------------------------------------------------------------
@@ -570,6 +639,18 @@ def emit_rest(xml, lay, is24h, colors=None, ambient=False):
         emit_text(xml, lay.am_pm, colors)
 
 
+def emit_ambient_dimmer(xml, name, color, alpha=255):
+    """A rectangle over the whole face in `color`, shown only in ambient mode."""
+    full_group(xml, name, alpha=0)
+    xml.empty("Variant", mode="AMBIENT", target="alpha", value=alpha)
+    xml.open("PartDraw", x=0, y=0, width=CANVAS, height=CANVAS)
+    xml.open("Rectangle", x=0, y=0, width=CANVAS, height=CANVAS)
+    xml.empty("Fill", color=color)
+    xml.close("Rectangle")
+    xml.close("PartDraw")
+    xml.close("Group")
+
+
 def emit_time(xml, lay, is24h):
     """The time in theme colors, plus a plain white copy for ambient mode if so configured.
 
@@ -579,6 +660,7 @@ def emit_time(xml, lay, is24h):
     """
     emit_hours(xml, lay)
     emit_rest(xml, lay, is24h)
+    emit_ambient_dimmer(xml, "ambient_theme_dim", "[CONFIGURATION.theme.%d]" % THEME_AMBIENT_DIM)
     open_condition(xml, "plainAmbient", '[CONFIGURATION.colorfulAmbient] == "FALSE"')
     full_group(xml, "time_ambient_plain", alpha=0)
     xml.empty("Variant", mode="AMBIENT", target="alpha", value="255")
@@ -696,7 +778,7 @@ def settings():
         (
             "colorfulAmbient",
             "Colorful ambient mode",
-            [("TRUE", "colored"), ("FALSE", "plain white")],
+            [("TRUE", "colored"), ("FALSE", "plain off-white")],
             "TRUE",
         ),
     ]
@@ -754,7 +836,7 @@ def watchface_xml(metrics, defaults, tilted_slots=False):
             "ColorOption",
             id=option_id,
             displayName="theme_" + option_id,
-            colors=" ".join(theme_colors(base)),
+            colors=" ".join(theme_option_colors(base)),
         )
     xml.close("ColorConfiguration")
     xml.open("ListConfiguration", id="font", displayName="font_label", defaultValue=defaults["font"])
@@ -794,6 +876,9 @@ def watchface_xml(metrics, defaults, tilted_slots=False):
             xml.close("Group")
         xml.close("Default")
         xml.close("Condition")
+        level = font_ambient_level(font)
+        if level < 1:
+            emit_ambient_dimmer(xml, "ambient_font_dim", BLACK, alpha=round(255 * (1 - level)))
         xml.close("Group")
         xml.close("ListOption")
     xml.close("ListConfiguration")

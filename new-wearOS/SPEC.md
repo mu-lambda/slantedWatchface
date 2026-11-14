@@ -108,8 +108,14 @@ vector drawable per font.
   `theme_colors()` expands each base color into the five colors of the scheme, as the
   original did: hours, seconds and AM/PM in the base color, minutes in a gray with the base
   color's brightness, and the date in the original's date yellow at that brightness. The
-  five colors are indexed by `HOURS, MINUTES, SECONDS, AM_PM, DATE`; in the XML they are
-  `[CONFIGURATION.theme.N]`. Ambient mode with plain colors uses `AMBIENT_COLORS` instead.
+  five colors are indexed by `HOURS, MINUTES, SECONDS, THEME_AMBIENT_DIM, DATE`; in the
+  XML they are `[CONFIGURATION.theme.N]`. AM/PM uses the hours' color, so its slot holds
+  the theme's ambient dimmer instead (WFF v1 allows five colors per option; see Ambient
+  below). Ambient mode with plain colors uses `AMBIENT_COLORS` instead.
+- `FontConfig.ambient_ink`, `AMBIENT_COMPLICATION_INK` and `AMBIENT_LIMIT`: how much of
+  the round screen each element covers at its worst time of day, measured with
+  `watchface/tools/ambient_sweep.sh` and `ambient.py`, and the 15% limit they must stay
+  within.
 - `CALIBRATION`: a `Calibration` for each font. These are offsets in canvas pixels for the
   one-digit and two-digit hours (x), the hours (y), the seconds (x) and the minutes (y),
   fitted to screenshots of the original.
@@ -153,20 +159,23 @@ The ink measurements become expressions like this:
 WatchFace 450×450
 ├── Metadata CLOCK_TYPE, PREVIEW_TIME
 ├── UserConfigurations
-│   ├── ColorConfiguration theme        (9 options × 5 colors)
+│   ├── ColorConfiguration theme        (9 options × 5 colors, one of them the dimmer)
 │   ├── ListConfiguration font          (6 options, each with icon font_icon_<font>)
 │   ├── BooleanConfiguration is24h
 │   └── BooleanConfiguration colorfulAmbient
 └── Scene
     ├── Group "slanted" (angle 20°, pivot at the center)
     │   └── ListConfiguration font → Group <font>
-    │       └── Condition [CONFIGURATION.is24h] == "TRUE" → Group h24 | h12
-    │           ├── hours: Condition [HOUR_…] > 9 → two-digit | one-digit PartText
-    │           ├── minutes, seconds (hidden in ambient), date, AM/PM (12h only)
-    │           └── Condition [CONFIGURATION.colorfulAmbient] == "FALSE":
-    │               Group "time_ambient_plain" (alpha 0, AMBIENT variant alpha 255)
-    │               ├── PartDraw black rectangle covering the canvas
-    │               └── the same texts in white and light gray, without seconds
+    │       ├── Condition [CONFIGURATION.is24h] == "TRUE" → Group h24 | h12
+    │       │   ├── hours: Condition [HOUR_…] > 9 → two-digit | one-digit PartText
+    │       │   ├── minutes, seconds (hidden in ambient), date, AM/PM (12h only)
+    │       │   ├── Group "ambient_theme_dim" (ambient only): rectangle in
+    │       │   │   [CONFIGURATION.theme.3], a translucent black
+    │       │   └── Condition [CONFIGURATION.colorfulAmbient] == "FALSE":
+    │       │       Group "time_ambient_plain" (alpha 0, AMBIENT variant alpha 255)
+    │       │       ├── PartDraw black rectangle covering the canvas
+    │       │       └── the same texts in off-white, without seconds
+    │       └── Group "ambient_font_dim" (ambient only, heavy fonts): black rectangle
     └── ComplicationSlot × 2: raw/: upright; raw-v36/: angle 20°
         └── Complication SHORT_TEXT → raw/ only: Group "tilted" (angle 20°) → icon, text
 ```
@@ -187,8 +196,26 @@ these vary.
 **Ambient.** The colored texts stay visible in ambient mode; only the seconds hide, through
 an `AMBIENT` variant on alpha. For plain ambient mode, an overlay group fades in only in
 ambient mode. It covers the colored face with a black rectangle and redraws the time in
-white. Because the overlay draws over the colored face instead of replacing it, the
+off-white. Because the overlay draws over the colored face instead of replacing it, the
 colored layout appears only once in the XML.
+
+The time is dimmed in ambient mode to keep within Google Play's limit (WO-P7: an average
+pixel value of at most 15%, white counting as 100%). Dimming is a black rectangle drawn
+over the time, so the colors keep their hue. There are two:
+
+- `ambient_theme_dim`, between the colored time and the plain overlay, so it only affects
+  colorful mode. Its color is the theme's `THEME_AMBIENT_DIM` entry, a black whose alpha
+  `theme_ambient_level()` computes for the theme; WFF can't vary a `Variant`'s value with
+  the settings, but it can vary a color.
+- `ambient_font_dim`, over the font's whole time, so it affects both modes. Its alpha is a
+  constant from `font_ambient_level()`, and fonts that need no dimming don't get one.
+
+Both levels come from the same estimate: the worst-case brightness is the sum, over hours
+(with AM/PM), minutes and date, of the element's `ambient_ink` times its color's value
+(the mean of R, G and B), plus the complications in their theme colors. The font level
+makes the plain colors fit with complications in the brightest theme. The theme level then
+makes the theme's colors fit for every font at that font's level. The complications
+themselves are not dimmed.
 
 **Complications.** `ComplicationSlot` must be a direct child of `Scene`, and its geometry is
 static. So the slots can't be inside the tilted group or depend on the font. For each font,
