@@ -34,7 +34,7 @@ bazel run //watchface:install        # install on $ANDROID_SERIAL (or the only d
 - A passing schema test does not mean the face renders correctly. The renderer ignores or
   misreads some things the schema allows (see "WFF renderer behavior" in SPEC.md). Check
   visible changes on the emulator.
-- Watch the size of `watchface.xml` (about 127 KB). Each font and each 12h/24h variant
+- Watch the size of `watchface.xml` (about 131 KB). Each font and each 12h/24h variant
   repeats the whole time layout, so a setting that wraps the time multiplies the XML.
 - System `python3` has no fontTools, and `python3 -I` ignores `PYTHONPATH`. To run font
   code outside Bazel, make a venv in a scratch directory and `pip install fonttools`. The
@@ -103,6 +103,23 @@ To test settings the way users change them:
 - `adb shell am force-stop com.google.wear.watchface.runtime` falls back to the default
   face; reselect ours with the `DEBUG_SURFACE set-watchface` broadcast that `wff_install`
   uses.
+
+### Ambient brightness
+
+Ambient mode must stay within 15% average brightness (WO-P7); see "Ambient" in SPEC.md.
+After adding a font or changing its size or scale factors, re-measure its ink:
+
+1. `watchface/tools/ambient_sweep.sh $TMPDIR/sweep <font>` (about 10 minutes per font, on
+   the Wear OS 5 emulator, which needs `adb root`).
+2. `python3 -I watchface/tools/ambient.py ink $TMPDIR/sweep` and copy the values into the
+   font's `ambient_ink` in `FontConfig` (round up).
+3. To check a build, take ambient screenshots at the font's worst time (the sweep's
+   brightest shots) in the white and yellow themes and in plain mode, and run
+   `python3 -I watchface/tools/ambient.py check <png>...`. Each must be at most 15%.
+
+The emulator dims ambient mode (0xFF draws as 0xDC); `ambient.py` corrects for it. A
+`while read` loop around `adb shell` stops after one round, because adb reads the loop's
+input; read from another file descriptor (`while read x <&3; do ...; done 3<file`).
 
 ### Comparing with the original
 

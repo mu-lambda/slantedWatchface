@@ -33,6 +33,21 @@ files at build time and writes these measurements into `watchface.xml` as lookup
 expressions over the current hour, minute and second. Six fonts, 24h/12h and ambient
 variants add up to about 127 KB of XML that nobody has to maintain by hand.
 
+**Ambient mode within Google Play's brightness limit.** Play requires an ambient mode
+that lights at most 15% of the screen on average, at every time of day (WO-P7). The
+original drew ambient mode in white or in the full theme colors, which reaches 20–42%. The
+WFF face:
+
+- draws plain ambient mode in a warm off-white (`#A39F96`, the hours darker at `#827F78`)
+  instead of white;
+- dims bright themes in colorful ambient mode (orange, yellow, cyan, magenta, white and
+  light gray); green, red and blue stay as they are;
+- dims heavy fonts in both ambient modes: Ordinary to about 60%, Bebas Kai slightly.
+
+The generator computes the dimming from how much of the screen each font's digits cover at
+their worst time of day, which was measured on the emulator. It counts against the round
+screen, which is stricter than the square image Play may use.
+
 **Measured corrections per font.** Even with the same metrics, the WFF renderer places scaled
 text a few pixels differently than Android's canvas did, and the difference depends on the
 font. A small table of offsets per font, fitted to screenshots of the original, absorbs this
@@ -56,7 +71,7 @@ place. The face uses one layout that the slots fit:
   matching yellow);
 - the font, from six, each shown with a "12" icon drawn in that font;
 - 24-hour clock;
-- colorful or plain white ambient mode;
+- colorful or plain off-white ambient mode;
 - the two complication slots.
 
 The original also let you pick the color of each element separately; WFF's editor
@@ -80,7 +95,7 @@ codes start at 1000, above every original release.
 - Right-wrist users get the left-wrist tilt.
 - Text that is too long for the bottom complication slot ends in "…", because that row runs
   into the round edge of the screen.
-- With plain white ambient mode, the complications keep their colors.
+- With plain off-white ambient mode, the complications keep their theme colors.
 - On Wear OS 4 and 5, the editor outlines the complication slots with upright rectangles
   around the tilted content, because its editor can't show tilted slots. Wear OS 6 and
   later get tilted outlines: the APK carries a second copy of the face for them
