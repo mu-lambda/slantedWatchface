@@ -29,7 +29,12 @@ bazel build //watchface:slanted      # APK: bazel-bin/watchface/slanted.apk
 bazel build //watchface:watchface    # just the generated files: bazel-bin/watchface/watchface/
 bazel test //...                     # schema test; run after every generator change
 bazel run //watchface:install        # install on $ANDROID_SERIAL (or the only device) and select it
+bazel build //watchface:slanted_bundle   # unsigned app bundle: bazel-bin/watchface/slanted.aab
+bazel run //watchface:install_bundle     # install from the bundle, as Google Play would
 ```
+
+- Never run `//watchface:release` or handle the upload keystore: signing a release is the
+  maintainer's step, and jarsigner asks for passwords interactively.
 
 - A passing schema test does not mean the face renders correctly. The renderer ignores or
   misreads some things the schema allows (see "WFF renderer behavior" in SPEC.md). Check
