@@ -42,12 +42,20 @@ bazel run //watchface:install        # install on $ANDROID_SERIAL (or the only d
 
 ## Emulators
 
-Two round Wear OS AVDs, both 454×454:
+Round Wear OS AVDs, all 454×454:
 
 | AVD | Serial | Runs |
 |---|---|---|
-| `Wear_OS_Large_Round_API_34` (Wear OS 5) | `emulator-5554` | this face |
+| `Wear_OS_Large_Round_API_34` (Wear OS 5) | `emulator-5554` | this face (`raw/watchface.xml`) |
+| `Wear_OS_Large_Round_API_36` (Wear OS 6) | `emulator-5558` | this face (`raw-v36/watchface.xml`) |
 | `Wear_OS_Large_Round_API_30` (Wear OS 3) | `emulator-5556` | the original, release 1.16 |
+
+The Wear OS 6 emulator (`-port 5558`) needs hardware virtualization, which the command
+sandbox blocks: start it outside the sandbox, or it hangs in software emulation. If it
+starts without a visible window, the emulator is waiting on a hidden dialog asking to
+send old crash reports; delete `/tmp/android-$USER/emu-crash-*.db` and start it again. On Wear OS 6, `wff_install`'s broadcast doesn't
+select the face; add it once through the watch face picker ("Add new"), after which
+reinstalls keep it selected. The Wear OS 7 image doesn't run on this Mac (M1).
 
 Start them headless in the background, for example
 `emulator -avd Wear_OS_Large_Round_API_30 -port 5556 -no-window -no-audio -no-boot-anim`
@@ -112,8 +120,11 @@ existing font (Limelight is the reference the maintainer prefers) and check them
 - `[AMPM_STRING_ENG]` and `[AMPM_STRING_SHORT]` render empty; use `[AMPM_STRING]`.
 - `pivotX` and `pivotY` are fractions (0..1) of the element's size.
 - `ComplicationSlot` must be a direct child of `Scene`, with static geometry. It can't be
-  inside the tilted group or a configuration. Don't give it an `angle`: the editor then
-  draws its outline in the wrong place. Rotate a `Group` inside the `Complication` instead.
+  inside the tilted group or a configuration. In `raw/watchface.xml` (Wear OS 4 and 5),
+  don't give it an `angle`: that editor draws its outline in the wrong place. Rotate a
+  `Group` inside the `Complication` instead. `raw-v36/watchface.xml` rotates the slot.
+- Changes to the slots need checking in the editor on both Wear OS 5 and 6, since each
+  uses a different document.
 - Don't nest configuration elements (`ListConfiguration`, `BooleanConfiguration`) in the
   `Scene`. The schema test and the first render pass, but the face stops following the
   editor after the first change. Use a `Condition` on `[CONFIGURATION.<id>]` instead.

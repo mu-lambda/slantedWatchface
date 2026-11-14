@@ -51,7 +51,7 @@ py_test(
     srcs = ["validate_schema.py"],
     args = [
         "$(rootpath @wff_spec//:1/watchface.xsd)",
-        "$(rootpath :watchface_xml)",
+        "$(rootpaths :watchface_xml)",
     ],
     data = [
         ":watchface_xml",

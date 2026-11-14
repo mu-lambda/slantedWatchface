@@ -5,15 +5,19 @@ load("//tools/android:wff.bzl", "WffResourcesInfo")
 def _watchface_resources_impl(ctx):
     name = ctx.label.name
     watchface = ctx.actions.declare_file(name + "/watchface.xml")
+    watchface_v36 = ctx.actions.declare_file(name + "/watchface_v36.xml")
     strings = ctx.actions.declare_file(name + "/generated_strings.xml")
     help = ctx.actions.declare_file(name + "/help.txt")
     resources = {
         "raw/watchface.xml": watchface,
+        # Android picks this one on API 36 (Wear OS 6) and later.
+        "raw-v36/watchface.xml": watchface_v36,
         "values/generated_strings.xml": strings,
     }
 
     args = ctx.actions.args()
     args.add("--watchface_out", watchface)
+    args.add("--watchface_tilted_slots_out", watchface_v36)
     args.add("--strings_out", strings)
     args.add("--help_out", help)
     for font in ctx.files.fonts:
@@ -37,7 +41,10 @@ def _watchface_resources_impl(ctx):
     )
     return [
         DefaultInfo(files = depset(generated)),
-        OutputGroupInfo(watchface_xml = depset([watchface]), help = depset([help])),
+        OutputGroupInfo(
+            watchface_xml = depset([watchface, watchface_v36]),
+            help = depset([help]),
+        ),
         WffResourcesInfo(resources = resources),
     ]
 
@@ -45,8 +52,10 @@ watchface_resources = rule(
     implementation = _watchface_resources_impl,
     doc = """Generates watchface.xml, its strings and the font icons.
 
+There are two watch face documents: raw/watchface.xml with upright complication slots,
+and raw-v36/watchface.xml with rotated ones, which Android picks on Wear OS 6 and later.
 Provides them, together with the fonts, as WffResourcesInfo for wff_apk. The output
-group `watchface_xml` holds just watchface.xml, and `help` a text file that explains
+group `watchface_xml` holds both documents, and `help` a text file that explains
 WFF_DEFAULTS and lists every setting with its values (for wff_install's `help`).
 
 `--define=WFF_DEFAULTS=id=value,...` overrides the default values of the user settings.

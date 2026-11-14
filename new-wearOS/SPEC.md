@@ -28,8 +28,9 @@ new-wearOS/
 ## Build graph
 
 ```
-fonts/*.ttf ──► watchface_resources :watchface ──► raw/watchface.xml
-                (runs //watchface/generator:generate) values/generated_strings.xml
+fonts/*.ttf ──► watchface_resources :watchface ──► raw/watchface.xml (upright slots)
+                (runs //watchface/generator:generate) raw-v36/watchface.xml (tilted slots)
+                                                      values/generated_strings.xml
                                                       drawable/font_icon_<font>.xml (x6)
                                                       font/<font>.ttf (the input fonts)
                                                       help.txt (output group help)
@@ -71,9 +72,15 @@ res/** + AndroidManifest.xml ─────────────────
 **`watchface_resources`** runs the generator on a list of fonts. A font's file name is its
 resource name (`fonts/bebas_kai.ttf` is `bebas_kai`), so the BUILD file just globs
 `fonts/*.ttf`. The rule passes each font and its icon output to the generator, and returns
-everything as `WffResourcesInfo`: `raw/watchface.xml`, `values/generated_strings.xml`, one
-`drawable/font_icon_<font>.xml` per font, and the fonts themselves as `font/<font>.ttf`. The
-output group `watchface_xml` holds just `watchface.xml`, for the schema test.
+everything as `WffResourcesInfo`: `raw/watchface.xml`, `raw-v36/watchface.xml`,
+`values/generated_strings.xml`, one `drawable/font_icon_<font>.xml` per font, and the fonts
+themselves as `font/<font>.ttf`. The output group `watchface_xml` holds the two watch face
+documents, for the schema test.
+
+**Two documents, one APK.** The two documents differ only in the complication slots (see
+Complications below). Android's resource system picks `raw-v36/watchface.xml` on API 36
+(Wear OS 6) and later, and `raw/watchface.xml` on older versions; the WFF runtime loads
+the document through it. Both declare WFF version 1.
 
 `--define=WFF_DEFAULTS=id=value,...` is passed to the generator as `--defaults` and changes
 the settings' default values. It is meant for screenshots; without it, the generator's
@@ -160,8 +167,8 @@ WatchFace 450×450
     │               Group "time_ambient_plain" (alpha 0, AMBIENT variant alpha 255)
     │               ├── PartDraw black rectangle covering the canvas
     │               └── the same texts in white and light gray, without seconds
-    └── ComplicationSlot × 2 (not rotated)
-        └── Complication SHORT_TEXT → Group "tilted" (angle 20°) → icon, text
+    └── ComplicationSlot × 2: raw/: upright; raw-v36/: angle 20°
+        └── Complication SHORT_TEXT → raw/ only: Group "tilted" (angle 20°) → icon, text
 ```
 
 **Settings in the Scene.** Only the font uses a configuration element in the `Scene`
@@ -189,11 +196,17 @@ static. So the slots can't be inside the tilted group or depend on the font. For
 the date to halfway between the hours' baseline and the bottom edge, and from the minutes
 to the right edge. The generator then keeps only the part that every font has in common.
 That part is split into `COMPLICATION_SLOTS` rows. The center of each row is rotated about
-the canvas center by `ANGLE`, and the slot is centered there. The slot itself is not
-rotated: the editor draws a rotated slot's outline in the wrong place and doesn't offer
-the bottom slot at all. Instead, a `Group` inside the `Complication` rotates the content by
-`ANGLE` about the slot's center. So the editor's outlines are upright rectangles around
-tilted content. Each slot accepts `SHORT_TEXT` and starts with a system provider
+the canvas center by `ANGLE`, and the slot is centered there. How the tilt is done
+depends on the document (`tilted_slots` in `emit_complications()`):
+
+- `raw-v36/watchface.xml` (Wear OS 6 and later) rotates the slot itself by `ANGLE`. The
+  editor outlines it as a tilted rectangle.
+- `raw/watchface.xml` (Wear OS 4 and 5) keeps the slot upright and rotates its content
+  with a `Group` inside the `Complication`. These editors draw a rotated slot's outline in
+  the wrong place and don't offer the bottom slot at all, so here the outlines are upright
+  rectangles around the tilted content.
+
+Each slot accepts `SHORT_TEXT` and starts with a system provider
 (`COMPLICATION_DEFAULTS`). It shows the monochrome icon, tinted in the minutes' color, then
 `TEXT TITLE` in the hours' color. The text box stops where the round screen edge crosses
 the row and ends in an ellipsis when the text is too long.
@@ -213,8 +226,9 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
 - Configuration elements nested inside another configuration's option render correctly at
   first, but the renderer stops applying changes from the editor after the first one. The
   documentation says they can't be nested; the schema doesn't enforce it.
-- The editor ignores a `ComplicationSlot`'s `angle` (and pivot) when it draws the slot
-  outlines and hit areas, so rotated slots appear in the wrong place.
+- The Wear OS 5 editor ignores a `ComplicationSlot`'s `angle` (and pivot) when it draws the
+  slot outlines and hit areas, so rotated slots appear in the wrong place. The Wear OS 6
+  editor handles them correctly.
 
 ## Verification
 
