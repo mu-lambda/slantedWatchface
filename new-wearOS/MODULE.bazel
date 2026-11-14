@@ -27,6 +27,16 @@ use_repo(android_sdk, "android_build_tools", "local_android_sdk")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+# bundletool, which builds the app bundle for Google Play (needs Java 11 or later).
+http_file(
+    name = "bundletool",
+    downloaded_file_path = "bundletool.jar",
+    sha256 = "a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29",
+    urls = ["https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar"],
+)
+
 # Official Watch Face Format XSD schemas, used to validate the generated watchface.xml.
 http_archive(
     name = "wff_spec",

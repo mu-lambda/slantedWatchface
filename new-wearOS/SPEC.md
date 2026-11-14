@@ -12,7 +12,8 @@ new-wearOS/
 ├── .bazelversion                    Pinned Bazel version
 ├── tools/android/
 │   ├── sdk.bzl                       Module extension: Android build-tools and local SDK
-│   └── wff.bzl                       Rules wff_apk, wff_install; macro res_files
+│   ├── wff.bzl                       Rules wff_apk, wff_install, wff_release; macro res_files
+│   └── bundle_module.py              Rearranges a proto-format APK into a bundle module
 └── watchface/
     ├── BUILD.bazel                   Generation, packaging, installation, schema test
     ├── AndroidManifest.xml           Code-free app declaring WFF version 1
@@ -22,7 +23,7 @@ new-wearOS/
     ├── generator/defs.bzl            Rule watchface_resources, which runs the generator
     ├── validate_schema.py            XSD 1.1 validation (the schema test)
     ├── testdata/                     Reference screenshots of the original face, release 1.16
-    └── tools/                        Comparison scripts against the original (not part of the build)
+    └── tools/                        Comparison and ambient measurement scripts (not part of the build)
 ```
 
 ## Build graph
@@ -37,8 +38,13 @@ fonts/*.ttf ──► watchface_resources :watchface ──► raw/watchface.xml
                                                               │ WffResourcesInfo
                                                               ▼
 res/** + AndroidManifest.xml ───────────────────────► wff_apk :slanted ──► slanted.apk
+                                                              │   └──► wff_install :install (bazel run)
                                                               │
-                                                              └──► wff_install :install (bazel run)
+                                                              └──► slanted.aab (output group bundle,
+                                                                   filegroup :slanted_bundle, unsigned)
+                                                                   ├──► wff_install :install_bundle
+                                                                   └──► wff_release :release (bazel run)
+                                                                        └──► dist/<package>-<version>.aab
 :watchface_xml (output group of :watchface) + @wff_spec//:v1 ──► py_test :watchface_schema_test
 ```
 
@@ -49,6 +55,7 @@ res/** + AndroidManifest.xml ─────────────────
 | `rules_python` | Python 3.12 toolchain for the generator and the test | Bazel Central Registry |
 | `@slanted_pypi` | `fonttools` (generator) and `xmlschema` (test) | pip, from `generator/requirements_lock.txt` |
 | `@android_build_tools` | `aapt2`, `zipalign`, `apksigner.jar` | build-tools 36.1 download, pinned by SHA-256 |
+| `@bundletool` | `bundletool.jar` (needs Java 11 or later) | GitHub release 1.18.3, pinned by SHA-256 |
 | `@local_android_sdk` | `android.jar` (platform android-36), `adb`, debug keystore | local SDK, via symlinks |
 | `@wff_spec` | Official WFF XSD schemas, filegroups `v1`…`v4` | `google/watchface` at a pinned commit |
 
@@ -59,13 +66,23 @@ res/** + AndroidManifest.xml ─────────────────
   `WffResourcesInfo` (a map from resource path to file). It symlinks every file into a
   staged `res/` tree, then runs
   `aapt2 compile --dir`, `aapt2 link` (against `android.jar`, with SDK and version
-  attributes; minSdk 33, targetSdk 36), `zipalign -p 4` and `apksigner sign`. It signs with the debug keystore by
-  default; the `keystore*` and `key_alias` attributes are there for a release key.
+  attributes; minSdk 33, targetSdk 36), `zipalign -p 4` and `apksigner sign`. It signs with
+  the debug keystore by default. Its output group `bundle` holds the same app as an
+  unsigned app bundle: `aapt2 link --proto-format`, then `bundle_module.py` moves the
+  manifest to `manifest/` as bundletool expects of a module, then `bundletool
+  build-bundle`. Bazel builds the bundle only when it is asked for.
 - **`res_files(glob(["res/**"]))`** maps hand-written resources to their path under `res/`.
 - **`wff_install`** is a `bazel run` script that runs `adb install -r` and then broadcasts
   `com.google.android.wearable.app.DEBUG_SURFACE set-watchface` to make the face active.
   This works on emulators and debuggable builds. Set `ANDROID_SERIAL` to pick a device.
   With `-- --help` it prints its usage, followed by the text file in its `help` attribute.
+  Given a `bundle` instead of an `apk`, it installs the way Google Play does:
+  `bundletool build-apks --connected-device` (signed with the debug key), then
+  `install-apks`.
+- **`wff_release`** is a `bazel run` script that signs the bundle with `jarsigner` (from
+  the JDK) using the keystore and alias given on the command line, and verifies the
+  signature. jarsigner asks for the passwords. The signed bundle goes to `dist/` in the
+  workspace, which git ignores.
 
 ### Generation rule (watchface/generator/defs.bzl)
 
@@ -278,5 +295,7 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   makes it work with `WFF_DEFAULTS` and lists it in `--help`). Then branch on it in `Scene`
   and add its label to `strings_xml()`. Every option of a setting that wraps the time
   multiplies that part of the XML.
-- **Release:** raise `version_code` and `version_name` in `watchface/BUILD.bazel`, and pass a
-  release `keystore` to `wff_apk`.
+- **Release:** raise `version_code` and `VERSION_NAME` in `watchface/BUILD.bazel`. Check the
+  bundle with `bazel run //watchface:install_bundle`, then sign it with
+  `bazel run //watchface:release -- --keystore <upload keystore> --alias <alias>` and
+  upload `dist/de.mulambda.slantedWatchface-<version>.aab`.

@@ -1,8 +1,10 @@
 load("@rules_python//python:defs.bzl", "py_test")
-load("//tools/android:wff.bzl", "res_files", "wff_apk", "wff_install")
+load("//tools/android:wff.bzl", "res_files", "wff_apk", "wff_install", "wff_release")
 load("//watchface/generator:defs.bzl", "watchface_resources")
 
 PACKAGE = "de.mulambda.slantedWatchface"
+
+VERSION_NAME = "2.0"
 
 watchface_resources(
     name = "watchface",
@@ -23,7 +25,24 @@ wff_apk(
     resources = res_files(glob(["res/**"])),
     # Must stay above the version codes of the original (pre-WFF) releases on Play.
     version_code = 1000,
-    version_name = "2.0-dev",
+    version_name = VERSION_NAME,
+)
+
+# The same app as an unsigned app bundle, for Google Play:
+#   bazel build //watchface:slanted_bundle   # bazel-bin/watchface/slanted.aab
+filegroup(
+    name = "slanted_bundle",
+    srcs = [":slanted"],
+    output_group = "bundle",
+)
+
+# Signs the bundle with the Play upload key, into dist/ (asks for the passwords):
+#   bazel run //watchface:release -- --keystore <file> --alias <alias>
+wff_release(
+    name = "release",
+    bundle = ":slanted_bundle",
+    package = PACKAGE,
+    version_name = VERSION_NAME,
 )
 
 filegroup(
@@ -43,6 +62,14 @@ wff_install(
     name = "install",
     apk = ":slanted",
     help = ":watchface_help",
+    package = PACKAGE,
+)
+
+# Installs from the bundle instead, through bundletool, as Google Play would. To check
+# the bundle before uploading it.
+wff_install(
+    name = "install_bundle",
+    bundle = ":slanted_bundle",
     package = PACKAGE,
 )
 

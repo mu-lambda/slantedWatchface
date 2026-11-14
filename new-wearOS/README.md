@@ -82,9 +82,16 @@ system font. Its metrics can't be read at build time, so the generator uses Robo
 were fitted to screenshots.
 
 **Bazel with small custom rules.** A resource-only APK doesn't fit the general Android rules,
-which always add compiled code. A few short Starlark rules call `aapt2`, `zipalign` and
-`apksigner` directly. Build-tools are downloaded at a pinned version, so only `android.jar`,
-`adb` and the debug keystore come from the local Android SDK.
+which always add compiled code. A few short Starlark rules call `aapt2`, `zipalign`,
+`apksigner` and `bundletool` directly. Build-tools and bundletool are downloaded at pinned
+versions, so only `android.jar`, `adb` and the debug keystore come from the local Android
+SDK.
+
+**Released as an app bundle, signed outside the build.** The Play listing has always
+received app bundles, so it uses Play App Signing: Google signs what users install, and
+uploads are signed with the maintainer's upload key. The build makes an unsigned bundle,
+and a separate `bazel run` step signs it, asking for the passwords. That way neither the
+key nor its password ever gets into a BUILD file or Bazel's cache.
 
 **Same package name, higher version code.** The APK keeps the original's package name
 (`de.mulambda.slantedWatchface`) so that it updates the existing Play listing. Its version
