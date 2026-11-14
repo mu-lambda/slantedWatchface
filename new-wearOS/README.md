@@ -18,7 +18,8 @@ How the code is organized is described in [SPEC.md](SPEC.md).
   system's WFF renderer draws the face, and the system's editor handles the settings, so
   there is no settings activity and no companion app.
 - **Run on as many watches as possible.** The face uses WFF version 1 and needs Wear OS 4
-  (API 33) or later.
+  (API 33) or later. It targets API 36 (Wear OS 6), the newest level it is tested on;
+  Google Play requires at least API 35 for Wear OS updates.
 - **Builds that are reproducible and checked.** Bazel builds the face from source. Every
   build checks the generated face against Google's official WFF schema.
 

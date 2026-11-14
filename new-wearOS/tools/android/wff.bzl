@@ -125,7 +125,9 @@ wff_apk = rule(
             doc = "Targets providing further resources with their res/ paths.",
         ),
         "min_sdk": attr.int(default = 33),
-        "target_sdk": attr.int(default = 34),
+        # Google Play requires Wear OS apps to target API 35 or later (since Aug 31, 2026).
+        # Must match PLATFORM in sdk.bzl, whose android.jar the APK links against.
+        "target_sdk": attr.int(default = 36),
         "version_code": attr.int(mandatory = True),
         "version_name": attr.string(mandatory = True),
         "keystore": attr.label(allow_single_file = True, default = _SDK + "debug.keystore"),

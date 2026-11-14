@@ -194,7 +194,7 @@
   "moduleExtensions": {
     "//tools/android:sdk.bzl%android_sdk": {
       "general": {
-        "bzlTransitiveDigest": "UuD4yd5FXbC7fH+UI28F6LBzqhEW94NyIrWlV3WXb84=",
+        "bzlTransitiveDigest": "jcBfv8lu8kkA+/fmuoEmuX8RxFfASFEmezlJEsFmZmI=",
         "usagesDigest": "fUhRxCI//y3vcbkG1G9QoF/TuCaTrDoPJc8UI3PJkEE=",
         "recordedInputs": [
           "REPO_MAPPING:,bazel_tools bazel_tools"

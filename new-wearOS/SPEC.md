@@ -49,7 +49,7 @@ res/** + AndroidManifest.xml ─────────────────
 | `rules_python` | Python 3.12 toolchain for the generator and the test | Bazel Central Registry |
 | `@slanted_pypi` | `fonttools` (generator) and `xmlschema` (test) | pip, from `generator/requirements_lock.txt` |
 | `@android_build_tools` | `aapt2`, `zipalign`, `apksigner.jar` | build-tools 36.1 download, pinned by SHA-256 |
-| `@local_android_sdk` | `android.jar` (newest installed platform), `adb`, debug keystore | local SDK, via symlinks |
+| `@local_android_sdk` | `android.jar` (platform android-36), `adb`, debug keystore | local SDK, via symlinks |
 | `@wff_spec` | Official WFF XSD schemas, filegroups `v1`…`v4` | `google/watchface` at a pinned commit |
 
 ### Packaging rules (tools/android/wff.bzl)
@@ -59,7 +59,7 @@ res/** + AndroidManifest.xml ─────────────────
   `WffResourcesInfo` (a map from resource path to file). It symlinks every file into a
   staged `res/` tree, then runs
   `aapt2 compile --dir`, `aapt2 link` (against `android.jar`, with SDK and version
-  attributes), `zipalign -p 4` and `apksigner sign`. It signs with the debug keystore by
+  attributes; minSdk 33, targetSdk 36), `zipalign -p 4` and `apksigner sign`. It signs with the debug keystore by
   default; the `keystore*` and `key_alias` attributes are there for a release key.
 - **`res_files(glob(["res/**"]))`** maps hand-written resources to their path under `res/`.
 - **`wff_install`** is a `bazel run` script that runs `adb install -r` and then broadcasts

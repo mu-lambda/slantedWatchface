@@ -13,8 +13,8 @@ for human readers, this file is for agents.
   are written by `watchface/generator/generate.py`.
 - Keep the package name `de.mulambda.slantedWatchface` and keep `version_code` at 1000 or
   above: the APK updates the original's Play listing.
-- The maintainer reviews changes as GitHub pull requests and commits and pushes with their
-  own script. Prepare changes (and a commit message if asked), but don't commit or push
+- The maintainer commits changes either directly to main or through a GitHub pull request,
+  with their own script. Prepare changes (and a commit message if asked), but don't commit or push
   unless asked.
 - When a change affects the design or the architecture, update README.md or SPEC.md too.
   The `--help` of `//watchface:install` is generated from `settings()` in the generator,

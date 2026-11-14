@@ -2,8 +2,8 @@
 
 - @android_build_tools: a pinned build-tools release (aapt2, zipalign, apksigner),
   downloaded from Google's SDK repository and checked against a known hash.
-- @local_android_sdk: what has to come from this machine: android.jar of the newest
-  installed platform, adb, and the debug keystore. The SDK is found via
+- @local_android_sdk: what has to come from this machine: android.jar of platform
+  android-PLATFORM (the one wff_apk's target_sdk names), adb, and the debug keystore. The SDK is found via
   $ANDROID_HOME, $ANDROID_SDK_ROOT, or the default install location.
 """
 
@@ -22,21 +22,9 @@ _BUILD_TOOLS = {
     ),
 }
 
-def _version_key(v):
-    parts = []
-    for p in v.replace("-", ".").split("."):
-        parts.append(int(p) if p.isdigit() else -1)
-    return parts
-
-def _newest(rctx, path, prefix = ""):
-    candidates = []
-    for entry in rctx.path(path).readdir():
-        name = entry.basename
-        if name.startswith(prefix) and name[len(prefix):].replace(".", "").isdigit():
-            candidates.append(name)
-    if not candidates:
-        fail("No %s* found in %s" % (prefix, path))
-    return sorted(candidates, key = lambda n: _version_key(n[len(prefix):]))[-1]
+# The SDK platform whose android.jar the APK links against. Keep it equal to wff_apk's
+# default target_sdk.
+PLATFORM = 36
 
 def _local_android_sdk_impl(rctx):
     home = rctx.getenv("HOME", "")
@@ -49,8 +37,10 @@ def _local_android_sdk_impl(rctx):
     if not sdk:
         fail("Android SDK not found. Set ANDROID_HOME.")
 
-    platform = sdk + "/platforms/" + _newest(rctx, sdk + "/platforms", "android-")
-    rctx.symlink(platform + "/android.jar", "android.jar")
+    android_jar = "%s/platforms/android-%d/android.jar" % (sdk, PLATFORM)
+    if not rctx.path(android_jar).exists:
+        fail("%s not found. Install it with: sdkmanager \"platforms;android-%d\"" % (android_jar, PLATFORM))
+    rctx.symlink(android_jar, "android.jar")
     rctx.symlink(sdk + "/platform-tools/adb", "adb")
 
     keystore = home + "/.android/debug.keystore"
