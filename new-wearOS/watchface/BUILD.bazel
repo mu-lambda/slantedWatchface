@@ -1,0 +1,63 @@
+load("@rules_python//python:defs.bzl", "py_test")
+load("//tools/android:wff.bzl", "res_files", "wff_apk", "wff_install")
+load("//watchface/generator:defs.bzl", "watchface_resources")
+
+PACKAGE = "de.mulambda.slantedWatchface"
+
+watchface_resources(
+    name = "watchface",
+    # Each font's file name is its resource name. Must match FONTS in generator/generate.py.
+    fonts = glob(["fonts/*.ttf"]),
+)
+
+filegroup(
+    name = "watchface_xml",
+    srcs = [":watchface"],
+    output_group = "watchface_xml",
+)
+
+wff_apk(
+    name = "slanted",
+    manifest = "AndroidManifest.xml",
+    resource_sets = [":watchface"],
+    resources = res_files(glob(["res/**"])),
+    # Must stay above the version codes of the original (pre-WFF) releases on Play.
+    version_code = 1000,
+    version_name = "2.0-dev",
+)
+
+filegroup(
+    name = "watchface_help",
+    srcs = [":watchface"],
+    output_group = "help",
+)
+
+# Installs the face and makes it the active watch face:
+#   bazel run //watchface:install
+# The values the user settings start with can be changed at build time with WFF_DEFAULTS,
+# a comma-separated list of setting=value, for example
+#   bazel run //watchface:install --define=WFF_DEFAULTS=font=bebas_kai,is24h=FALSE
+# The settings are theme, font, is24h and colorfulAmbient. For all their values, run
+#   bazel run //watchface:install -- --help
+wff_install(
+    name = "install",
+    apk = ":slanted",
+    help = ":watchface_help",
+    package = PACKAGE,
+)
+
+py_test(
+    name = "watchface_schema_test",
+    srcs = ["validate_schema.py"],
+    args = [
+        "$(rootpath @wff_spec//:1/watchface.xsd)",
+        "$(rootpath :watchface_xml)",
+    ],
+    data = [
+        ":watchface_xml",
+        "@wff_spec//:1/watchface.xsd",
+        "@wff_spec//:v1",
+    ],
+    main = "validate_schema.py",
+    deps = ["@slanted_pypi//xmlschema"],
+)
