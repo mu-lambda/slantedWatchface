@@ -30,8 +30,8 @@ it was about to draw (`Paint.getTextBounds()`) and placed everything relative to
 example, the minutes start just right of the hours' ink, which is narrower for "11" than for
 "10". WFF can't measure text. So a Python generator reads the glyph metrics from the font
 files at build time and writes these measurements into `watchface.xml` as lookup
-expressions over the current hour, minute and second. Six fonts, 24h/12h and ambient
-variants add up to about 127 KB of XML that nobody has to maintain by hand.
+expressions over the current hour, minute and second. Five fonts, 24h/12h and ambient
+variants add up to about 118 KB of XML that nobody has to maintain by hand.
 
 **Ambient mode within Google Play's brightness limit.** Play requires an ambient mode
 that lights at most 15% of the screen on average, at every time of day (WO-P7). The
@@ -42,7 +42,7 @@ WFF face:
   instead of white;
 - dims bright themes in colorful ambient mode (orange, yellow, cyan, magenta, white,
   light gray, and fuchsia and violet); green, red and blue stay as they are;
-- dims heavy fonts in both ambient modes: Ordinary to about 60%, Bebas Kai slightly.
+- dims heavy fonts in both ambient modes: Bebas Kai slightly.
 
 The generator computes the dimming from how much of the screen each font's digits cover at
 their worst time of day, which was measured on the emulator. It counts against the round
@@ -70,7 +70,7 @@ place. The face uses one layout that the slots fit:
   seconds in the base color, minutes in a white of the same brightness, the date in a
   matching yellow), and fuchsia and violet, which gives the minutes a color of their own
   (light fuchsia hours and seconds, lilac minutes);
-- the font, from six, each shown with a "12" icon drawn in that font;
+- the font, from five, each shown with a "12" icon drawn in that font;
 - 24-hour clock;
 - colorful or plain off-white ambient mode;
 - the two complication slots.

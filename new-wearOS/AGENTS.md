@@ -39,7 +39,7 @@ bazel run //watchface:install_bundle     # install from the bundle, as Google Pl
 - A passing schema test does not mean the face renders correctly. The renderer ignores or
   misreads some things the schema allows (see "WFF renderer behavior" in SPEC.md). Check
   visible changes on the emulator.
-- Watch the size of `watchface.xml` (about 131 KB). Each font and each 12h/24h variant
+- Watch the size of `watchface.xml` (about 118 KB). Each font and each 12h/24h variant
   repeats the whole time layout, so a setting that wraps the time multiplies the XML.
 - System `python3` has no fontTools, and `python3 -I` ignores `PYTHONPATH`. To run font
   code outside Bazel, make a venv in a scratch directory and `pip install fonttools`. The

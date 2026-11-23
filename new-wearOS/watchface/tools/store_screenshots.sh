@@ -28,7 +28,7 @@ shot 2_sweet_hipster_orange_12h "font=sweet_hipster,theme=orange,is24h=FALSE"
 shot 3_bebas_kai_cyan "font=bebas_kai,theme=cyan"
 shot 4_fenwick_magenta "font=fenwick_woodtype,theme=magenta"
 shot 5_grafik_text_red_12h "font=grafik_text,theme=red,is24h=FALSE"
-shot 6_ordinary_blue "font=ordinary,theme=blue"
+shot 6_sweet_hipster_fuchsia_violet "font=sweet_hipster,theme=fuchsia_violet"
 shot 7_ambient_colorful "font=limelight,theme=green" ambient
 shot 8_ambient_offwhite "font=limelight,theme=green,colorfulAmbient=FALSE" ambient
 adb shell settings put global auto_time 1

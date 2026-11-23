@@ -22,6 +22,7 @@ OUT = os.environ.get("COMPARE_OUT") or os.path.join(
 LEGACY = os.environ.get("LEGACY_SERIAL", "emulator-5556")
 WFF = os.environ.get("WFF_SERIAL", "emulator-5554")
 PKG = "de.mulambda.slantedWatchface"
+# The original's fonts, in the order of its font picker. The WFF face dropped Ordinary.
 FONTS = ["limelight", "sweet_hipster", "grafik_text", "fenwick_woodtype", "ordinary", "bebas_kai"]
 
 # name -> (font, is24h, colorful_ambient, ambient_screenshot). The WFF face is always
@@ -33,7 +34,8 @@ SCENARIOS = {
     "h12": ("limelight", False, True, False),
 }
 for f in FONTS[1:]:
-    SCENARIOS[f] = (f, True, True, False)
+    if f != "ordinary":
+        SCENARIOS[f] = (f, True, True, False)
 
 
 def adb(serial, *args, capture=False):

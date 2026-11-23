@@ -66,7 +66,6 @@ FONTS = [
     FontConfig("sweet_hipster", "Sweet Hipster", 1.3, 0.9, 1.0, 0.7, 0.6, (0.158, 0.048, 0.017)),
     FontConfig("grafik_text", "Grafik Text", 1.0, 0.5, 0.9, 0.5, 0.5, (0.175, 0.058, 0.011)),
     FontConfig("fenwick_woodtype", "Fenwick Woodtype", 1.0, 0.7, 1.0, 0.6, 0.5, (0.166, 0.059, 0.011)),
-    FontConfig("ordinary", "Ordinary", 1.2, 0.6, 1.0, 0.5, 0.5, (0.310, 0.093, 0.015)),
     FontConfig("bebas_kai", "Bebas Kai", 1.0, 0.6, 0.8, 0.5, 0.5, (0.202, 0.064, 0.011)),
 ]
 DEFAULT_FONT = "limelight"
@@ -95,7 +94,6 @@ CALIBRATION = {
     "sweet_hipster": Calibration(-13, 7, 5, -6, 0),
     "grafik_text": Calibration(-7, -13, 1, 0, -4),
     "fenwick_woodtype": Calibration(-3, -5, 5, 0, -7),
-    "ordinary": Calibration(-8, -7, 2, 6, 0),
     "bebas_kai": Calibration(-12, -10, 2, 1, -2),
 }
 

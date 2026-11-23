@@ -19,7 +19,7 @@ new-wearOS/
     ├── BUILD.bazel                   Generation, packaging, installation, schema test
     ├── version.bzl                   VERSION_CODE and VERSION_NAME of the next release
     ├── AndroidManifest.xml           Code-free app declaring WFF version 1
-    ├── fonts/*.ttf                   The six fonts, named by resource name
+    ├── fonts/*.ttf                   The five fonts, named by resource name
     ├── res/                          Hand-written resources (watch face info, preview, app name)
     ├── generator/generate.py         Writes watchface.xml, its strings and the font icons
     ├── generator/defs.bzl            Rule watchface_resources, which runs the generator
@@ -120,8 +120,8 @@ vector drawable per font.
   and the horizontal squeeze of the hours (one and two digits), minutes and seconds. These
   are the original face's values. Each resource name must have a file
   `watchface/fonts/<resource>.ttf`, and the reverse; the generator fails otherwise. The
-  fonts are `limelight` (the default), `sweet_hipster`, `grafik_text`, `fenwick_woodtype`,
-  `ordinary` and `bebas_kai`.
+  fonts are `limelight` (the default), `sweet_hipster`, `grafik_text`, `fenwick_woodtype`
+  and `bebas_kai`.
 - `THEMES`: the color schemes, as (id, display name, base color). The ids are `green` (the
   default), `red`, `orange`, `yellow`, `cyan`, `blue`, `magenta`, `white`, `light_gray` and
   `fuchsia_violet`. `theme_colors()` expands each base color into the five colors of the
@@ -294,6 +294,8 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   `FONTS` in the generator. Then fit a `Calibration` entry with the comparison tools.
   Check that `complication_area()` for the new font doesn't shrink the shared complication
   area too much.
+- **Remove a font:** delete its `FontConfig`, its `CALIBRATION` entry and its TTF. Users
+  who had it selected get the default font after the update; their other settings stay.
 - **Add a theme:** append to `THEMES`, with one base color or an (hours, minutes) pair;
   the five colors and the ambient dimming are derived.
 - **Add a setting:** declare it in `UserConfigurations` and add it to `settings()` (which
