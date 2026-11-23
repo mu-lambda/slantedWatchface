@@ -123,10 +123,12 @@ vector drawable per font.
   fonts are `limelight` (the default), `sweet_hipster`, `grafik_text`, `fenwick_woodtype`,
   `ordinary` and `bebas_kai`.
 - `THEMES`: the color schemes, as (id, display name, base color). The ids are `green` (the
-  default), `red`, `orange`, `yellow`, `cyan`, `blue`, `magenta`, `white` and `light_gray`.
-  `theme_colors()` expands each base color into the five colors of the scheme, as the
-  original did: hours, seconds and AM/PM in the base color, minutes in a gray with the base
-  color's brightness, and the date in the original's date yellow at that brightness. The
+  default), `red`, `orange`, `yellow`, `cyan`, `blue`, `magenta`, `white`, `light_gray` and
+  `fuchsia_violet`. `theme_colors()` expands each base color into the five colors of the
+  scheme, as the original did: hours, seconds and AM/PM in the base color, minutes in a
+  gray with the base color's brightness, and the date in the original's date yellow at
+  that brightness. A base color can also be a pair (hours color, minutes color), as for
+  `fuchsia_violet`: then the minutes get the second color instead of the gray. The
   five colors are indexed by `HOURS, MINUTES, SECONDS, THEME_AMBIENT_DIM, DATE`; in the
   XML they are `[CONFIGURATION.theme.N]`. AM/PM uses the hours' color, so its slot holds
   the theme's ambient dimmer instead (WFF v1 allows five colors per option; see Ambient
@@ -178,7 +180,7 @@ The ink measurements become expressions like this:
 WatchFace 450×450
 ├── Metadata CLOCK_TYPE, PREVIEW_TIME
 ├── UserConfigurations
-│   ├── ColorConfiguration theme        (9 options × 5 colors, one of them the dimmer)
+│   ├── ColorConfiguration theme        (10 options × 5 colors, one of them the dimmer)
 │   ├── ListConfiguration font          (6 options, each with icon font_icon_<font>)
 │   ├── BooleanConfiguration is24h
 │   └── BooleanConfiguration colorfulAmbient
@@ -292,7 +294,8 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   `FONTS` in the generator. Then fit a `Calibration` entry with the comparison tools.
   Check that `complication_area()` for the new font doesn't shrink the shared complication
   area too much.
-- **Add a theme:** append to `THEMES`; the five colors are derived.
+- **Add a theme:** append to `THEMES`, with one base color or an (hours, minutes) pair;
+  the five colors and the ambient dimming are derived.
 - **Add a setting:** declare it in `UserConfigurations` and add it to `settings()` (which
   makes it work with `WFF_DEFAULTS` and lists it in `--help`). Then branch on it in `Scene`
   and add its label to `strings_xml()`. Every option of a setting that wraps the time

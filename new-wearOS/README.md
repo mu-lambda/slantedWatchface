@@ -40,8 +40,8 @@ WFF face:
 
 - draws plain ambient mode in a warm off-white (`#A39F96`, the hours darker at `#827F78`)
   instead of white;
-- dims bright themes in colorful ambient mode (orange, yellow, cyan, magenta, white and
-  light gray); green, red and blue stay as they are;
+- dims bright themes in colorful ambient mode (orange, yellow, cyan, magenta, white,
+  light gray, and fuchsia and violet); green, red and blue stay as they are;
 - dims heavy fonts in both ambient modes: Ordinary to about 60%, Bebas Kai slightly.
 
 The generator computes the dimming from how much of the screen each font's digits cover at
@@ -68,7 +68,8 @@ place. The face uses one layout that the slots fit:
 **Settings use the system editor.** The settings are:
 - a color theme: nine base colors, each expanded into the original's scheme (hours and
   seconds in the base color, minutes in a white of the same brightness, the date in a
-  matching yellow);
+  matching yellow), and fuchsia and violet, which gives the minutes a color of their own
+  (light fuchsia hours and seconds, lilac minutes);
 - the font, from six, each shown with a "12" icon drawn in that font;
 - 24-hour clock;
 - colorful or plain off-white ambient mode;
