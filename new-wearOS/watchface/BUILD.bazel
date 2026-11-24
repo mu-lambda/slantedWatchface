@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 load("//tools/android:wff.bzl", "res_files", "wff_apk", "wff_install", "wff_release")
 load("//watchface/generator:defs.bzl", "watchface_resources")
 load(":version.bzl", "VERSION_CODE", "VERSION_NAME")
@@ -42,6 +42,20 @@ wff_release(
     package = PACKAGE,
     version_code = VERSION_CODE,
     version_name = VERSION_NAME,
+)
+
+# Uploads the signed bundle from :release to Google Play and releases it on a track:
+#   bazel run //watchface:upload -- --key <service account key.json>
+# Use --list-tracks to see what is on Play, --dry-run to check first, --help for more.
+py_binary(
+    name = "upload",
+    srcs = ["//tools/android:play_upload.py"],
+    args = [
+        "--package=" + PACKAGE,
+        "--version-code=%d" % VERSION_CODE,
+        "--version-name=" + VERSION_NAME,
+    ],
+    main = "//tools/android:play_upload.py",
 )
 
 filegroup(

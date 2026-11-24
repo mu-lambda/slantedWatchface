@@ -7,4 +7,4 @@ Uploaded so far: 1000 and 1001 (2.0; 1001 is live).
 """
 
 VERSION_CODE = 1002
-VERSION_NAME = "2.0"
+VERSION_NAME = "2.1"

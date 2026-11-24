@@ -10,11 +10,13 @@ new-wearOS/
 ├── README.md, SPEC.md, AGENTS.md     Design choices, architecture, notes for coding agents
 ├── MODULE.bazel, MODULE.bazel.lock   Bazel module: dependencies and external repositories
 ├── .bazelversion                    Pinned Bazel version
-├── playstore/                        Play listing: icon, screenshots, text (listing.md)
+├── playstore/                        Play listing: icon, screenshots, text (listing.md),
+│                                     release-notes/<version name>.txt
 ├── tools/android/
 │   ├── sdk.bzl                       Module extension: Android build-tools and local SDK
 │   ├── wff.bzl                       Rules wff_apk, wff_install, wff_release; macro res_files
-│   └── bundle_module.py              Rearranges a proto-format APK into a bundle module
+│   ├── bundle_module.py              Rearranges a proto-format APK into a bundle module
+│   └── play_upload.py                Uploads the signed bundle to Google Play
 └── watchface/
     ├── BUILD.bazel                   Generation, packaging, installation, schema test
     ├── version.bzl                   VERSION_CODE and VERSION_NAME of the next release
@@ -47,6 +49,7 @@ res/** + AndroidManifest.xml ─────────────────
                                                                    ├──► wff_install :install_bundle
                                                                    └──► wff_release :release (bazel run)
                                                                         └──► dist/<package>-<name>-<code>.aab
+                                                                             └──► py_binary :upload (bazel run)
 :watchface_xml (output group of :watchface) + @wff_spec//:v1 ──► py_test :watchface_schema_test
 ```
 
@@ -85,6 +88,16 @@ res/** + AndroidManifest.xml ─────────────────
   the JDK) using the keystore and alias given on the command line, and verifies the
   signature. jarsigner asks for the passwords. The signed bundle goes to `dist/` in the
   workspace, which git ignores.
+- **`:upload`** (in `watchface/BUILD.bazel`) is a `py_binary` running
+  `tools/android/play_upload.py` with the package and version from `version.bzl`. It
+  uploads the signed bundle from `dist/` through the Google Play Developer API (v3) as a
+  service account, and releases it on a track (default `wear:production`, status
+  `completed`). It uses only the Python standard library and `openssl`, which signs the
+  token request. One run is one Play edit: create, check that Play doesn't have the version
+  code yet, upload, check the uploaded version code, set the track's release with the notes
+  from `playstore/release-notes/<version name>.txt`, commit. On any error the edit is
+  deleted, so nothing changes on Play. `--list-tracks` shows what is on each track,
+  `--dry-run` checks the bundle, notes and key offline.
 
 ### Generation rule (watchface/generator/defs.bzl)
 
@@ -303,7 +316,15 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   and add its label to `strings_xml()`. Every option of a setting that wraps the time
   multiplies that part of the XML.
 - **Release:** raise `VERSION_CODE` (and `VERSION_NAME` if the face changed) in
-  `watchface/version.bzl`, and note the uploaded code in its docstring. Check the
+  `watchface/version.bzl`, and note the uploaded code in its docstring. Write the release
+  notes to `playstore/release-notes/<version name>.txt` (at most 500 characters). Check the
   bundle with `bazel run //watchface:install_bundle`, then sign it with
   `bazel run //watchface:release -- --keystore <upload keystore> --alias <alias>` and
-  upload `dist/de.mulambda.slantedWatchface-<version name>-<version code>.aab`.
+  upload it with `bazel run //watchface:upload -- --key <service account key>` (or set
+  `PLAY_SERVICE_ACCOUNT_KEY`). With `--status draft`, the release waits in Play Console
+  instead of going to review.
+- **Set up uploading** (once): in Google Cloud, pick or create a project, enable the
+  "Google Play Android Developer API", create a service account and download a JSON key
+  for it. Keep the key outside the repository. In Play Console, under Users and
+  permissions, invite the service account's email address and give it, for this app,
+  permission to release to production and to testing tracks.
