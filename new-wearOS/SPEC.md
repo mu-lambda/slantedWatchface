@@ -136,12 +136,13 @@ vector drawable per font.
   fonts are `limelight` (the default), `sweet_hipster`, `grafik_text`, `fenwick_woodtype`
   and `bebas_kai`.
 - `THEMES`: the color schemes, as (id, display name, base color). The ids are `green` (the
-  default), `red`, `orange`, `yellow`, `cyan`, `blue`, `magenta`, `white`, `light_gray` and
-  `fuchsia_violet`. `theme_colors()` expands each base color into the five colors of the
+  default), `red`, `orange`, `yellow`, `cyan`, `blue`, `magenta`, `white`, `light_gray`,
+  `fuchsia_violet` and `periwinkle`. `theme_colors()` expands each base color into the five colors of the
   scheme, as the original did: hours, seconds and AM/PM in the base color, minutes in a
   gray with the base color's brightness, and the date in the original's date yellow at
   that brightness. A base color can also be a pair (hours color, minutes color), as for
-  `fuchsia_violet`: then the minutes get the second color instead of the gray. The
+  `fuchsia_violet`: then the minutes get the second color instead of the gray. A triple
+  (hours, minutes, date), as for `periwinkle`, sets the date's color too. The
   five colors are indexed by `HOURS, MINUTES, SECONDS, THEME_AMBIENT_DIM, DATE`; in the
   XML they are `[CONFIGURATION.theme.N]`. AM/PM uses the hours' color, so its slot holds
   the theme's ambient dimmer instead (WFF v1 allows five colors per option; see Ambient
@@ -193,7 +194,7 @@ The ink measurements become expressions like this:
 WatchFace 450×450
 ├── Metadata CLOCK_TYPE, PREVIEW_TIME
 ├── UserConfigurations
-│   ├── ColorConfiguration theme        (10 options × 5 colors, one of them the dimmer)
+│   ├── ColorConfiguration theme        (11 options × 5 colors, one of them the dimmer)
 │   ├── ListConfiguration font          (6 options, each with icon font_icon_<font>)
 │   ├── BooleanConfiguration is24h
 │   └── BooleanConfiguration colorfulAmbient
@@ -309,7 +310,8 @@ Seen on Wear OS 5. The schema allows all of these, but the renderer behaves diff
   area too much.
 - **Remove a font:** delete its `FontConfig`, its `CALIBRATION` entry and its TTF. Users
   who had it selected get the default font after the update; their other settings stay.
-- **Add a theme:** append to `THEMES`, with one base color or an (hours, minutes) pair;
+- **Add a theme:** append to `THEMES`, with one base color, an (hours, minutes) pair or an
+  (hours, minutes, date) triple;
   the five colors and the ambient dimming are derived.
 - **Add a setting:** declare it in `UserConfigurations` and add it to `settings()` (which
   makes it work with `WFF_DEFAULTS` and lists it in `--help`). Then branch on it in `Scene`
