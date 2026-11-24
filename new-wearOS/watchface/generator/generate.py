@@ -98,7 +98,8 @@ CALIBRATION = {
 }
 
 # Base colors offered by the original face's color picker (minus black and dark gray),
-# then two-color themes, whose base is (hours color, minutes color).
+# then themes with their own colors for the minutes, and maybe the date: (hours, minutes)
+# or (hours, minutes, date).
 THEMES = [
     ("green", "Green", 0x00FF00),
     ("red", "Red", 0xFF0000),
@@ -110,6 +111,7 @@ THEMES = [
     ("white", "White", 0xFFFFFF),
     ("light_gray", "Light gray", 0xCCCCCC),
     ("fuchsia_violet", "Fuchsia and violet", (0xFF50FF, 0xC090FF)),
+    ("periwinkle", "Periwinkle", (0x6D60BD, 0xACA9F1, 0x9393E5)),
 ]
 DEFAULT_THEME = "green"
 
@@ -144,8 +146,11 @@ def _rgb(h, s, v):
 
 def theme_colors(base):
     """The full color scheme the original face derived from one base color. A base of
-    (hours, minutes) gives the minutes their own color instead of the white of the base."""
-    base, minutes = base if isinstance(base, tuple) else (base, None)
+    (hours, minutes) gives the minutes their own color instead of the white of the base,
+    and (hours, minutes, date) the date too, instead of the date yellow."""
+    if not isinstance(base, tuple):
+        base = (base,)
+    base, minutes, date = base + (None,) * (3 - len(base))
     base_h, base_s, base_v = _hsv(base)
     date_h, date_s, _ = _hsv(DEFAULT_DATE_COLOR)
     colors = [None] * 5
@@ -153,7 +158,7 @@ def theme_colors(base):
     colors[HOURS] = _rgb(base_h, base_s, base_v)
     colors[MINUTES] = _rgb(0, 0, base_v) if minutes is None else _rgb(*_hsv(minutes))
     colors[SECONDS] = _rgb(base_h, base_s, base_v)
-    colors[DATE] = _rgb(date_h, date_s, base_v)
+    colors[DATE] = _rgb(date_h, date_s, base_v) if date is None else _rgb(*_hsv(date))
     return colors
 
 

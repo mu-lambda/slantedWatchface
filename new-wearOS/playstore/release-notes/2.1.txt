@@ -1,2 +1,2 @@
-New color theme: fuchsia and violet.
+New color themes: fuchsia and violet, and periwinkle.
 The Ordinary font is gone; if you used it, the face now shows Limelight.
