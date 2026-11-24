@@ -33,8 +33,12 @@ bazel build //watchface:slanted_bundle   # unsigned app bundle: bazel-bin/watchf
 bazel run //watchface:install_bundle     # install from the bundle, as Google Play would
 ```
 
-- Never run `//watchface:release` or handle the upload keystore: signing a release is the
-  maintainer's step, and jarsigner asks for passwords interactively.
+- Never run `//watchface:release` or `//watchface:upload` (except `--help` and
+  `--dry-run`), and never handle the upload keystore or the service account key: signing
+  and publishing are the maintainer's steps, and jarsigner asks for passwords
+  interactively. To test changes to `play_upload.py`, import it in a scratch script and
+  point `API`, `UPLOAD_API` and the key's `token_uri` at a local mock server, with a
+  throwaway RSA key and a bundle signed with a throwaway keystore.
 
 - A passing schema test does not mean the face renders correctly. The renderer ignores or
   misreads some things the schema allows (see "WFF renderer behavior" in SPEC.md). Check

@@ -94,6 +94,13 @@ uploads are signed with the maintainer's upload key. The build makes an unsigned
 and a separate `bazel run` step signs it, asking for the passwords. That way neither the
 key nor its password ever gets into a BUILD file or Bazel's cache.
 
+**Uploaded by a script, as a service account.** Another `bazel run` step uploads the signed
+bundle through the Google Play Developer API and releases it on the Wear OS production
+track, with release notes kept next to the listing. It authenticates with a service
+account key that stays outside the repository, and needs only the Python standard library
+and `openssl`, so it adds no dependencies. Everything happens in one Play edit, which
+takes effect only when the whole upload succeeds.
+
 **Same package name, higher version code.** The APK keeps the original's package name
 (`de.mulambda.slantedWatchface`) so that it updates the existing Play listing. Its version
 codes start at 1000, above every original release. The version of the next release is
